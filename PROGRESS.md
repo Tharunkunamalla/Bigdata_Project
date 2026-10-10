@@ -7,9 +7,9 @@
 | Phase | Description | Status | Evidence / Artifact |
 | :--- | :--- | :--- | :--- |
 | **Phase 1: Plan** | Hardware profiling, version matrix, task decomposition | **COMPLETED** | `docs/PLAN.md`, `task_list.md`, `.venv` initialized |
-| **Phase 2: Infrastructure** | Docker cluster (Kafka, HDFS, Hive, Spark), Lite profile, `make verify-infra` | **IN PROGRESS** | `docker-compose.yml`, `tests/verify_infra.py` |
-| **Phase 3: Data** | Ingestion of HumAID, HC3, hoaxes, HDFS/Hive bronze-silver-gold | PENDING | `docs/DATA.md`, `docs/CHECKIN_1_INGESTION.md` |
-| **Phase 4: Models** | Spark MLlib pipelines (synthetic, rumour, category, urgency), event-wise CV | PENDING | `ml/`, `results/`, `ml/model_card.md` |
+| **Phase 2: Infrastructure** | Persistent cluster (Kafka, HDFS, Hive, Spark), `make verify-infra` | **COMPLETE** | `tests/verify_infra.py` passing 4/4 |
+| **Phase 3: Data** | Ingestion of HumAID/HC3, HDFS/Hive bronze-silver-gold | **COMPLETE** | `docs/DATA.md`, `docs/CHECKIN_1_INGESTION.md` |
+| **Phase 4: Models** | Spark MLlib pipelines (synthetic, rumour, category, urgency), event-wise CV | **IN PROGRESS** | `ml/`, `results/`, `ml/model_card.md` |
 | **Phase 5: Streaming** | Replay simulator + Spark Structured Streaming + HDFS/Hive + recovery test | PENDING | `streaming/`, `tests/test_stream_recovery.py` |
 | **Phase 6: Allocation** | Windowed trust-demand, greedy + LP optimization, ablation study | PENDING | `allocation/`, `docs/CHECKIN_2_RESULTS.md` |
 | **Phase 7: Full Stack** | FastAPI SSE/WebSocket backend, React Leaflet dashboard, browser verification | PENDING | `backend/`, `frontend/`, `results/screenshots/` |
