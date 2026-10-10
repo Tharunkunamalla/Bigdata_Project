@@ -1,0 +1,45 @@
+{
+  "dataset": {
+    "total_records": 60000,
+    "train_records": 30000,
+    "test_records": 30000,
+    "train_events": [
+      "hurricane",
+      "flood"
+    ],
+    "test_events": [
+      "earthquake",
+      "wildfire"
+    ]
+  },
+  "models": {
+    "synthetic_detector": {
+      "roc_auc": 1.0,
+      "pr_auc": 1.0,
+      "f1": 0.957,
+      "accuracy": 0.9589,
+      "model_type": "LogisticRegression_ElasticNet",
+      "path": "/mnt/c/Users/HP/OneDrive/Desktop/bigdata project/ml/models/synthetic_detector_model"
+    },
+    "rumour_classifier": {
+      "roc_auc": 0.9293,
+      "f1": 0.9304,
+      "model_type": "RandomForestClassifier",
+      "path": "/mnt/c/Users/HP/OneDrive/Desktop/bigdata project/ml/models/rumour_classifier_model"
+    },
+    "humanitarian_category": {
+      "macro_f1": 0.4674,
+      "accuracy": 0.5452,
+      "model_type": "MultinomialLogisticRegression",
+      "path": "/mnt/c/Users/HP/OneDrive/Desktop/bigdata project/ml/models/humanitarian_category_model"
+    },
+    "urgency_regressor": {
+      "rmse": 0.2184,
+      "mae": 0.1627,
+      "r2": 0.1871,
+      "model_type": "LinearRegression_ElasticNet",
+      "path": "/mnt/c/Users/HP/OneDrive/Desktop/bigdata project/ml/models/urgency_regressor_model"
+    }
+  },
+  "training_time_seconds": 164.63
+}
