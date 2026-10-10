@@ -1,0 +1,267 @@
+services:
+  # ----------------------------------------------------------------------------
+  # 1. Apache Kafka 3.7.0 in KRaft Mode (No ZooKeeper required)
+  # ----------------------------------------------------------------------------
+  kafka:
+    image: apache/kafka:3.7.0
+    container_name: cse412-kafka
+    networks:
+      - cse412-net
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9093,EXTERNAL://0.0.0.0:9092,CONTROLLER://0.0.0.0:9094
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9093,EXTERNAL://localhost:9092
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9094
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_JVM_PERFORMANCE_OPTS: "-Xmx256M -Xms128M"
+    deploy:
+      resources:
+        limits:
+          memory: 384M
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server localhost:9092 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+  # ----------------------------------------------------------------------------
+  # 2. Apache Hadoop HDFS 3.3.6 (Namenode)
+  # ----------------------------------------------------------------------------
+  namenode:
+    image: apache/hadoop:3.3.6
+    container_name: cse412-namenode
+    user: root
+    networks:
+      - cse412-net
+    ports:
+      - "9000:9000"
+      - "9870:9870"
+    volumes:
+      - ./hadoop/core-site.xml:/opt/hadoop/etc/hadoop/core-site.xml:ro
+      - ./hadoop/hdfs-site.xml:/opt/hadoop/etc/hadoop/hdfs-site.xml:ro
+      - namenode_data:/opt/hadoop/data/nameNode
+    environment:
+      HADOOP_HOME: /opt/hadoop
+      HDFS_NAMENODE_USER: root
+      HDFS_DATANODE_USER: root
+      HADOOP_OPTS: "-Xmx256m -Xms128m"
+    command: >
+      bash -c "if [ ! -d /opt/hadoop/data/nameNode/current ]; then
+                 /opt/hadoop/bin/hdfs namenode -format -force;
+               fi &&
+               /opt/hadoop/bin/hdfs --config /opt/hadoop/etc/hadoop namenode"
+    deploy:
+      resources:
+        limits:
+          memory: 384M
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/hadoop/bin/hdfs dfsadmin -safemode get || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  # ----------------------------------------------------------------------------
+  # 3. Apache Hadoop HDFS 3.3.6 (Datanode 1)
+  # ----------------------------------------------------------------------------
+  datanode:
+    image: apache/hadoop:3.3.6
+    container_name: cse412-datanode
+    user: root
+    networks:
+      - cse412-net
+    ports:
+      - "9864:9864"
+    volumes:
+      - ./hadoop/core-site.xml:/opt/hadoop/etc/hadoop/core-site.xml:ro
+      - ./hadoop/hdfs-site.xml:/opt/hadoop/etc/hadoop/hdfs-site.xml:ro
+      - datanode_data:/opt/hadoop/data/dataNode
+    environment:
+      HADOOP_HOME: /opt/hadoop
+      HDFS_DATANODE_USER: root
+      HADOOP_OPTS: "-Xmx256m -Xms128m"
+    depends_on:
+      namenode:
+        condition: service_healthy
+    command: ["/opt/hadoop/bin/hdfs", "--config", "/opt/hadoop/etc/hadoop", "datanode"]
+    deploy:
+      resources:
+        limits:
+          memory: 384M
+
+  # Optional second datanode for Full Profile
+  datanode-2:
+    profiles: ["full"]
+    image: apache/hadoop:3.3.6
+    container_name: cse412-datanode-2
+    user: root
+    networks:
+      - cse412-net
+    volumes:
+      - ./hadoop/core-site.xml:/opt/hadoop/etc/hadoop/core-site.xml:ro
+      - ./hadoop/hdfs-site.xml:/opt/hadoop/etc/hadoop/hdfs-site.xml:ro
+      - datanode2_data:/opt/hadoop/data/dataNode
+    environment:
+      HADOOP_HOME: /opt/hadoop
+      HDFS_DATANODE_USER: root
+      HADOOP_OPTS: "-Xmx256m -Xms128m"
+    depends_on:
+      namenode:
+        condition: service_healthy
+    command: ["/opt/hadoop/bin/hdfs", "--config", "/opt/hadoop/etc/hadoop", "datanode"]
+    deploy:
+      resources:
+        limits:
+          memory: 384M
+
+  # ----------------------------------------------------------------------------
+  # 4. Apache Hive 4.0.0 (Standalone Metastore)
+  # ----------------------------------------------------------------------------
+  hive-metastore:
+    image: apache/hive:4.0.0
+    container_name: cse412-hive-metastore
+    networks:
+      - cse412-net
+    ports:
+      - "9083:9083"
+    environment:
+      SERVICE_NAME: metastore
+      SERVICE_OPTS: "-Xmx256m"
+      IS_RESUME: "true"
+    volumes:
+      - ./hive/hive-site.xml:/opt/hive/conf/hive-site.xml:ro
+      - ./hadoop/core-site.xml:/opt/hadoop/etc/hadoop/core-site.xml:ro
+    depends_on:
+      namenode:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 384M
+
+  # ----------------------------------------------------------------------------
+  # 5. Apache Hive 4.0.0 (HiveServer2)
+  # ----------------------------------------------------------------------------
+  hiveserver2:
+    image: apache/hive:4.0.0
+    container_name: cse412-hiveserver2
+    networks:
+      - cse412-net
+    ports:
+      - "10000:10000"
+      - "10002:10002"
+    environment:
+      SERVICE_NAME: hiveserver2
+      SERVICE_OPTS: "-Xmx256m"
+      IS_RESUME: "true"
+    volumes:
+      - ./hive/hive-site.xml:/opt/hive/conf/hive-site.xml:ro
+      - ./hadoop/core-site.xml:/opt/hadoop/etc/hadoop/core-site.xml:ro
+    depends_on:
+      - hive-metastore
+    deploy:
+      resources:
+        limits:
+          memory: 384M
+
+  # ----------------------------------------------------------------------------
+  # 6. Apache Spark 3.5.1 (Master)
+  # ----------------------------------------------------------------------------
+  spark-master:
+    image: apache/spark:3.5.1
+    container_name: cse412-spark-master
+    networks:
+      - cse412-net
+    ports:
+      - "7077:7077"
+      - "8085:8080"
+    environment:
+      SPARK_MODE: master
+      SPARK_LOCAL_IP: 0.0.0.0
+      SPARK_MASTER_HOST: 0.0.0.0
+      SPARK_DAEMON_MEMORY: 256m
+    command: ["/opt/spark/bin/spark-class", "org.apache.spark.deploy.master.Master", "--ip", "0.0.0.0", "--port", "7077", "--webui-port", "8080"]
+    deploy:
+      resources:
+        limits:
+          memory: 384M
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/ || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+  # ----------------------------------------------------------------------------
+  # 7. Apache Spark 3.5.1 (Worker 1)
+  # ----------------------------------------------------------------------------
+  spark-worker-1:
+    image: apache/spark:3.5.1
+    container_name: cse412-spark-worker-1
+    networks:
+      - cse412-net
+    ports:
+      - "8081:8081"
+    environment:
+      SPARK_MODE: worker
+      SPARK_LOCAL_IP: 0.0.0.0
+      SPARK_MASTER_URL: spark://spark-master:7077
+      SPARK_WORKER_MEMORY: 512m
+      SPARK_WORKER_CORES: 2
+      SPARK_DAEMON_MEMORY: 256m
+    depends_on:
+      spark-master:
+        condition: service_healthy
+    command: ["/opt/spark/bin/spark-class", "org.apache.spark.deploy.worker.Worker", "spark://spark-master:7077", "--webui-port", "8081"]
+    deploy:
+      resources:
+        limits:
+          memory: 640M
+
+  # Optional second worker for Full Profile
+  spark-worker-2:
+    profiles: ["full"]
+    image: apache/spark:3.5.1
+    container_name: cse412-spark-worker-2
+    networks:
+      - cse412-net
+    ports:
+      - "8082:8081"
+    environment:
+      SPARK_MODE: worker
+      SPARK_LOCAL_IP: 0.0.0.0
+      SPARK_MASTER_URL: spark://spark-master:7077
+      SPARK_WORKER_MEMORY: 512m
+      SPARK_WORKER_CORES: 2
+      SPARK_DAEMON_MEMORY: 256m
+    depends_on:
+      spark-master:
+        condition: service_healthy
+    command: ["/opt/spark/bin/spark-class", "org.apache.spark.deploy.worker.Worker", "spark://spark-master:7077", "--webui-port", "8081"]
+    deploy:
+      resources:
+        limits:
+          memory: 640M
+
+networks:
+  cse412-net:
+    name: cse412-net
+    driver: bridge
+
+volumes:
+  namenode_data:
+    name: cse412_namenode_data
+  datanode_data:
+    name: cse412_datanode_data
+  datanode2_data:
+    name: cse412_datanode2_data

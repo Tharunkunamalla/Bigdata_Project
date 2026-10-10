@@ -1,0 +1,41 @@
+# Python & Virtual Environments
+.venv/
+venv/
+ENV/
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+
+# Node & Frontend
+node_modules/
+frontend/dist/
+frontend/.vite/
+.npm/
+
+# Big Data Storage & Intermediate Data
+data/raw/*
+!data/raw/.gitkeep
+data/interim/*
+!data/interim/.gitkeep
+data/curated/*
+!data/curated/.gitkeep
+checkpoint/
+checkpoints/
+metastore_db/
+derby.log
+warehouse/
+
+# Docker & Logs
+docker/volumes/
+*.log
+*.pid
+
+# IDE & OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
