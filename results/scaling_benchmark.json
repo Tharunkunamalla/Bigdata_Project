@@ -1,0 +1,26 @@
+{
+  "10000": {
+    "rows": 10000,
+    "pandas_time_sec": 0.0454,
+    "pandas_peak_ram_mb": 0.84,
+    "spark_time_sec": 11.5009
+  },
+  "50000": {
+    "rows": 50000,
+    "pandas_time_sec": 0.0366,
+    "pandas_peak_ram_mb": 3.79,
+    "spark_time_sec": 4.0144
+  },
+  "100000": {
+    "rows": 100000,
+    "pandas_time_sec": 0.0383,
+    "pandas_peak_ram_mb": 7.57,
+    "spark_time_sec": 6.0074
+  },
+  "250000": {
+    "rows": 250000,
+    "pandas_time_sec": 0.0681,
+    "pandas_peak_ram_mb": 21.92,
+    "spark_time_sec": 11.37
+  }
+}

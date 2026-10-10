@@ -1,0 +1,65 @@
+{
+  "analysis_name": "Sybil Coordination Graph Analysis",
+  "total_vertices": 50072,
+  "total_coordination_edges": 331466,
+  "top_amplification_hubs": [
+    {
+      "user_id": "bot_user_0_002",
+      "amplification_degree": 16347
+    },
+    {
+      "user_id": "bot_user_0_003",
+      "amplification_degree": 16304
+    },
+    {
+      "user_id": "bot_user_10_017",
+      "amplification_degree": 15867
+    },
+    {
+      "user_id": "bot_user_0_007",
+      "amplification_degree": 15266
+    },
+    {
+      "user_id": "bot_user_0_008",
+      "amplification_degree": 15090
+    },
+    {
+      "user_id": "bot_user_0_015",
+      "amplification_degree": 14794
+    },
+    {
+      "user_id": "bot_user_11_001",
+      "amplification_degree": 14781
+    },
+    {
+      "user_id": "bot_user_10_006",
+      "amplification_degree": 14754
+    },
+    {
+      "user_id": "bot_user_1_011",
+      "amplification_degree": 14620
+    },
+    {
+      "user_id": "bot_user_0_011",
+      "amplification_degree": 14320
+    }
+  ],
+  "cluster_comparison": [
+    {
+      "cluster_type": "Organic Citizens",
+      "user_count": 46732,
+      "avg_retweet_volume": 14.5,
+      "avg_account_age_days": 2341.4,
+      "avg_follower_count": 7509.1
+    },
+    {
+      "cluster_type": "Synthetic Bot Sybils",
+      "user_count": 3340,
+      "avg_retweet_volume": 297.2,
+      "avg_account_age_days": 103.5,
+      "avg_follower_count": 222.2
+    }
+  ],
+  "execution_time_seconds": 34.39,
+  "timestamp": 1791638419.6422617
+}
