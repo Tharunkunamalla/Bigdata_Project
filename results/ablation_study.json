@@ -1,0 +1,36 @@
+{
+  "Blind_Greedy": {
+    "avg_wasted_dispatch_pct": 26.54,
+    "std_wasted_dispatch_pct": 7.82,
+    "avg_genuine_victims_served": 38.2,
+    "std_genuine_victims_served": 4.1,
+    "avg_wasted_units": 13.8
+  },
+  "TrustAware_Greedy": {
+    "avg_wasted_dispatch_pct": 0.77,
+    "std_wasted_dispatch_pct": 0.94,
+    "avg_genuine_victims_served": 51.6,
+    "std_genuine_victims_served": 0.5,
+    "avg_wasted_units": 0.4
+  },
+  "Blind_MILP": {
+    "avg_wasted_dispatch_pct": 28.46,
+    "std_wasted_dispatch_pct": 7.23,
+    "avg_genuine_victims_served": 37.2,
+    "std_genuine_victims_served": 3.8,
+    "avg_wasted_units": 14.8
+  },
+  "TrustAware_MILP": {
+    "avg_wasted_dispatch_pct": 0.77,
+    "std_wasted_dispatch_pct": 0.94,
+    "avg_genuine_victims_served": 51.6,
+    "std_genuine_victims_served": 0.5,
+    "avg_wasted_units": 0.4
+  },
+  "comparative_findings": {
+    "waste_reduction_percentage": 97.29,
+    "genuine_reach_increase_percentage": 38.71,
+    "num_trials": 5,
+    "total_depot_fleet": 52
+  }
+}
