@@ -1,0 +1,119 @@
+{
+  "a1_provenance": {
+    "disaster_posts_raw.csv": {
+      "exists": true,
+      "size_bytes": 18656444,
+      "size_mb": 17.79,
+      "sha256": "7a0060033111af4402ec3a9f785c8b55dd3c184be20955f620f5db7bf0fbdbb1",
+      "row_count": 60000,
+      "provenance_distribution": {
+        "humaid_real": 48146,
+        "synthetic_generator": 11854
+      },
+      "is_synthetic_distribution": {
+        "0": 48146,
+        "1": 11854
+      }
+    },
+    "disaster_posts_raw.json": {
+      "exists": true,
+      "size_bytes": 46299879,
+      "size_mb": 44.16,
+      "sha256": "8c40804562c719ca33159605d5236dc99ecbef397aeda6f9484388b88464b6c6",
+      "row_count": 60000
+    }
+  },
+  "a2_metric_sanity": {
+    "exact_overlap_count": 0,
+    "train_unique_texts": 238,
+    "test_unique_texts": 198,
+    "burstiness_synthetic_mean": 0.2798,
+    "burstiness_human_mean": 0.6808,
+    "auc_stylometrics_only": 1.0,
+    "acc_stylometrics_only": 1.0,
+    "auc_text_only": 0.9411,
+    "acc_text_only": 0.8924,
+    "auc_shuffled_label_control": 0.5989,
+    "auc_combined": 1.0,
+    "acc_combined": 1.0,
+    "top_synthetic_tokens": [
+      "tap",
+      "private",
+      "snakes",
+      "dam",
+      "intentionally",
+      "poisoned",
+      "deliberately",
+      "camps",
+      "bacteria",
+      "cholera"
+    ],
+    "top_human_tokens": [
+      "near",
+      "need",
+      "water",
+      "woman",
+      "pregnant",
+      "higher",
+      "power",
+      "danger",
+      "dry",
+      "hours"
+    ],
+    "category_deterministic_with_text": 1.0
+  },
+  "a3_tool_integration": {
+    "kafka_status": "FAIL",
+    "kafka_error": "NoBrokersAvailable",
+    "streaming_uses_readStream": true,
+    "streaming_subscribes_kafka": true,
+    "hive_metastore_port_9083": false,
+    "hiveserver2_port_10000": false,
+    "graph_uses_graphx_or_graphframes": false,
+    "backend_stream_reads_file": true
+  },
+  "a4_fault_tolerance": {
+    "test_name": "Spark Structured Streaming Checkpoint Fault Recovery",
+    "pre_crash_records": 200,
+    "post_recovery_records": 0,
+    "total_records_processed": 200,
+    "target_records": 200,
+    "recovery_successful": true,
+    "data_loss_detected": false,
+    "timestamp": 1791630360.5635135
+  },
+  "a5_scaling": {
+    "10000": {
+      "rows": 10000,
+      "pandas_time_sec": 0.0454,
+      "pandas_peak_ram_mb": 0.84,
+      "spark_time_sec": 11.5009
+    },
+    "50000": {
+      "rows": 50000,
+      "pandas_time_sec": 0.0366,
+      "pandas_peak_ram_mb": 3.79,
+      "spark_time_sec": 4.0144
+    },
+    "100000": {
+      "rows": 100000,
+      "pandas_time_sec": 0.0383,
+      "pandas_peak_ram_mb": 7.57,
+      "spark_time_sec": 6.0074
+    },
+    "250000": {
+      "rows": 250000,
+      "pandas_time_sec": 0.0681,
+      "pandas_peak_ram_mb": 21.92,
+      "spark_time_sec": 11.37
+    }
+  },
+  "a6_ablation": {
+    "uses_simulated_beta_distribution": true,
+    "single_event_only": true
+  },
+  "a7_reproducibility": {
+    "workspace_path": "C:\\Users\\HP\\OneDrive\\Desktop\\bigdata project",
+    "inside_onedrive": true
+  }
+}
