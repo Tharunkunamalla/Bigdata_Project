@@ -12,10 +12,10 @@
 CrisisGuard AI operates on **128,860 curated disaster and verification records** compiled from open academic benchmarks, professional journalistic fact-checking archives, and live government feeds. 
 
 ### 1.1 Data Realism & Fabrication Transparency Declaration
-- **Authentic Records (97.69%):** 125,886 records are authentic human posts, open QA benchmarks, and multi-generator benchmark texts from QCRI HumAID, CrisisLexT26, Hello-SimpleAI HC3, MAGE Benchmark, PHEME Rumour Dataset, and LIAR.
-- **Generated Adversarial Hoaxes (2.31%):** Exactly **2,974 records** are generated emergency distress hoaxes:
-  - **Generator A (1,500 records in Train only):** In-domain disaster hoaxes mimicking urgent hazard collapses (dam breaches, chemical plumes, levee failures).
-  - **Generator B (1,474 records in Held-Out Test only):** In-domain disaster hoaxes with **completely disjoint vocabulary** (hospital fires, seismic fault ruptures, municipal water reservoir poisoning).
+- **Authentic Records (97.85%):** 126,091 records are authentic human posts, open QA benchmarks, and multi-generator benchmark texts from QCRI HumAID, CrisisLexT26, Hello-SimpleAI HC3, MAGE Benchmark, PHEME Rumour Dataset, and LIAR.
+- **Generated Adversarial Hoaxes (2.15%):** Exactly **2,769 unique records** (from 3,000 raw generated instances) are synthetic emergency distress hoaxes:
+  - **Generator A (1,295 unique records in Train only):** In-domain disaster hoaxes mimicking urgent hazard collapses (dam breaches, chemical plumes, levee failures).
+  - **Generator B (1,474 unique records in Held-Out Test only):** In-domain disaster hoaxes with **completely disjoint vocabulary** (hospital fires, seismic fault ruptures, municipal water reservoir poisoning).
   - *Technical Necessity:* Because authentic historical disaster tweets do not contain coordinated LLM-generated emergency dispatch attacks, synthetic hoaxes are strictly necessary to evaluate the system under adversarial conditions.
 - **Geographic Coordinates (Simulated for Social Media Posts):** Because public disaster datasets (QCRI HumAID, CrisisLex, PHEME) strip exact GPS coordinates to protect citizen privacy in accordance with Twitter/X developer terms, **latitude and longitude coordinates for social posts are assigned from regional disaster bounding boxes (simulated)**. In contrast, **emergency dispatch depot locations are 100% authentic physical facilities** retrieved via the OpenStreetMap (OSM) Overpass API.
 
@@ -27,9 +27,9 @@ All external and raw corpora are registered in `data/raw/dataset_provenance_mani
 
 | Dataset Name | Source Organization | Raw Format & Local File | Size (MB) | Rows | Status | Primary Purpose in CrisisGuard | License |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| **QCRI HumAID** | Qatar Computing Research Institute (QCRI) | Compressed Tarball (`crisis_datasets_benchmarks_v1.0.tar.gz`) | 124.13 MB | 87,536 | **USED** | Core training & held-out test splits for humanitarian categorizer & genuine disaster baseline | CC BY 4.0 |
+| **QCRI HumAID** | Qatar Computing Research Institute (QCRI) | Compressed Tarball (`crisis_datasets_benchmarks_v1.0.tar.gz`) | 124.13 MB | 87,536 | **USED** | Core training & test splits for humanitarian categorizer & genuine disaster baseline | CC BY 4.0 |
 | **CrisisLexT26** | Olteanu et al. (EPFL / QCRI) | CSV (`real_disaster_tweets.csv`) | 0.94 MB | 7,565 | **USED** | Disaster informativeness and verified hazard updates vs casual chatter for rumour classifier | CC BY-NC 4.0 |
-| **Hello-SimpleAI HC3** | Hello-SimpleAI Research Group | JSON Lines (`hc3_open_qa.jsonl`) | 2.78 MB | 2,364 | **USED** | Baseline AI text detection and cross-domain transfer collapse evaluation | CC BY-SA 4.0 |
+| **Hello-SimpleAI HC3** | Hello-SimpleAI Research Group | JSON Lines (`hc3_open_qa.jsonl`) | 2.78 MB | 2,364 | **USED** | Baseline AI text detection and cross-domain transfer evaluation | CC BY-SA 4.0 |
 | **MAGE Benchmark** | ACL 2023 (Li et al.) | CSV (`mage_test.csv` & `mage_curated_eval.csv`) | 68.42 MB | 11,562 | **USED** | Multi-generator machine text evaluation across GPT-4, LLaMA, OPT, and Claude | Open Academic |
 | **PHEME Rumour Dataset** | Figshare / EU PHEME Project | Compressed Tarball (`PHEME_veracity.tar.bz2`) | 44.37 MB | 6,424 | **USED** | Ground-truth rumour posts across breaking crisis news events for rumour classifier | CC BY 4.0 |
 | **LIAR Benchmark** | PolitiFact / Wang et al. | CSV (`liar_statements.csv`) | 2.73 MB | 10,435 | **USED** | Fact-checked real-world misinformation statements for rumour & hoax classifier | CC BY-SA 4.0 |
@@ -37,9 +37,9 @@ All external and raw corpora are registered in `data/raw/dataset_provenance_mani
 | **OpenFEMA Declarations** | Federal Emergency Management Agency | JSON (`openfema_disasters.json`) | 0.42 MB | 500 | **USED** | Federal disaster declaration validation for simulation scenario profiles and county FIPS | US Public Domain |
 | **USGS Real-Time Earthquakes** | USGS Hazards Program | GeoJSON (`live_usgs_earthquakes.json`) | 0.16 MB | 235 | **USED** | Real-time seismic telemetry and epicenter coordinates for live alert streaming simulation | US Public Domain |
 | **NOAA NWS Active Alerts** | National Weather Service | JSON (`live_nws_alerts.json`) | 0.96 MB | 232 | **USED** | Active emergency flood and hurricane weather warnings for live streaming simulation | US Public Domain |
-| **WELFake / ISOT News** | Zenodo / University of Victoria | CSV (`fake_news/welfake.csv`) | 0.00 MB | 0 | **DOWNLOADED-NOT-USED** | Excluded from short-format disaster streaming pipeline due to long-form political article format (>2,500 words) | Academic Research |
+| **WELFake Sample** | Zenodo / University of Victoria | CSV (`welfake_sample.csv`) | 0.04 MB | 100 | **DOWNLOADED-NOT-USED** | **A 100-row sample that is not used.** Downloaded as an auxiliary sanity archive; not included in training or evaluation pipelines. | Academic Research |
 
-### 1.2 Cryptographic SHA256 Checksums
+### 2.1 Cryptographic SHA256 Checksums
 - `crisis_datasets_benchmarks_v1.0.tar.gz`: `a2034fa012ca6717a66b965f70b7413d7122bdf559981881bfae6f4ce315e19d`
 - `real_disaster_tweets.csv`: `61111c6dc31e679a6baadcfbe6d2b37805177a4a2ec3b6ccbfd9d8b7bdfd7aa8`
 - `hc3_open_qa.jsonl`: `4d968e1e1473fa0ca3ea318c4e470878193850aa06c74fb9f82662c1613eb5db`
@@ -48,48 +48,45 @@ All external and raw corpora are registered in `data/raw/dataset_provenance_mani
 - `liar_statements.csv`: `5e161de96137ce5288be8c42ec7828135832a8e83313ffc3d9a7bb296a22da41`
 - `osm_emergency_depots.json`: `38a979e8ce3edbb2ea2d6ecbc324a3aa8f60fe9d9d249f390d40e1b6ecbc2e48`
 - `openfema_disasters.json`: `bd2f5c2b2e0fe983c261e403d65b16e4fe51a2e88a03f47e30773b06cf72a500`
+- `welfake_sample.csv`: `e5bc41eb8e86fa7f07e5b30ec028a2b53eb977056635df01934989679fe26673`
 
 ---
 
-## 3. Stratified Train / Test Partitioning (Source-by-Source Breakdown)
+## 3. Stratified Train / Test Partitioning & Data Ingestion Funnel
 
-To prevent subtle vocabulary and entity memorization, we enforce **strict event-based stratification**:
+To maintain strict empirical honesty, the dataset partition is formally designated as a **75/25 Random Stratified Split** (stratified across dataset source, `is_synthetic`, and `is_hoax` with seed 42). Disaster events and categories are balanced proportionally across both partitions to maintain regional and operational coverage, rather than claiming an event-held-out split. **Adversarial hoaxes remain strictly isolated**: Generator A (1,295 unique records) is 100% in Train, while Generator B (1,474 unique records with completely disjoint vocabulary) is 100% in Test.
 
 ```
                        128,860 Curated Disaster Records
                                        │
         ┌──────────────────────────────┴──────────────────────────────┐
         ▼                                                             ▼
-   Train Partition (74.6%)                                       Test Partition (25.4%)
-   - Rows: 96,143                                                - Rows: 32,717
-   - Events: Hurricane Harvey, Irma,                             - Events: Nepal Earthquake (2015),
-             Maria, Florence, Kerala Floods,                               Philippines Typhoon Hagupit (2014),
-             Cyclone Idai, Cyclone Fani, etc.                              Alberta Floods (2013),
-   - Generator A (In-Domain Hoaxes)                                        California Wildfires holdout
-                                                                 - Generator B (Unseen Vocab Hoaxes)
+   Train Partition (74.39%)                                      Test Partition (25.61%)
+   - Rows: 95,862                                                - Rows: 32,998
+   - Balanced across all 6 real sources                          - Balanced across all 6 real sources
+   - Generator A (In-Domain Hoaxes: 1,295)                       - Generator B (Disjoint Vocab Hoaxes: 1,474)
 ```
 
-### 3.1 Exact Source-by-Source Accounting Table
-The table below accounts for every single row in the corpus:
+### 3.1 End-to-End Data Funnel Table (Per Source)
+The table below traces every source from raw ingestion on disk through text cleaning, within-source deduplication, cross-source deduplication, and final partition allocation:
 
-| Source Dataset | Train Split Rows | Held-Out Test Split Rows | Total Rows | Partition Method | Notes |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **QCRI HumAID** | 65,932 | 21,604 | 87,536 | Event-Stratified Holdout | 5 major events held out entirely in test |
-| **CrisisLexT26** | 5,674 | 1,891 | 7,565 | 75/25 Stratified Split | Balanced informativeness distribution |
-| **Hello-SimpleAI HC3** | 1,773 | 591 | 2,364 | 75/25 Stratified Split | ChatGPT QA vs Human QA |
-| **MAGE Benchmark** | 8,671 | 2,891 | 11,562 | 75/25 Stratified Split | Multi-LLM synthetic benchmark (GPT-4, LLaMA, OPT) |
-| **PHEME Rumour Dataset** | 4,818 | 1,606 | 6,424 | 75/25 Stratified Split | Breaking news rumour cascades |
-| **LIAR Benchmark** | 7,775 | 2,660 | 10,435 | 75/25 Stratified Split | PolitiFact fact-checked statements |
-| **Hoax Generator A** | 1,500 | 0 | 1,500 | Train Only | Vocabulary A: dam breach, levee collapse, chemical plume |
-| **Hoax Generator B** | 0 | 1,474 | 1,474 | Held-Out Test Only | Vocabulary B: hospital fire, seismic rupture, water poisoning |
-| **TOTAL** | **96,143** | **32,717** | **128,860** | **Strict Event Split** | **Exact sum: 96,143 + 32,717 = 128,860** |
+| Source Dataset | Raw Rows Ingested | After Text Cleaning | Within-Source Dedup | Retained in Corpus | Final Train Rows | Final Test Rows | Status & Isolation |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **QCRI HumAID** | 87,557 | 87,536 | 87,536 | 87,536 | 65,652 | 21,884 | Stratified 75/25 |
+| **CrisisLexT26** | 7,613 | 7,565 | 6,904 | 6,904 | 5,178 | 1,726 | Stratified 75/25 |
+| **Hello-SimpleAI HC3** | 2,374 | 2,364 | 2,348 | 2,348 | 1,761 | 587 | Stratified 75/25 |
+| **PHEME Rumour Dataset** | 6,425 | 6,424 | 6,280 | 6,280 | 4,710 | 1,570 | Stratified 75/25 |
+| **LIAR Benchmark** | 11,507 | 11,484 | 11,466 | 11,466 | 8,599 | 2,867 | Stratified 75/25 |
+| **MAGE Benchmark** | 11,562 | 11,562 | 11,557 | 11,557 | 8,667 | 2,890 | Stratified 75/25 |
+| **Hoax Generator A** | 1,500 | 1,500 | 1,295 | 1,295 | 1,295 | 0 | Train Only (100%) |
+| **Hoax Generator B** | 1,500 | 1,500 | 1,474 | 1,474 | 0 | 1,474 | Test Only (100%) |
+| **TOTAL** | **130,038** | **129,935** | **128,860** | **128,860** | **95,862** | **32,998** | **Exact: 95,862 + 32,998 = 128,860** |
 
 ### 3.2 Zero-Leakage Audit
 - **Set-Intersection Test:** Evaluated directly in `test_train_test_split_leakage` (`tests/test_real_pipeline.py`):
   $$\text{Overlap} = \{ \text{Text}_{\text{train}} \} \cap \{ \text{Text}_{\text{test}} \} = \emptyset \quad (\mathbf{0 \text{ overlapping texts, } 0.00\% \text{ Leakage}})$$
-- **Case-Insensitive Normalization:** Text strings are lowercased and stripped of punctuation and URLs prior to collision hashing.
+- **Case-Insensitive Normalization:** Text strings are lowercased and stripped of whitespace and URLs prior to collision hashing.
 - **Disjoint Hoax Vocabularies:** Hoax Generator A and Hoax Generator B share zero hazard keywords or template phrases.
-
 ---
 
 ## 4. Origin and Meaning of Every Label

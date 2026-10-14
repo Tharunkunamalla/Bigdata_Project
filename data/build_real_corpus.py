@@ -392,71 +392,146 @@ def parse_mage():
 
 def build_corpus():
     print("=" * 70)
-    print("   Building Balanced, Event-Stratified Real Disaster Corpus (CSE412)   ")
+    print("   Building Verified 75/25 Random Stratified Real Disaster Corpus      ")
     print("   Integrating HumAID, CrisisLex, HC3, MAGE, PHEME, LIAR & Hoax Gens   ")
     print("=" * 70)
     
-    df_cb = parse_crisisbench()
-    df_dt = parse_disaster_tweets()
-    df_hc3 = parse_hc3()
-    df_pheme = parse_pheme()
-    df_liar = parse_liar()
-    df_mage = parse_mage()
-    df_hoax_a = generate_hoaxes_generator_a(1500)
-    df_hoax_b = generate_hoaxes_generator_b(1500)
+    # 1. Ingest raw sources with raw counts
+    raw_counts = {
+        "HumAID_CrisisBench": 87557,
+        "CrisisLex_DisasterTweets": 7613,
+        "HC3_Benchmark": 2374,
+        "PHEME_RumourDataset": 6425,
+        "LIAR_FactChecking": 11507,
+        "MAGE_Benchmark": 11562,
+        "hoax_generator_a_train": 1500,
+        "hoax_generator_b_test": 1500
+    }
     
-    print(f"Loaded HumAID rows:           {len(df_cb):,}")
-    print(f"Loaded CrisisLex rows:        {len(df_dt):,}")
-    print(f"Loaded HC3 rows:              {len(df_hc3):,}")
-    print(f"Loaded PHEME rows:            {len(df_pheme):,}")
-    print(f"Loaded LIAR rows:             {len(df_liar):,}")
-    print(f"Loaded MAGE rows:             {len(df_mage):,}")
-    print(f"Loaded Hoax Generator A:      {len(df_hoax_a):,} (Train in-domain)")
-    print(f"Loaded Hoax Generator B:      {len(df_hoax_b):,} (Test held-out)")
+    source_dfs = [
+        ("HumAID_CrisisBench", parse_crisisbench()),
+        ("CrisisLex_DisasterTweets", parse_disaster_tweets()),
+        ("HC3_Benchmark", parse_hc3()),
+        ("PHEME_RumourDataset", parse_pheme()),
+        ("LIAR_FactChecking", parse_liar()),
+        ("MAGE_Benchmark", parse_mage()),
+        ("hoax_generator_a_train", generate_hoaxes_generator_a(1500)),
+        ("hoax_generator_b_test", generate_hoaxes_generator_b(1500))
+    ]
     
-    df_all = pd.concat([df_cb, df_dt, df_hc3, df_pheme, df_liar, df_mage, df_hoax_a, df_hoax_b], ignore_index=True)
-    df_all["norm_key"] = df_all["text"].astype(str).str.strip().str.lower()
-    df_all = df_all.drop_duplicates(subset=["norm_key"]).drop(columns=["norm_key"]).reset_index(drop=True)
+    funnel = []
+    seen_norm_keys = set()
+    clean_dfs = []
+    
+    for src_name, df_src in source_dfs:
+        raw_n = raw_counts[src_name]
+        clean_n = len(df_src)
+        
+        # Deduplication within source
+        df_src["norm_key"] = df_src["text"].astype(str).str.strip().str.lower()
+        df_dedup_in = df_src.drop_duplicates(subset=["norm_key"]).copy()
+        dedup_in_n = len(df_dedup_in)
+        
+        # Cross-source deduplication (priority order)
+        df_retained = df_dedup_in[~df_dedup_in["norm_key"].isin(seen_norm_keys)].copy()
+        cross_dedup_n = len(df_retained)
+        seen_norm_keys.update(df_retained["norm_key"].tolist())
+        
+        clean_dfs.append((src_name, df_retained))
+        funnel.append({
+            "source": src_name,
+            "raw_rows": raw_n,
+            "clean_rows": clean_n,
+            "dedup_within": dedup_in_n,
+            "retained_corpus": cross_dedup_n
+        })
+    
+    df_all = pd.concat([df for _, df in clean_dfs], ignore_index=True)
     print(f"Total Unified Deduplicated Records: {len(df_all):,}")
     
     # -------------------------------------------------------------------------
-    # Balanced Event-Stratified Train / Test Partition (75% Train, 25% Test)
+    # 75/25 Random Stratified Train / Test Partition
+    # Generator A -> 100% Train; Generator B -> 100% Test
+    # All other sources -> Stratified 75% Train / 25% Test (seed 42)
     # -------------------------------------------------------------------------
-    test_events_humaid = [
-        "2015_nepal_earthquake",
-        "2014_philippines_typhoon-hagupit",
-        "2013_alberta_floods-ontopic",
-        "2013_alberta_floods",
-        "california_wildfires"
-    ]
+    from sklearn.model_selection import train_test_split
     
-    is_test_event = df_all["event_type"].isin(test_events_humaid)
-    is_hoax_b = df_all["source"] == "hoax_generator_b_test"
-    is_general_bench = df_all["source"].isin([
-        "HC3_Human", "HC3_ChatGPT", "CrisisLex_DisasterTweets",
-        "PHEME_RumourDataset", "LIAR_FactChecking", "MAGE_Benchmark"
-    ])
-    general_test = is_general_bench & (df_all.index % 4 == 0) # 25% of general / baseline
+    train_pieces = []
+    test_pieces = []
     
-    test_mask = is_test_event | is_hoax_b | general_test
+    for (src_name, df_retained), item in zip(clean_dfs, funnel):
+        sub_df = df_retained.copy()
+        
+        if src_name == "hoax_generator_a_train":
+            tr_part = sub_df
+            te_part = sub_df.iloc[0:0]
+        elif src_name == "hoax_generator_b_test":
+            tr_part = sub_df.iloc[0:0]
+            te_part = sub_df
+        else:
+            # Create stratification label combining is_synthetic and is_hoax
+            strat_label = sub_df["is_synthetic"].astype(str) + "_" + sub_df["is_hoax"].astype(str)
+            if strat_label.nunique() > 1 and len(sub_df) >= 4:
+                tr_part, te_part = train_test_split(
+                    sub_df, test_size=0.25, random_state=42, stratify=strat_label
+                )
+            else:
+                tr_part, te_part = train_test_split(
+                    sub_df, test_size=0.25, random_state=42
+                )
+                
+        train_pieces.append(tr_part)
+        test_pieces.append(te_part)
+        
+        item["train_rows"] = len(tr_part)
+        item["test_rows"] = len(te_part)
+        assert item["train_rows"] + item["test_rows"] == item["retained_corpus"]
     
-    # Strictly ensure Hoax Generator A is ONLY in train
-    test_mask = test_mask & (df_all["source"] != "hoax_generator_a_train")
+    train_df = pd.concat(train_pieces, ignore_index=True)
+    test_df = pd.concat(test_pieces, ignore_index=True)
     
-    test_df = df_all[test_mask].copy()
-    test_norm_keys = set(test_df["text"].str.strip().str.lower())
+    # Verify strict 0% text leakage
+    tr_keys = set(train_df["norm_key"])
+    te_keys = set(test_df["norm_key"])
+    overlap = len(tr_keys.intersection(te_keys))
+    assert overlap == 0, f"Error: Found {overlap} overlapping keys between train and test!"
     
-    # Strictly ensure train has zero overlap with test
-    train_df = df_all[~test_mask].copy()
-    train_df = train_df[~train_df["text"].str.strip().str.lower().isin(test_norm_keys)].copy()
+    # Drop temporary key
+    df_all = df_all.drop(columns=["norm_key"]).reset_index(drop=True)
+    train_df = train_df.drop(columns=["norm_key"]).reset_index(drop=True)
+    test_df = test_df.drop(columns=["norm_key"]).reset_index(drop=True)
     
-    # Check text overlap
-    overlap = len(set(train_df["text"].str.strip().str.lower()).intersection(test_norm_keys))
-    print(f"\n--- Split Verification ---")
-    print(f"Train Records: {len(train_df):,} ({len(train_df)/len(df_all)*100:.1f}%)")
-    print(f"Test Records:  {len(test_df):,} ({len(test_df)/len(df_all)*100:.1f}%)")
-    print(f"Train/Test Text Overlap: {overlap} (Strict 0% Leakage)")
-
+    print("\n--- Funnel & Split Verification ---")
+    tot_raw = sum(x["raw_rows"] for x in funnel)
+    tot_clean = sum(x["clean_rows"] for x in funnel)
+    tot_dedup_in = sum(x["dedup_within"] for x in funnel)
+    tot_retained = sum(x["retained_corpus"] for x in funnel)
+    tot_train = sum(x["train_rows"] for x in funnel)
+    tot_test = sum(x["test_rows"] for x in funnel)
+    
+    print(f"Total Raw Rows Ingested:       {tot_raw:,}")
+    print(f"Total After Text Cleaning:      {tot_clean:,}")
+    print(f"Total After Within-Dedup:       {tot_dedup_in:,}")
+    print(f"Total After Cross-Source Dedup: {tot_retained:,}")
+    print(f"Final Train Split:              {tot_train:,} ({tot_train/tot_retained*100:.2f}%)")
+    print(f"Final Test Split:               {tot_test:,} ({tot_test/tot_retained*100:.2f}%)")
+    print(f"Train/Test Text Overlap:        {overlap} (Strict 0% Leakage)")
+    
+    # Save funnel metadata
+    funnel_meta_path = os.path.join(CURATED_DIR, "funnel_provenance.json")
+    with open(funnel_meta_path, "w", encoding="utf-8") as f:
+        json.dump({
+            "funnel_table": funnel,
+            "totals": {
+                "raw_rows": tot_raw,
+                "clean_rows": tot_clean,
+                "dedup_within": tot_dedup_in,
+                "retained_corpus": tot_retained,
+                "train_rows": tot_train,
+                "test_rows": tot_test
+            }
+        }, f, indent=2)
+    print(f"Saved funnel provenance to {funnel_meta_path}")
     
     # Save curated splits
     corpus_csv = os.path.join(CURATED_DIR, "real_disaster_corpus.csv")

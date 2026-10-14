@@ -97,12 +97,12 @@ def markdown_to_html(md_text):
 <style>
     @page {{
         size: letter;
-        margin: 18mm 18mm 18mm 18mm;
+        margin: 16mm 16mm 16mm 16mm;
     }}
     body {{
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-        font-size: 10.5pt;
-        line-height: 1.5;
+        font-size: 10pt;
+        line-height: 1.45;
         color: #1e293b;
         background: #ffffff;
         margin: 0;

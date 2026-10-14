@@ -278,9 +278,18 @@ def run_ablation_experiment(num_seeds=30, demands_per_seed=120):
     # Metrics container across regions
     regional_results = {}
     
-    # Calibration parameters derived from empirical PR-curve operating threshold
-    THETA_CALIB = 0.0069
-    SCALE_CALIB = 0.0050
+    # Calibration parameters derived from training validation split optimization
+    THETA_CALIB = 0.2704
+    SCALE_CALIB = 0.0500
+    metrics_path = os.path.join(RESULTS_DIR, "metrics.json")
+    if os.path.exists(metrics_path):
+        try:
+            with open(metrics_path, "r", encoding="utf-8") as f:
+                m_data = json.load(f)
+                THETA_CALIB = float(m_data["synthetic_detector"]["calibrated_threshold"]["threshold"])
+                print(f"Loaded validation-calibrated operating threshold theta* = {THETA_CALIB:.4f} from metrics.json")
+        except Exception as e:
+            print(f"Notice: Using default threshold ({e})")
 
     # 1. Main Comparative Trials (>= 30 Seeds) across all 4 regions
     for reg_key, reg_info in REGIONAL_DEPOTS.items():
