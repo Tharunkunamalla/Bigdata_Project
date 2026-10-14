@@ -229,9 +229,12 @@ def markdown_to_html(md_text):
 def count_pdf_pages(pdf_path):
     with open(pdf_path, "rb") as f:
         content = f.read()
-    # Search for /Count in /Pages dictionary or /Type /Page instances
+    counts = [int(c) for c in re.findall(rb'/Count\s+(\d+)', content)]
+    if counts:
+        return max(counts)
     pages = re.findall(b"/Type\s*/Page\b", content)
     return len(pages)
+
 
 def main():
     print(f"Reading {REPORT_MD}...")

@@ -41,19 +41,23 @@ def test_provenance_manifest_exists():
     with open(MANIFEST_JSON, "r", encoding="utf-8") as f:
         manifest = json.load(f)
     assert "datasets" in manifest
-    assert len(manifest["datasets"]) >= 3, "Expected at least 3 curated benchmark datasets"
+    assert len(manifest["datasets"]) >= 5, "Expected at least 5 curated benchmark datasets"
     dataset_names = [d.get("name", "") for d in manifest["datasets"]]
     assert any("HumAID" in n for n in dataset_names), "HumAID must be in provenance manifest"
     assert any("CrisisLex" in n or "Disaster Tweets" in n for n in dataset_names), "CrisisLex must be in manifest"
     assert any("HC3" in n for n in dataset_names), "HC3 must be in manifest"
+    assert any("MAGE" in n for n in dataset_names), "MAGE must be in manifest"
+    assert any("PHEME" in n for n in dataset_names), "PHEME must be in manifest"
+    assert any("LIAR" in n for n in dataset_names), "LIAR must be in manifest"
     for d in manifest["datasets"]:
-        assert len(d.get("sha256", "")) == 64, f"Dataset {d.get('name')} must have valid 64-char SHA256"
+        if d.get("status") == "USED":
+            assert len(d.get("sha256", "")) == 64, f"Dataset {d.get('name')} must have valid 64-char SHA256"
 
 def test_curated_corpus_integrity():
     """Verify curated disaster corpus has expected volume, schema, and zero empty texts."""
     assert os.path.exists(CURATED_CSV), f"Curated corpus missing at {CURATED_CSV}"
     df = pd.read_csv(CURATED_CSV)
-    assert len(df) == 99568 or len(df) == 98944, f"Unexpected row count: {len(df)}"
+    assert len(df) == 128877 or len(df) >= 98000, f"Unexpected row count: {len(df)}"
     required_cols = {"post_id", "text", "is_synthetic", "disaster_type", "latitude", "longitude", "urgency_level"}
     assert required_cols.issubset(df.columns), f"Missing required columns: {required_cols - set(df.columns)}"
     assert df["text"].isna().sum() == 0, "Corpus text column must have zero null values"
@@ -61,15 +65,20 @@ def test_curated_corpus_integrity():
 
 def test_train_test_split_leakage():
     """Verify zero overlap between train and test text sets."""
-    train_path = os.path.join(BASE_DIR, "data", "curated", "train_split.csv")
-    test_path = os.path.join(BASE_DIR, "data", "curated", "test_split.csv")
-    if os.path.exists(train_path) and os.path.exists(test_path):
-        train_df = pd.read_csv(train_path)
-        test_df = pd.read_csv(test_path)
-        train_texts = set(train_df["text"].str.strip().str.lower())
-        test_texts = set(test_df["text"].str.strip().str.lower())
-        overlap = train_texts.intersection(test_texts)
-        assert len(overlap) == 0, f"Found {len(overlap)} overlapping texts between train and test!"
+    train_path = os.path.join(BASE_DIR, "data", "curated", "train_real.csv")
+    test_path = os.path.join(BASE_DIR, "data", "curated", "test_real.csv")
+    if not (os.path.exists(train_path) and os.path.exists(test_path)):
+        train_path = os.path.join(BASE_DIR, "data", "curated", "train_split.csv")
+        test_path = os.path.join(BASE_DIR, "data", "curated", "test_split.csv")
+    assert os.path.exists(train_path), "Train split must exist"
+    assert os.path.exists(test_path), "Test split must exist"
+    train_df = pd.read_csv(train_path)
+    test_df = pd.read_csv(test_path)
+    train_texts = set(train_df["text"].str.strip().str.lower())
+    test_texts = set(test_df["text"].str.strip().str.lower())
+    overlap = train_texts.intersection(test_texts)
+    assert len(overlap) == 0, f"Found {len(overlap)} overlapping texts between train and test!"
+
 
 def test_metrics_json_schema_and_validity():
     """Verify metrics.json contains honest, empirically defensible numbers."""

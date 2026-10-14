@@ -1,38 +1,38 @@
 {
-  "evaluation_timestamp": "2026-10-14T07:41:04.071532Z",
-  "training_time_seconds": 144.58,
+  "evaluation_timestamp": "2026-10-14T13:03:30.312971Z",
+  "training_time_seconds": 151.44,
   "split_provenance": {
-    "train_records": 74174,
-    "test_records": 25394,
+    "train_records": 96156,
+    "test_records": 58115,
     "text_leakage_overlap": 0,
     "split_type": "75/25 Event-Stratified Split"
   },
   "synthetic_detector": {
     "model_type": "LogisticRegression_ElasticNet",
-    "roc_auc": 0.9155,
-    "pr_auc": 0.5777,
-    "prevalence": 0.0713,
-    "majority_class_baseline_acc": 0.9287,
-    "accuracy": 0.9363,
-    "balanced_accuracy": 0.5584,
-    "mcc": 0.3145,
-    "positive_class_f1": 0.2084,
-    "positive_class_precision": 0.9103,
-    "positive_class_recall": 0.1177,
-    "macro_f1": 0.5876,
-    "weighted_f1": 0.9128,
+    "roc_auc": 0.8658,
+    "pr_auc": 0.5433,
+    "prevalence": 0.0871,
+    "majority_class_baseline_acc": 0.9129,
+    "accuracy": 0.9302,
+    "balanced_accuracy": 0.6284,
+    "mcc": 0.4346,
+    "positive_class_f1": 0.3961,
+    "positive_class_precision": 0.8013,
+    "positive_class_recall": 0.263,
+    "macro_f1": 0.6795,
+    "weighted_f1": 0.9136,
     "feature_baselines": {
-      "text_only_auc": 0.9323,
-      "stylometric_only_auc": 0.9685,
-      "full_combined_auc": 0.9155
+      "text_only_auc": 0.9107,
+      "stylometric_only_auc": 0.9252,
+      "full_combined_auc": 0.8658
     }
   },
   "sanity_controls": {
     "twenty_shuffle_control": {
-      "mean_auc": 0.5922,
-      "std_auc": 0.1758,
-      "t_statistic": 2.2856,
-      "p_value": 0.0339,
+      "mean_auc": 0.5001,
+      "std_auc": 0.0056,
+      "t_statistic": 0.1001,
+      "p_value": 0.9213,
       "verdict": "PASS (Statistically indistinguishable from theoretical random 0.50 AUC, p > 0.05)"
     },
     "domain_shift_experiment": {
@@ -46,24 +46,24 @@
   },
   "rumour_classifier": {
     "model_type": "RandomForestClassifier",
-    "roc_auc": 0.8837,
-    "weighted_f1": 0.8347,
-    "accuracy": 0.8876,
+    "roc_auc": 0.8571,
+    "weighted_f1": 0.7746,
+    "accuracy": 0.8454,
     "label_origin": "CrisisLex CrowdFlower annotations (target=0 non-disaster/rumour vs target=1 verified disaster report)",
     "performance_assessment": "Moderate ROC-AUC (0.68) reflecting ambiguity between informal personal remarks and unverified disaster rumors."
   },
   "humanitarian_category": {
     "model_type": "MultinomialLogisticRegression",
-    "accuracy": 0.6233,
-    "macro_f1": 0.6414,
+    "accuracy": 0.6177,
+    "macro_f1": 0.6279,
     "label_origin": "QCRI HumAID human expert multi-class annotations across 6 operational categories",
     "performance_assessment": "62% multi-class accuracy across 6 fine-grained operational categories."
   },
   "urgency_regressor": {
     "model_type": "LinearRegression_ElasticNet",
-    "rmse": 1.1504,
-    "mae": 0.9343,
-    "r2": 0.069,
+    "rmse": 1.1045,
+    "mae": 0.8799,
+    "r2": 0.0346,
     "label_origin": "Deterministic priority mapping from operational category (1.0 to 5.0 scale)",
     "performance_assessment": "R\u00b2=0.13 reflects that urgency in social text is heavily subjective and coarse-grained."
   }

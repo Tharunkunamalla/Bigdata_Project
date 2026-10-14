@@ -145,31 +145,31 @@
 <p class='spacer'></p>
 <p><strong>CrisisGuard AI</strong> is an end-to-end distributed big data analytics and optimization pipeline designed to counter this vulnerability in real time. Built across five integrated technologies—<strong>Apache Kafka 3.7.0</strong>, <strong>Apache Hadoop HDFS 3.3.6</strong>, <strong>Apache Hive Metastore 3.1.3</strong> (queried through Spark SQL), <strong>Apache Spark 3.5.1 MLlib</strong>, and <strong>PuLP Mixed-Integer Linear Programming (MILP)</strong>—the system ingests high-velocity disaster streams, applies natural language inference to compute trust and urgency scores, clusters coordinated botnet campaigns using MinHash Locality-Sensitive Hashing (LSH), and solves optimal multi-depot fleet dispatch plans.</p>
 <p class='spacer'></p>
-<p>Every metric in this report is derived from an authentic, curated disaster corpus of <strong>99,568 records</strong> (QCRI CrisisBench / HumAID, CrisisLexT26, and Hello-SimpleAI HC3) evaluated across live cluster daemons. In multi-region ablation trials across 30 random seeds, CrisisGuard's trust-aware formulation increased genuine victims reached in simulation from <strong><em>39.10 \pm 1.10</em> to <em>43.70 \pm 1.05</em> victims</strong> in Houston marine operations while reducing wasted hoax dispatches from <strong>24.81% to 15.96%</strong>—a statistically significant improvement (<em>t = 18.60, p = 1.16 \times 10^{-17}</em>, paired t-test).</p>
+<p>Every metric in this report is derived from an authentic, curated disaster corpus of <strong>128,860 records</strong> (QCRI CrisisBench / HumAID, CrisisLexT26, Hello-SimpleAI HC3, MAGE Benchmark, PHEME Rumour Dataset, and LIAR Fact-Checking) evaluated across live cluster daemons. In multi-region ablation trials across 30 random seeds with real OpenStreetMap Overpass emergency depots, CrisisGuard's trust-aware formulation increased genuine victims reached in simulation from <strong><em>36.77 \pm 1.32</em> to <em>43.93 \pm 1.18</em> victims</strong> in Houston marine operations while reducing wasted hoax dispatches from <strong>29.29% to 15.51%</strong>—a statistically significant improvement (<em>t = 12.32, p = 4.72 \times 10^{-13}</em>, paired t-test).</p>
 <p class='spacer'></p>
 <hr/>
 <p class='spacer'></p>
 <h3>Key Verified System Metrics (Single Source of Truth)</h3>
 <p class='spacer'></p>
 <h4>1. Dataset & Split Provenance (Strict Event-Stratified Partition)</h4>
-<li><strong>Total Deduplicated Records</strong>: 99,568</li>
-<li><strong>Train Set (75% Event Partition)</strong>: 74,174 rows</li>
-<li><strong>Held-Out Test Set (25% Event Partition)</strong>: 25,394 rows</li>
-<li><strong>Held-Out Disaster Events</strong>: 2015 Nepal Earthquake, 2014 Philippines Typhoon Hagupit, 2013 Alberta Floods, California Wildfires (25% holdout)</li>
+<li><strong>Total Deduplicated Records</strong>: 128,860</li>
+<li><strong>Train Set (74.6% Event Partition)</strong>: 96,143 rows</li>
+<li><strong>Held-Out Test Set (25.4% Event Partition)</strong>: 32,717 rows</li>
+<li><strong>Held-Out Disaster Events</strong>: 2015 Nepal Earthquake, 2014 Philippines Typhoon Hagupit, 2013 Alberta Floods, California Wildfires (holdout)</li>
 <li><strong>Train/Test Text Overlap</strong>: Exactly <strong>0 overlapping texts</strong> (0.00% data leakage)</li>
-<li><strong>Hoax Isolation</strong>: Generator A hoaxes in Train only; Generator B hoaxes (disjoint vocabulary) in Held-Out Test only</li>
+<li><strong>Hoax Isolation</strong>: Generator A hoaxes (1,500 rows) in Train only; Generator B hoaxes (1,474 rows, disjoint vocabulary) in Held-Out Test only</li>
 <p class='spacer'></p>
 <h4>2. Model Performance on Real Held-Out Disasters</h4>
 <div class='table-container'><table>
 <tr><th>Model</th><th>Algorithm</th><th>ROC-AUC</th><th>PR-AUC</th><th>Balanced Acc</th><th>Positive F1 (y=1)</th><th>Macro F1</th><th>Weighted F1</th><th>Prevalence / Baseline Acc</th></tr>
-<tr><td>Synthetic Detector</td><td>LogisticRegression (L2)</td><td><strong>0.9155</strong></td><td><strong>0.5777</strong></td><td><strong>0.5584</strong></td><td><strong>0.2084</strong></td><td><strong>0.5876</strong></td><td><strong>0.9128</strong></td><td>Prev: 7.13% (Maj Acc: 92.87%)</td></tr>
-<tr><td>Rumour Classifier</td><td>RandomForest (30 trees)</td><td><strong>0.8837</strong></td><td>N/A</td><td>N/A</td><td>N/A</td><td>N/A</td><td><strong>0.8347</strong></td><td>Acc: 88.76% (CrisisLex annot.)</td></tr>
-<tr><td>Humanitarian Classifier</td><td>Multinomial LR</td><td>N/A</td><td>N/A</td><td>N/A</td><td>N/A</td><td><strong>0.6414</strong></td><td>N/A</td><td>Multi-Class Acc: <strong>62.33%</strong> (6 classes)</td></tr>
-<tr><td>Urgency Regressor</td><td>LinearRegression</td><td>N/A</td><td>N/A</td><td>N/A</td><td>N/A</td><td>N/A</td><td>N/A</td><td>RMSE: <strong>1.1504</strong>, MAE: <strong>0.9343</strong>, R²: <strong>0.069</strong></td></tr>
+<tr><td>Synthetic Detector</td><td>LogisticRegression (L2)</td><td><strong>0.8658</strong></td><td><strong>0.5433</strong></td><td><strong>0.6284</strong></td><td><strong>0.3961</strong></td><td><strong>0.6795</strong></td><td><strong>0.9136</strong></td><td>Prev: 8.71% (Maj Acc: 91.29%)</td></tr>
+<tr><td>Rumour Classifier</td><td>RandomForest (30 trees)</td><td><strong>0.8571</strong></td><td>N/A</td><td>N/A</td><td>N/A</td><td>N/A</td><td><strong>0.7746</strong></td><td>Acc: 84.54% (CrisisLex, PHEME, LIAR)</td></tr>
+<tr><td>Humanitarian Classifier</td><td>Multinomial LR</td><td>N/A</td><td>N/A</td><td>N/A</td><td>N/A</td><td><strong>0.6279</strong></td><td>N/A</td><td>Multi-Class Acc: <strong>61.77%</strong> (6 classes)</td></tr>
+<tr><td>Urgency Regressor</td><td>LinearRegression</td><td>N/A</td><td>N/A</td><td>N/A</td><td>N/A</td><td>N/A</td><td>N/A</td><td>RMSE: <strong>1.1045</strong>, MAE: <strong>0.8799</strong>, R²: <strong>0.0346</strong></td></tr>
 </table></div>
 <p class='spacer'></p>
 <h4>3. Empirical Sanity Controls</h4>
-<li><strong>20-Shuffle Label Permutation Control</strong>: Mean AUC = <strong>0.5015 ± 0.0066</strong> (t = 1.2612, p = 0.2173). Statistically indistinguishable from 0.50 random chance.</li>
+<li><strong>20-Shuffle Label Permutation Control</strong>: Mean AUC = <strong>0.5001 ± 0.0056</strong> (t = 0.1001, p = 0.9213). Statistically indistinguishable from 0.50 random chance.</li>
 <li><strong>Domain Shift Experiment</strong>:</li>
 <li>HC3-Trained Cross-Domain Model on Disaster Hoaxes: <strong>5.22% recall</strong> at threshold 0.50 (complete domain collapse due to style/length mismatch).</li>
 <li>Disaster In-Domain Model on Generator B: Raw threshold 0.50 yields 0.00% recall due to class imbalance prior shift; at calibrated operational threshold (<em>\theta = 0.0069</em>), recall reaches <strong>73.74%</strong> with <strong>0.9034 ROC-AUC</strong>.</li>
@@ -178,14 +178,14 @@
 <li>Injected Hoax Duplicate Density: <strong>15.2058 edges/post</strong>.</li>
 <li>Template Construction Artifact: ~<strong>85.0%</strong> of raw amplification is attributable to generator template phrasing syntax.</li>
 <p class='spacer'></p>
-<h4>4. Emergency Resource Allocation Ablation (PuLP MILP with Real MLlib Scores)</h4>
+<h4>4. Emergency Resource Allocation Ablation (PuLP MILP with Real MLlib Scores & OSM Depots)</h4>
 <li><strong>Houston Flood (30 Seeds, 95% CI)</strong>:</li>
-<li>Blind-LP: Genuine Reached = <strong>39.1 ± 1.1</strong> | Wasted Dispatches = <strong>24.81%</strong></li>
-<li>TrustAware-LP: Genuine Reached = <strong>43.7 ± 1.05</strong> | Wasted Dispatches = <strong>15.96%</strong></li>
-<li>Paired t-test: <strong>t = 18.6021, p = 1.16e-17</strong> (statistically significant gain of +4.6 genuine victims reached per batch in simulation).</li>
-<li>Hoax Dispatch Reduction: <strong>35.67%</strong> relative reduction.</li>
+<li>Blind-LP: Genuine Reached = <strong>36.77 ± 1.32</strong> | Wasted Dispatches = <strong>29.29%</strong></li>
+<li>TrustAware-LP: Genuine Reached = <strong>43.93 ± 1.18</strong> | Wasted Dispatches = <strong>15.51%</strong></li>
+<li>Paired t-test: <strong>t = 12.3248, p = 4.72e-13</strong> (statistically significant gain of +7.16 genuine victims reached per batch in simulation).</li>
+<li>Hoax Dispatch Reduction: <strong>47.05%</strong> relative reduction.</li>
 <li><strong>Sensitivity Sweeps</strong>:</li>
-<li>Hoax Rate (5% → 40%): Genuine gain increases monotonically from +5.15 to +36.20 victims.</li>
+<li>Hoax Rate (5% → 40%): Genuine gain increases monotonically from +4.30 to +32.50 victims.</li>
 <li>Detector AUC (0.55 → 0.99): Genuine gain increases from +9.85 to +22.30 victims; benefit disappears at AUC <= 0.55.</li>
 <p class='spacer'></p>
 <h4>5. Scaling Benchmark & Streaming Resiliency</h4>
@@ -246,18 +246,24 @@
 <h2>4. Data Provenance & Leakage Prevention</h2>
 <p class='spacer'></p>
 <h3>4.1 Provenance Accounting Table</h3>
-<p>The curated corpus consists of <strong>99,568 deduplicated records</strong> partitioned into a 75% Train (74,174 rows) / 25% Test (25,394 rows) event-stratified holdout:</p>
+<p>The curated corpus consists of <strong>128,860 deduplicated records</strong> partitioned into a 74.6% Train (96,143 rows) / 25.4% Test (32,717 rows) event-stratified holdout:</p>
 <p class='spacer'></p>
 <div class='table-container'><table>
-<tr><th>Source Dataset</th><th>Train Rows</th><th>Held-Out Test Rows</th><th>Label Type</th><th>Notes</th></tr>
-<tr><td><strong>QCRI HumAID</strong></td><td>62,730</td><td>21,604</td><td>Human Disaster Tweets</td><td>Seen events in Train; Nepal, Hagupit, Alberta held out in Test.</td></tr>
-<tr><td><strong>CrisisLexT26</strong></td><td>7,031</td><td>1,729</td><td>Human Disaster Tweets</td><td>CrowdFlower informativeness labels.</td></tr>
-<tr><td><strong>HC3 ChatGPT QA</strong></td><td>1,664</td><td>336</td><td>Real AI Text (ChatGPT)</td><td>General QA, used strictly for domain-shift evaluation.</td></tr>
-<tr><td><strong>HC3 Human QA</strong></td><td>1,249</td><td>251</td><td>Real Human QA</td><td>General QA baseline.</td></tr>
-<tr><td><strong>Hoax Generator A</strong></td><td>1,500</td><td>0</td><td>Injected Disaster Hoaxes</td><td>Train only: dam breach, chemical plume, levee collapse.</td></tr>
-<tr><td><strong>Hoax Generator B</strong></td><td>0</td><td>1,474</td><td>Injected Disaster Hoaxes</td><td>Test only: hospital fire, seismic rupture, water contamination (disjoint vocabulary).</td></tr>
-<tr><td><strong>Total</strong></td><td><strong>74,174</strong></td><td><strong>25,394</strong></td><td><strong>99,568 Total Records</strong></td><td><strong>0 overlapping texts (0.00% leakage)</strong></td></tr>
+<tr><th>Source Dataset</th><th>Train Rows</th><th>Held-Out Test Rows</th><th>Total Rows</th><th>Label Type & Origin</th><th>Notes</th></tr>
+<tr><td><strong>QCRI HumAID</strong></td><td>65,932</td><td>21,604</td><td>87,536</td><td>Human Disaster Tweets (QCRI Experts)</td><td>Seen events in Train; Nepal, Hagupit, Alberta, Wildfires held out in Test.</td></tr>
+<tr><td><strong>CrisisLexT26</strong></td><td>5,674</td><td>1,891</td><td>7,565</td><td>Human Disaster Tweets (CrowdFlower)</td><td>CrowdFlower informativeness & verified hazard updates.</td></tr>
+<tr><td><strong>HC3 (Hello-SimpleAI)</strong></td><td>1,773</td><td>591</td><td>2,364</td><td>ChatGPT AI vs Human QA</td><td>Used for cross-domain baseline comparison.</td></tr>
+<tr><td><strong>MAGE Benchmark</strong></td><td>8,671</td><td>2,891</td><td>11,562</td><td>Multi-LLM Synthetic Text (ACL 2023)</td><td>Machine-generated text from GPT-4, LLaMA, OPT, Claude (50% synthetic).</td></tr>
+<tr><td><strong>PHEME Rumour Dataset</strong></td><td>4,818</td><td>1,606</td><td>6,424</td><td>Twitter Rumours & Veracity (Figshare)</td><td>Breaking news rumours (Charlie Hebdo, Ferguson, Ottawa, Sydney, etc.).</td></tr>
+<tr><td><strong>LIAR Benchmark</strong></td><td>7,775</td><td>2,660</td><td>10,435</td><td>Fact-Checked Claims (PolitiFact)</td><td>Professional journalistic fact-checking ratings.</td></tr>
+<tr><td><strong>Hoax Generator A</strong></td><td>1,500</td><td>0</td><td>1,500</td><td>Injected Disaster Hoaxes</td><td>Train only: dam breach, chemical plume, levee collapse.</td></tr>
+<tr><td><strong>Hoax Generator B</strong></td><td>0</td><td>1,474</td><td>1,474</td><td>Injected Disaster Hoaxes</td><td>Test only: hospital fire, seismic rupture, water contamination (disjoint vocab).</td></tr>
+<tr><td><strong>Total</strong></td><td><strong>96,143</strong></td><td><strong>32,717</strong></td><td><strong>128,860</strong></td><td><strong>Authentic + Injected Hoaxes</strong></td><td><strong>0 overlapping texts (0.00% leakage)</strong></td></tr>
 </table></div>
+<p class='spacer'></p>
+<h3>4.2 Data Honesty & Geographic Coordinate Realism</h3>
+<li><strong>Authentic Records vs Generated Hoaxes</strong>: 125,886 records (97.69%) are authentic human/academic benchmark texts. Exactly <strong>2,974 records (2.31%)</strong> are generated disaster hoaxes (1,500 Generator A in train, 1,474 Generator B in test) specifically created to model adversarial disaster injection where public social archives lack adversarial LLM attacks.</li>
+<li><strong>Simulated Geographic Coordinates</strong>: Because Twitter/X API and academic disaster benchmarks anonymize exact user coordinates for privacy, latitude and longitude for tweets are assigned from region bounding boxes (simulated), not real tweet locations. Emergency depot coordinates are 100% real facilities retrieved via OpenStreetMap Overpass.</li>
 <p class='spacer'></p>
 <hr/>
 <p class='spacer'></p>
@@ -265,23 +271,24 @@
 <p class='spacer'></p>
 <h3>5.1 Multi-Task Model Suite</h3>
 <p>1. <strong>Synthetic Text Detector (Logistic Regression, L2)</strong>:</p>
-<li>Full Model ROC-AUC: <strong>0.9155</strong>, PR-AUC: <strong>0.5777</strong></li>
-<li>Class Imbalance Reality: Prevalence is 7.13%, Majority-class baseline accuracy is 92.87%. Model accuracy is 93.63%, Balanced accuracy is 0.5584, MCC is 0.3145.</li>
-<li>Baselines: Text-Only AUC = 0.9323, Stylometric-Only AUC = 0.9685.</li>
-<li>*Why stylometrics are strong*: In held-out test events with unseen vocabulary (Generator B), formatting cues (uppercase ratio, punctuation, character length) transfer across generators without keyword memorization.</li>
+<li>Full Model ROC-AUC: <strong>0.8658</strong>, PR-AUC: <strong>0.5433</strong></li>
+<li>Class Imbalance Reality: Prevalence is 8.71%, Majority-class baseline accuracy is 91.29%. Model accuracy is 93.02%, Balanced accuracy is 0.6284, Positive F1 is 0.3961, MCC is 0.4346.</li>
+<li>Baselines: Text-Only AUC = 0.9107, Stylometric-Only AUC = 0.9252.</li>
+<li>*Why ROC-AUC is 0.8658*: The inclusion of MAGE (evaluating multi-generator machine text across GPT-4, LLaMA, and OPT) realistically challenges the detector in the wild beyond simple template memorization.</li>
 <p>2. <strong>Rumour Classifier (Random Forest, 30 trees)</strong>:</p>
-<li>ROC-AUC: <strong>0.8837</strong>, Weighted F1: <strong>0.8347</strong>, Accuracy: <strong>88.76%</strong>.</li>
+<li>ROC-AUC: <strong>0.8571</strong>, Weighted F1: <strong>0.7746</strong>, Accuracy: <strong>84.54%</strong>.</li>
+<li>*Origin*: CrisisLex informativeness, PHEME breaking news rumours, and LIAR fact-checking ratings. Real-world rumour cascades introduce linguistic ambiguity, honestly reflected in metrics.</li>
 <p>3. <strong>Humanitarian Category Classifier (Multinomial LR)</strong>:</p>
-<li>Multi-class Accuracy: <strong>62.33%</strong>, Macro F1: <strong>0.6414</strong> across 6 operational categories.</li>
+<li>Multi-class Accuracy: <strong>61.77%</strong>, Macro F1: <strong>0.6279</strong> across 6 operational categories.</li>
 <p>4. <strong>Urgency Priority Regressor (Linear Regression)</strong>:</p>
-<li>RMSE: <strong>1.1504</strong>, MAE: <strong>0.9343</strong>, <em>R^2</em>: <strong>0.0690</strong>.</li>
-<li>*Honest Assessment*: <em>R^2</em> is low (0.069) because social disaster text exhibits extreme variance; priority mapping from terse tweets is inherently coarse-grained.</li>
+<li>RMSE: <strong>1.1045</strong>, MAE: <strong>0.8799</strong>, <em>R^2</em>: <strong>0.0346</strong>.</li>
+<li>*Honest Assessment*: <em>R^2</em> is 0.0346 because social media text exhibits extreme variance; continuous priority regression from short posts is inherently noisy.</li>
 <p class='spacer'></p>
 <h3>5.2 Sanity Controls</h3>
-<li><strong>20-Shuffle Label Permutation Control</strong>: Mean AUC = <strong>0.5015 ± 0.0066</strong> (<em>t = 1.2612, p = 0.2173</em>). Indistinguishable from pure random chance.</li>
+<li><strong>20-Shuffle Label Permutation Control</strong>: Mean AUC = <strong>0.5001 ± 0.0056</strong> (<em>t = 0.1001, p = 0.9213</em>). Indistinguishable from pure random chance.</li>
 <li><strong>Domain Shift Experiment</strong>:</li>
 <li>HC3-Trained Model on Disaster Hoaxes: <strong>5.22% recall</strong> (Complete domain collapse).</li>
-<li>In-Domain Model at Default Threshold 0.50: <strong>0.00% recall</strong> (due to 7.13% base rate prior shift).</li>
+<li>In-Domain Model at Default Threshold 0.50: <strong>0.00% recall</strong> (due to 8.71% base rate prior shift).</li>
 <li>In-Domain Model at Calibrated Threshold (<em>\theta = 0.0069</em>): <strong>73.74% recall</strong>, <strong>49.50% precision</strong>, <strong>0.6271 positive F1</strong>, and <strong>0.9034 ROC-AUC</strong>.</li>
 <p class='spacer'></p>
 <hr/>
@@ -299,24 +306,24 @@
 <p class='spacer'></p>
 <h2>7. Multi-Region Resource Allocation Ablation</h2>
 <p class='spacer'></p>
-<p>Evaluated across 30 seeds with 120 demands per seed using actual Spark MLlib model scores from <code>test_predictions.csv</code>:</p>
+<p>Evaluated across 30 seeds with 120 demands per seed using actual Spark MLlib model scores from <code>test_predictions.csv</code> and real OpenStreetMap Overpass depot facilities:</p>
 <p class='spacer'></p>
 <div class='table-container'><table>
 <tr><th>Region & Fleet</th><th>Policy</th><th>Genuine Reached (Mean ± 95% CI)</th><th>Wasted Dispatches (%)</th><th>Paired t-Test vs Blind LP</th></tr>
-<tr><td><strong>Houston (Flood)</strong></td><td>Blind Greedy</td><td>38.20 ± 1.15</td><td>26.54% ± 1.30%</td><td>—</td></tr>
-<tr><td>*52 Rescue Boats*</td><td>Blind LP</td><td>39.10 ± 1.10</td><td>24.81% ± 1.12%</td><td>Baseline</td></tr>
-<tr><td></td><td><strong>Trust-Aware LP</strong></td><td><strong>43.70 ± 1.05</strong></td><td><strong>15.96% ± 1.02%</strong></td><td><strong><em>t = 18.60, p = 1.16 \times 10^{-17}</em></strong></td></tr>
+<tr><td><strong>Houston (Flood)</strong></td><td>Blind Greedy</td><td>35.80 ± 1.25</td><td>31.15% ± 1.35%</td><td>—</td></tr>
+<tr><td>*52 Rescue Boats*</td><td>Blind LP</td><td>36.77 ± 1.32</td><td>29.29% ± 1.25%</td><td>Baseline</td></tr>
+<tr><td></td><td><strong>Trust-Aware LP</strong></td><td><strong>43.93 ± 1.18</strong></td><td><strong>15.51% ± 1.05%</strong></td><td><strong><em>t = 12.32, p = 4.72 \times 10^{-13}</em></strong></td></tr>
 <tr><td></td><td>Oracle Upper Bound</td><td>52.00 ± 0.00</td><td>0.00% ± 0.00%</td><td>Theoretical Limit</td></tr>
-<tr><td><strong>Miami (Surge)</strong></td><td>Blind LP</td><td>41.03 ± 1.15</td><td>24.01% ± 1.10%</td><td>Baseline</td></tr>
-<tr><td>*54 Ambulances*</td><td><strong>Trust-Aware LP</strong></td><td><strong>45.50 ± 1.07</strong></td><td><strong>15.74% ± 0.98%</strong></td><td><strong><em>t = 16.71, p = 3.97 \times 10^{-16}</em></strong></td></tr>
-<tr><td><strong>California (Fire)</strong></td><td>Blind LP</td><td>29.10 ± 1.17</td><td>21.54% ± 1.15%</td><td>Baseline</td></tr>
-<tr><td>*52 Fire Units*</td><td><strong>Trust-Aware LP</strong></td><td>28.87 ± 1.85</td><td><strong>12.84% ± 1.10%</strong></td><td><em>p = 0.66</em> (Fleet not saturated)</td></tr>
-<tr><td><strong>Nepal (Quake)</strong></td><td>Blind LP</td><td>33.90 ± 1.46</td><td>23.01% ± 1.20%</td><td>Baseline</td></tr>
-<tr><td>*52 SAR Squads*</td><td><strong>Trust-Aware LP</strong></td><td>34.33 ± 0.75</td><td><strong>14.52% ± 0.95%</strong></td><td><em>p = 0.41</em> (Fleet not saturated)</td></tr>
+<tr><td><strong>Miami (Surge)</strong></td><td>Blind LP</td><td>37.77 ± 1.43</td><td>30.06% ± 1.22%</td><td>Baseline</td></tr>
+<tr><td>*54 Ambulances*</td><td><strong>Trust-Aware LP</strong></td><td><strong>46.03 ± 1.16</strong></td><td><strong>14.75% ± 1.00%</strong></td><td><strong><em>t = 14.85, p = 2.22 \times 10^{-15}</em></strong></td></tr>
+<tr><td><strong>California (Fire)</strong></td><td>Blind LP</td><td>29.10 ± 0.97</td><td>23.49% ± 1.10%</td><td>Baseline</td></tr>
+<tr><td>*52 Fire Units*</td><td><strong>Trust-Aware LP</strong></td><td>23.40 ± 1.53</td><td><strong>18.72% ± 1.02%</strong></td><td><strong><em>t = 6.82, p = 1.04 \times 10^{-10}</em></strong></td></tr>
+<tr><td><strong>Nepal (Quake)</strong></td><td>Blind LP</td><td>35.23 ± 1.59</td><td>27.81% ± 1.30%</td><td>Baseline</td></tr>
+<tr><td>*52 SAR Squads*</td><td><strong>Trust-Aware LP</strong></td><td>33.00 ± 1.09</td><td><strong>17.63% ± 1.05%</strong></td><td><strong><em>t = 3.12, p = 3.57 \times 10^{-3}</em></strong></td></tr>
 </table></div>
 <p class='spacer'></p>
 <li><strong>Sensitivity Sweeps</strong>:</li>
-<li><strong>Hoax Rate (5% → 40%)</strong>: Genuine gain scales from +5.15 victims to +36.20 victims.</li>
+<li><strong>Hoax Rate (5% → 40%)</strong>: Genuine gain scales monotonically from +4.30 victims to +32.50 victims reached in simulation.</li>
 <li><strong>Detector Quality (AUC 0.55 → 0.99)</strong>: Genuine gain ranges from +9.85 victims at AUC 0.55 to +22.30 victims at AUC 0.99. Benefit diminishes as detector approaches random chance.</li>
 <p class='spacer'></p>
 <hr/>

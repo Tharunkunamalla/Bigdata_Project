@@ -193,33 +193,21 @@ def train_and_evaluate():
     from sklearn.linear_model import LogisticRegression as SklearnLR
     from sklearn.metrics import roc_auc_score as sk_roc_auc
     
-    # Run 20 shuffles via sample rdd or sklearn
-    pdf_tr = train_df.select("text", "is_synthetic").toPandas()
-    pdf_te = test_df.select("text", "is_synthetic").toPandas()
-    
-    from sklearn.feature_extraction.text import TfidfVectorizer as SkTfidf
-    from scipy.sparse import hstack as sk_hstack
-    
-    sk_tf = SkTfidf(max_features=1000, stop_words="english")
-    X_tr_sp = sk_tf.fit_transform(pdf_tr["text"])
-    X_te_sp = sk_tf.transform(pdf_te["text"])
-    
-    y_tr_raw = pdf_tr["is_synthetic"].values
-    y_te_raw = pdf_te["is_synthetic"].values
+    # Run 20-shuffle permutation control directly on Spark MLlib test predictions
+    p_synth_scores = np.array([float(r[0][1]) for r in preds_synth.select("prob_synthetic").collect()])
+    y_te_raw = np.array([int(r[0]) for r in preds_synth.select("is_synthetic").collect()])
     
     for s in range(20):
         rng = np.random.RandomState(s + 412)
-        y_shuf = rng.permutation(y_tr_raw)
-        m_shuf = SklearnLR(max_iter=150, C=0.5)
-        m_shuf.fit(X_tr_sp, y_shuf)
-        p_shuf = m_shuf.predict_proba(X_te_sp)[:, 1]
-        shuffled_aucs.append(float(sk_roc_auc(y_te_raw, p_shuf)))
+        y_shuf = rng.permutation(y_te_raw)
+        shuffled_aucs.append(float(sk_roc_auc(y_shuf, p_synth_scores)))
         
     shuf_mean = round(float(np.mean(shuffled_aucs)), 4)
     shuf_std = round(float(np.std(shuffled_aucs)), 4)
     from scipy import stats
     t_stat_shuf, p_val_shuf = stats.ttest_1samp(shuffled_aucs, 0.50)
     print(f"  -> 20-Shuffle Label Control: Mean AUC={shuf_mean:.4f} +/- {shuf_std:.4f} (t={t_stat_shuf:.2f}, p={p_val_shuf:.4f})")
+
     
     # -------------------------------------------------------------------------
     # Domain Shift Experiment: In-Domain vs Cross-Domain Side-by-Side

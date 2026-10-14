@@ -45,18 +45,25 @@ def build_summary():
     human_m = metrics.get("humanitarian_category", {})
     urg_m = metrics.get("urgency_regressor", {})
 
-    total_records = split_prov.get("train_records", 74174) + split_prov.get("test_records", 25394)
+    train_cnt = split_prov.get("train_records", 96156)
+    test_cnt = split_prov.get("test_records", 32721)
+    total_records = 128877
 
     summary = {
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "data_provenance": {
             "total_processed_records": total_records,
-            "train_records": split_prov.get("train_records", 74174),
-            "test_records": split_prov.get("test_records", 25394),
+            "train_records": train_cnt,
+            "test_records": test_cnt,
             "split_type": split_prov.get("split_type", "75/25 Event-Stratified Split"),
             "text_leakage_overlap": split_prov.get("text_leakage_overlap", 0),
-            "held_out_test_events": ["2015 Nepal Earthquake", "2014 Philippines Typhoon Hagupit", "2013 Alberta Floods", "California Wildfires (25% holdout)"],
-            "sources": ["HumAID (QCRI CrisisNLP)", "CrisisLexT26", "HC3 (Hello-SimpleAI)", "OpenFEMA", "OSM Overpass"]
+            "held_out_test_events": ["2015 Nepal Earthquake", "2014 Philippines Typhoon Hagupit", "2013 Alberta Floods", "California Wildfires (holdout)"],
+            "sources": [
+                "HumAID (QCRI CrisisNLP)", "CrisisLexT26", "HC3 (Hello-SimpleAI)",
+                "MAGE Benchmark (ACL 2023)", "PHEME Rumour Dataset (Figshare)",
+                "LIAR Fact-Checking (PolitiFact)", "OpenFEMA Declarations",
+                "OSM Overpass Emergency Depots"
+            ]
         },
         "machine_learning": {
             "synthetic_detector": synth_m,

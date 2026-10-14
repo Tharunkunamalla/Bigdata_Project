@@ -39,9 +39,50 @@ CURATED_DIR = os.path.join(BASE_DIR, "data", "curated")
 os.makedirs(RESULTS_DIR, exist_ok=True)
 
 # ---------------------------------------------------------------------------
-# Multi-Region Emergency Response Depots
+# Multi-Region Emergency Response Depots (OSM Overpass Facilities)
 # ---------------------------------------------------------------------------
-REGIONAL_DEPOTS = {
+OSM_DEPOTS_FILE = os.path.join(BASE_DIR, "data", "raw", "osm_emergency_depots.json")
+
+def load_osm_regional_depots():
+    """Loads actual OpenStreetMap Overpass emergency facilities (hospitals & fire stations)."""
+    if os.path.exists(OSM_DEPOTS_FILE):
+        try:
+            with open(OSM_DEPOTS_FILE, "r", encoding="utf-8") as f:
+                osm_data = json.load(f)
+            reg_map = {
+                "houston": {"disaster": "Hurricane Harvey (Flood)", "resource": "rescue_boats", "caps": [15, 12, 10, 15]},
+                "california": {"disaster": "California Wildfires", "resource": "wildfire_units", "caps": [14, 12, 12, 14]},
+                "nepal": {"disaster": "Nepal Earthquake", "resource": "earthquake_rescue_teams", "caps": [15, 12, 12, 13]},
+                "miami": {"disaster": "Hurricane & Tropical Storm", "resource": "ambulances", "caps": [16, 12, 12, 14]}
+            }
+            depots_by_region = {}
+            for r_name, r_cfg in reg_map.items():
+                matches = [d for d in osm_data if d.get("region") == r_name]
+                if len(matches) >= 4:
+                    selected = matches[:4]
+                    dep_list = []
+                    for idx, m in enumerate(selected):
+                        dep_list.append({
+                            "id": f"{r_name}_osm_{idx+1}",
+                            "name": f"{m.get('name', 'Depot')} ({m.get('amenity', 'facility').replace('_', ' ').title()})",
+                            "lat": float(m.get("latitude")),
+                            "lon": float(m.get("longitude")),
+                            "capacity": r_cfg["caps"][idx]
+                        })
+                    depots_by_region[r_name] = {
+                        "disaster": r_cfg["disaster"],
+                        "resource": r_cfg["resource"],
+                        "depots": dep_list
+                    }
+            if len(depots_by_region) == 4:
+                return depots_by_region
+        except Exception:
+            pass
+    return None
+
+_osm_loaded = load_osm_regional_depots()
+
+REGIONAL_DEPOTS = _osm_loaded if _osm_loaded is not None else {
     "houston": {
         "disaster": "Hurricane Harvey (Flood)",
         "resource": "rescue_boats",
@@ -83,6 +124,7 @@ REGIONAL_DEPOTS = {
         ]
     }
 }
+
 
 def haversine_km(lat1, lon1, lat2, lon2):
     R = 6371.0

@@ -308,37 +308,120 @@ def generate_hoaxes_generator_b(count=1500):
         })
     return pd.DataFrame(records)
 
+def parse_pheme():
+    """Parses PHEME rumour and non-rumour source tweets (6,425 records)."""
+    fpath = os.path.join(RAW_DIR, "pheme_source_tweets.csv")
+    if not os.path.exists(fpath):
+        return pd.DataFrame()
+    df = pd.read_csv(fpath)
+    records = []
+    for idx, r in df.iterrows():
+        t = clean_text(str(r.get("text", "")))
+        if len(t) < 15:
+            continue
+        is_rumour = int(r.get("is_rumour", 0))
+        records.append({
+            "post_id": str(r.get("tweet_id", f"pheme_{idx}")),
+            "text": t,
+            "event_type": str(r.get("event", "pheme_event")),
+            "disaster_type": "general",
+            "humanitarian_category": "caution_and_advice",
+            "is_synthetic": 0,
+            "is_hoax": is_rumour,
+            "urgency_level": 2.5,
+            "latitude": round(37.7749 + np.random.normal(0, 0.08), 5),
+            "longitude": round(-122.4194 + np.random.normal(0, 0.08), 5),
+            "source": "PHEME_RumourDataset"
+        })
+    return pd.DataFrame(records)
+
+def parse_liar():
+    """Parses LIAR fact-checking dataset statements (11,484 records)."""
+    fpath = os.path.join(RAW_DIR, "liar_statements.csv")
+    if not os.path.exists(fpath):
+        return pd.DataFrame()
+    df = pd.read_csv(fpath)
+    records = []
+    for idx, r in df.iterrows():
+        t = clean_text(str(r.get("statement", "")))
+        if len(t) < 20:
+            continue
+        lbl = str(r.get("label", "")).lower().strip()
+        is_hoax = 1 if lbl in ["false", "pants-fire", "barely-true"] else 0
+        records.append({
+            "post_id": f"liar_{idx}",
+            "text": t,
+            "event_type": "liar_factcheck",
+            "disaster_type": "general",
+            "humanitarian_category": "caution_and_advice",
+            "is_synthetic": 0,
+            "is_hoax": is_hoax,
+            "urgency_level": 2.0,
+            "latitude": round(38.8951 + np.random.normal(0, 0.08), 5),
+            "longitude": round(-77.0364 + np.random.normal(0, 0.08), 5),
+            "source": "LIAR_FactChecking"
+        })
+    return pd.DataFrame(records)
+
+def parse_mage():
+    """Parses MAGE machine-generated text benchmark (11,562 records across diverse LLMs)."""
+    fpath = os.path.join(RAW_DIR, "mage_curated_eval.csv")
+    if not os.path.exists(fpath):
+        return pd.DataFrame()
+    df = pd.read_csv(fpath)
+    records = []
+    for idx, r in df.iterrows():
+        t = clean_text(str(r.get("text", "")))[:300]
+        if len(t) < 25:
+            continue
+        lbl = int(r.get("label", 0))
+        records.append({
+            "post_id": f"mage_{idx}",
+            "text": t,
+            "event_type": "mage_llm_benchmark",
+            "disaster_type": "general",
+            "humanitarian_category": "caution_and_advice",
+            "is_synthetic": lbl,
+            "is_hoax": lbl,
+            "urgency_level": 2.0,
+            "latitude": round(37.7749 + np.random.normal(0, 0.08), 5),
+            "longitude": round(-122.4194 + np.random.normal(0, 0.08), 5),
+            "source": "MAGE_Benchmark"
+        })
+    return pd.DataFrame(records)
+
 def build_corpus():
     print("=" * 70)
     print("   Building Balanced, Event-Stratified Real Disaster Corpus (CSE412)   ")
+    print("   Integrating HumAID, CrisisLex, HC3, MAGE, PHEME, LIAR & Hoax Gens   ")
     print("=" * 70)
     
     df_cb = parse_crisisbench()
     df_dt = parse_disaster_tweets()
     df_hc3 = parse_hc3()
+    df_pheme = parse_pheme()
+    df_liar = parse_liar()
+    df_mage = parse_mage()
     df_hoax_a = generate_hoaxes_generator_a(1500)
     df_hoax_b = generate_hoaxes_generator_b(1500)
     
     print(f"Loaded HumAID rows:           {len(df_cb):,}")
     print(f"Loaded CrisisLex rows:        {len(df_dt):,}")
     print(f"Loaded HC3 rows:              {len(df_hc3):,}")
+    print(f"Loaded PHEME rows:            {len(df_pheme):,}")
+    print(f"Loaded LIAR rows:             {len(df_liar):,}")
+    print(f"Loaded MAGE rows:             {len(df_mage):,}")
     print(f"Loaded Hoax Generator A:      {len(df_hoax_a):,} (Train in-domain)")
     print(f"Loaded Hoax Generator B:      {len(df_hoax_b):,} (Test held-out)")
     
-    df_all = pd.concat([df_cb, df_dt, df_hc3, df_hoax_a, df_hoax_b], ignore_index=True)
-    df_all = df_all.drop_duplicates(subset=["text"]).reset_index(drop=True)
+    df_all = pd.concat([df_cb, df_dt, df_hc3, df_pheme, df_liar, df_mage, df_hoax_a, df_hoax_b], ignore_index=True)
+    df_all["norm_key"] = df_all["text"].astype(str).str.strip().str.lower()
+    df_all = df_all.drop_duplicates(subset=["norm_key"]).drop(columns=["norm_key"]).reset_index(drop=True)
     print(f"Total Unified Deduplicated Records: {len(df_all):,}")
     
     # -------------------------------------------------------------------------
     # Balanced Event-Stratified Train / Test Partition (75% Train, 25% Test)
     # -------------------------------------------------------------------------
-    # Held-out Test Events:
-    # 1. 2015 Nepal Earthquake (~9,600 rows in HumAID)
-    # 2. 2014 Philippines Typhoon Hagupit (~5,700 rows)
-    # 3. 2013 Alberta Floods (~5,300 rows)
-    # 4. California Wildfires (~850 rows)
-    # 5. Generator B Hoaxes (1,500 rows)
-    # 6. 35% of HC3 and CrisisLex
     test_events_humaid = [
         "2015_nepal_earthquake",
         "2014_philippines_typhoon-hagupit",
@@ -349,23 +432,31 @@ def build_corpus():
     
     is_test_event = df_all["event_type"].isin(test_events_humaid)
     is_hoax_b = df_all["source"] == "hoax_generator_b_test"
-    is_hc3_cl = df_all["source"].isin(["HC3_Human", "HC3_ChatGPT", "CrisisLex_DisasterTweets"])
-    hc3_cl_test = is_hc3_cl & (df_all.index % 4 == 0) # 25% of general / baseline
+    is_general_bench = df_all["source"].isin([
+        "HC3_Human", "HC3_ChatGPT", "CrisisLex_DisasterTweets",
+        "PHEME_RumourDataset", "LIAR_FactChecking", "MAGE_Benchmark"
+    ])
+    general_test = is_general_bench & (df_all.index % 4 == 0) # 25% of general / baseline
     
-    test_mask = is_test_event | is_hoax_b | hc3_cl_test
+    test_mask = is_test_event | is_hoax_b | general_test
     
     # Strictly ensure Hoax Generator A is ONLY in train
     test_mask = test_mask & (df_all["source"] != "hoax_generator_a_train")
     
-    train_df = df_all[~test_mask].copy()
     test_df = df_all[test_mask].copy()
+    test_norm_keys = set(test_df["text"].str.strip().str.lower())
+    
+    # Strictly ensure train has zero overlap with test
+    train_df = df_all[~test_mask].copy()
+    train_df = train_df[~train_df["text"].str.strip().str.lower().isin(test_norm_keys)].copy()
     
     # Check text overlap
-    overlap = len(set(train_df["text"]).intersection(set(test_df["text"])))
+    overlap = len(set(train_df["text"].str.strip().str.lower()).intersection(test_norm_keys))
     print(f"\n--- Split Verification ---")
     print(f"Train Records: {len(train_df):,} ({len(train_df)/len(df_all)*100:.1f}%)")
     print(f"Test Records:  {len(test_df):,} ({len(test_df)/len(df_all)*100:.1f}%)")
     print(f"Train/Test Text Overlap: {overlap} (Strict 0% Leakage)")
+
     
     # Save curated splits
     corpus_csv = os.path.join(CURATED_DIR, "real_disaster_corpus.csv")
@@ -376,7 +467,7 @@ def build_corpus():
     train_df.to_csv(train_csv, index=False)
     test_df.to_csv(test_csv, index=False)
     
-    # Also save parquet if pyarrow/fastparquet available
+    # Export to Parquet
     try:
         df_all.to_parquet(os.path.join(CURATED_DIR, "real_disaster_corpus.parquet"), index=False)
         train_df.to_parquet(os.path.join(CURATED_DIR, "train_real.parquet"), index=False)
@@ -393,3 +484,4 @@ def build_corpus():
 
 if __name__ == "__main__":
     build_corpus()
+

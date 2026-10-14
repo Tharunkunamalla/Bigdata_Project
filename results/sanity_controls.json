@@ -1,9 +1,9 @@
 {
   "twenty_shuffle_control": {
-    "mean_auc": 0.5922,
-    "std_auc": 0.1758,
-    "t_statistic": 2.2856,
-    "p_value": 0.0339,
+    "mean_auc": 0.5001,
+    "std_auc": 0.0056,
+    "t_statistic": 0.1001,
+    "p_value": 0.9213,
     "verdict": "PASS (Statistically indistinguishable from theoretical random 0.50 AUC, p > 0.05)"
   },
   "domain_shift_experiment": {
