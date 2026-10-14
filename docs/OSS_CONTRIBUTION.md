@@ -2,113 +2,170 @@
 
 **Course:** CSE412 — Big Data & Large-Scale Computing  
 **Project:** CrisisGuard AI  
-**Scope:** 4 Concrete, Technical Candidate Issues & Pull Requests Identified During Development
+**Scope:** 4 Technical Candidate Issues, Verified Upstream Links, and Concrete Draft Diffs  
 
-During the design, deployment, and auditing of CrisisGuard AI across Apache Spark, Hadoop HDFS, and PuLP, our team encountered several upstream software edge cases. Below are four structured open-source contributions, formatted as issue reports and pull-request proposals ready for submission to their respective upstream repositories.
+> **Course Policy Requirement Note**: In accordance with course evaluation guidelines, open-source software contributions earn extra credit **ONLY if the pull request is officially reviewed, accepted, and MERGED upstream** into the target codebase. Simply opening a pull request, filing an issue, or drafting a diff does not earn credit.
+
+During the architecture, deployment, and stress-testing of CrisisGuard AI across Apache Spark, Hadoop HDFS, and PuLP, our team identified four technical edge cases. Below are the verified upstream links, context, and concrete git diffs prepared for submission.
 
 ---
 
-## 1. Apache Spark: Push-Down Distance Filtering in `MinHashLSH.approxSimilarityJoin`
+## 1. Apache Spark MLlib: Sparse Vector Handling in `StandardScaler(withMean=True)`
 
-### Target Repository
-- **Repository:** `apache/spark` (Module: `mllib`, Submodule: `feature/LSH`)
-- **Component:** `pyspark.ml.feature.MinHashLSH` & `org.apache.spark.ml.feature.MinHashLSH`
-- **Type:** Performance Enhancement / Query Optimization
+### Upstream Verification & Links
+- **Repository:** Apache Spark (`apache/spark`)
+- **Verified Tracker:** [Apache Spark JIRA (MLlib)](https://issues.apache.org/jira/browse/SPARK)
+- **Module:** `mllib` / `pyspark.ml.feature`
+- **Component:** `org.apache.spark.ml.feature.StandardScaler`
 
 ### Context & Problem Statement
-During our coordination graph generation on 14,888 disaster posts (`graph/coordination_graph.py`), invoking `model.approxSimilarityJoin(df, df, threshold=0.35, distCol="JaccardDistance")` triggered significant driver and executor memory overhead.
-Under the current Spark MLlib implementation, `approxSimilarityJoin` generates a join across matching hash buckets and subsequently evaluates the full Euclidean/Jaccard distance function on vector pairs via an inner join condition. On high-density hash buckets (e.g., near-identical botnet text), this produces an explosion of intermediate join rows before the distance filter is applied, causing high GC pauses.
-
-### Proposed Upstream PR
-Introduce early-exit distance threshold evaluation during the hash bucket candidate collection phase:
-```scala
-// Proposed optimization in MinHashLSH.scala
-// Filter candidate pairs within hash buckets before full DataFrame expansion
-override protected[ml] def approxSimilarityJoin[T: ClassTag](
-    datasetA: Dataset[_],
-    datasetB: Dataset[_],
-    threshold: Double,
-    distCol: String): DataFrame = {
-  // Add bucket-level cardinality cap and push-down filter to hash table lookups
-  ...
-}
+When assembling numeric stylometric features with TF-IDF features using `VectorAssembler`, attempting to center dense features with `StandardScaler(withMean=True)` throws a runtime exception if applied after `VectorAssembler` has joined dense and sparse features into a single vector column:
 ```
-- **Impact:** Reduces intermediate Cartesian expansion by up to 60% on coordinated botnet datasets with high text similarity.
+IllegalArgumentException: StandardScaler does not support withMean=true for sparse vectors.
+```
+While mathematically valid (centering destroys vector sparsity), the documentation in `docs/ml-classification-regression.md` does not explain this interaction in combined multi-modal pipelines, nor does `StandardScaler` provide a `handleSparse="keep_uncentered"` fallback mode. Developers are forced to manually separate and scale features before assembly.
+
+### Concrete Draft Diff
+```diff
+--- a/mllib/src/main/scala/org/apache/spark/ml/feature/StandardScaler.scala
++++ b/mllib/src/main/scala/org/apache/spark/ml/feature/StandardScaler.scala
+@@ -72,6 +72,12 @@ class StandardScaler(override val uid: String)
+   def setWithMean(value: Boolean): this.type = set(withMean, value)
+ 
++  /**
++   * Param for handling sparse vectors when withMean=true.
++   * Options: 'error' (default), 'ignoreMean' (center only dense components).
++   */
++  final val handleSparse: Param[String] = new Param[String](this, "handleSparse",
++    "How to handle sparse vectors with withMean: error or ignoreMean",
++    ParamValidators.inArray(Array("error", "ignoreMean")))
++
+   override def fit(dataset: Dataset[_]): StandardScalerModel = {
+     transformSchema(dataset.schema, logging = true)
+     val input = dataset.select($(inputCol)).rdd.map {
+```
 
 ---
 
-## 2. Apache Hadoop HDFS: Graceful Path Component Truncation in Partition Writing
+## 2. Apache Hadoop HDFS: Unsanitized Partition Path Error Diagnostics
 
-### Target Repository
-- **Repository:** `apache/hadoop` (Module: `hadoop-hdfs`)
+### Upstream Verification & Links
+- **Repository:** Apache Hadoop (`apache/hadoop`)
+- **Verified Tracker:** [Apache Hadoop JIRA (HDFS)](https://issues.apache.org/jira/browse/HDFS)
+- **Module:** `hadoop-hdfs-project`
 - **Component:** `org.apache.hadoop.hdfs.server.namenode.INodeDirectory`
-- **Type:** Robustness Bug Fix / Diagnostics Enhancement
 
 ### Context & Problem Statement
-When ingesting raw multi-line disaster tweets into partitioned HDFS Parquet storage (`data/ingest_real_to_hdfs.py`), records containing unescaped newlines or quotation marks caused Spark to create directory paths containing raw newline characters (e.g., `/disaster_data/silver_real/disaster_type=flood\n.../`). 
-The HDFS NameNode immediately threw a fatal `org.apache.hadoop.ipc.RemoteException: PathComponentTooLongException` because the raw string exceeded max path component limits, aborting the entire distributed write without identifying which batch or record caused the corruption.
+When ingesting crowdsourced crisis text into partitioned HDFS Parquet storage (`hdfs://127.0.0.1:9000/disaster_data/silver_real/`), posts containing unescaped newline characters or URL control symbols in dynamic partition columns triggered a NameNode crash:
+```
+org.apache.hadoop.ipc.RemoteException: PathComponentTooLongException: The maximum path component length was exceeded
+```
+The error failed to log the problematic row index, partition key value, or byte offset, making debugging distributed writes across 100k records unnecessarily difficult.
 
-### Proposed Upstream PR
-1. In `hadoop-hdfs`, enhance `INodeDirectory` validation to reject invalid control characters (such as unescaped `\n`, `\r`, `\0`) with a detailed diagnostic message specifying the invalid character offset.
-2. In PySpark's Parquet partition writer, add an automatic URL-safe encoder option for partition path strings:
-   ```python
-   # Proposed feature option for Spark DataFrameWriter
-   df.write.option("sanitizePartitionPaths", "true").partitionBy("disaster_type").parquet(...)
-   ```
-- **Impact:** Prevents catastrophic write failures in production streaming pipelines ingesting dirty crowdsourced text.
+### Concrete Draft Diff
+```diff
+--- a/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/server/namenode/INodeDirectory.java
++++ b/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/server/namenode/INodeDirectory.java
+@@ -310,7 +310,8 @@ public class INodeDirectory extends INodeWithAdditionalFields
+     if (bytes.length > maxComponentLength) {
+-      throw new PathComponentTooLongException("The maximum path component length was exceeded: "
+-          + bytes.length + " > " + maxComponentLength);
++      String preview = DFSUtil.bytes2String(bytes, 0, Math.min(bytes.length, 64));
++      throw new PathComponentTooLongException(String.format(
++          "Path component length %d exceeds max %d. Offending prefix: '%s'",
++          bytes.length, maxComponentLength, preview));
+     }
+```
 
 ---
 
-## 3. PuLP: Deprecation Resolution & Native CBC Solver Detection on Windows
+## 3. PuLP: Automatic Solver Binary Resolution on Windows / WSL
 
-### Target Repository
-- **Repository:** `coin-or/pulp`
-- **Component:** `pulp.apis.coin_api.py` & `pulp.pulp.py`
-- **Type:** Maintenance / Compatibility Fix
+### Upstream Verification & Links
+- **Repository:** COIN-OR PuLP (`coin-or/pulp`)
+- **Verified Tracker:** [GitHub coin-or/pulp Issues](https://github.com/coin-or/pulp/issues)
+- **Module:** `pulp.apis.coin_api`
+- **Component:** `PULP_CBC_CMD` & `COIN_CMD`
 
 ### Context & Problem Statement
-In PuLP version 2.8+ running on Python 3.11+, instantiating binary decision variables in our resource optimizer (`allocation/optimizer.py`):
-```python
-x[(i, j)] = pulp.LpVariable(f"x_{i}_{j}", cat=pulp.LpBinary)
+In PuLP 2.8+ on Python 3.11+, using `pulp.PULP_CBC_CMD(msg=False)` triggers deprecation warnings:
 ```
-emits dozens of noisy deprecation warnings:
-```
-DeprecationWarning: Constructing LpVariable(name, ...) directly is deprecated; in PuLP 4.0 use prob.add_variable(...)
 DeprecationWarning: PULP_CBC_CMD is deprecated and will be removed in PuLP 4.0. Install CBC with `pip install pulp[cbc]` and use COIN_CMD instead.
 ```
-Furthermore, when running on Windows, `COIN_CMD` occasionally fails to resolve system `cbc.exe` paths if they are installed via WSL or Conda, forcing developers to rely on the deprecated `PULP_CBC_CMD`.
+However, on Windows developer machines where `pulp[cbc]` wheel compilation fails without MSVC C++ tools, `COIN_CMD` fails to locate the system `cbc.exe` unless it is explicitly specified via an absolute path, whereas the deprecated `PULP_CBC_CMD` located it reliably via Windows PATH search.
 
-### Proposed Upstream PR
-1. Update `pulp.apis.coin_api.py` to auto-detect CBC binaries located in standard Windows and WSL cross-mounted paths without raising warnings if `pulp[cbc]` is not installed.
-2. Provide a backwards-compatible wrapper in `LpProblem.addVariables()` to streamline multi-dimensional decision matrix instantiation:
-   ```python
-   # Proposed helper in pulp
-   prob.add_variable_matrix(keys=[(i, j) for i in range(N) for j in range(M)], cat=pulp.LpBinary)
-   ```
-- **Impact:** Clean execution across mixed Windows/Linux environments without noisy deprecation logs.
+### Concrete Draft Diff
+```diff
+--- a/pulp/apis/coin_api.py
++++ b/pulp/apis/coin_api.py
+@@ -102,6 +102,12 @@ class COIN_CMD(LpSolver_CMD):
+         if self.path is None:
+             self.path = self.find_binary("cbc")
++            if self.path is None and sys.platform.startswith("win"):
++                # Check standard Windows Chocolatey, Conda, or local program files
++                fallback_paths = ["C:\\ProgramData\\chocolatey\\bin\\cbc.exe", shutil.which("cbc.exe")]
++                for p in fallback_paths:
++                    if p and os.path.exists(p):
++                        self.path = p
++                        break
+         if self.path is None:
+             raise PulpSolverError("Cannot find COIN-OR CBC solver binary in system PATH.")
+```
 
 ---
 
-## 4. Hugging Face Datasets: Unified Schema Loader for QCRI HumAID Multi-Disaster Corpus
+## 4. Hugging Face Datasets: Community Loader for QCRI HumAID Benchmark
 
-### Target Repository
-- **Repository:** `huggingface/datasets`
-- **Component:** `datasets/humaid` (New Dataset Script)
-- **Type:** Community Dataset Loader Contribution
+### Upstream Verification & Links
+- **Repository:** Hugging Face Datasets (`huggingface/datasets`)
+- **Verified Tracker:** [GitHub huggingface/datasets Pull Requests](https://github.com/huggingface/datasets/pulls)
+- **Module:** `datasets/loading`
 
 ### Context & Problem Statement
-The QCRI HumAID dataset (19 disaster events, 87,557 records) is one of the most critical disaster NLP benchmarks, yet developers currently must download a raw 124 MB tarball (`crisis_datasets_benchmarks_v1.0.tar.gz`) containing disparate subdirectories where column names vary across events (`tweet_id`, `tweet_text`, `text`, `label`). Developers must manually write normalization scripts.
+QCRI HumAID is one of the standard benchmarks in crisis informatics (84k human-annotated disaster posts across 10 global crises). Currently, researchers must download raw tarballs and write custom CSV loaders because column headers vary across events (`tweet_id`, `tweet_text`, `class_label`). A canonical dataset builder script in Hugging Face Datasets standardizes ingestion for the entire community.
 
-### Proposed Upstream Contribution
-Publish a standardized Hugging Face dataset loading script:
+### Concrete Draft Loader Snippet
 ```python
-# datasets/humaid/humaid.py
+# datasets/datasets/humaid/humaid.py
+import csv
+import datasets
+
 class HumAID(datasets.GeneratorBasedBuilder):
-    """QCRI HumAID: Multi-Disaster Crisis Informatics Benchmark."""
+    """QCRI HumAID: Human-Annotated Disaster Response Informatics Benchmark."""
     VERSION = datasets.Version("1.0.0")
-    
+
+    def _info(self):
+        return datasets.DatasetInfo(
+            description="QCRI HumAID Disaster Tweet Benchmark across 10 environmental events.",
+            features=datasets.Features({
+                "post_id": datasets.Value("string"),
+                "text": datasets.Value("string"),
+                "event_type": datasets.Value("string"),
+                "disaster_type": datasets.Value("string"),
+                "humanitarian_category": datasets.Value("string"),
+            }),
+            supervised_keys=None,
+            homepage="https://crisisnlp.qcri.org/humaid_dataset.html",
+        )
+
     def _generate_examples(self, filepath):
-        # Normalizes column variations across all 19 disasters into canonical schema:
-        # {"event_id": str, "text": str, "humanitarian_category": str, "disaster_type": str}
+        with open(filepath, "r", encoding="utf-8") as f:
+            reader = csv.DictReader(f)
+            for id_, row in enumerate(reader):
+                yield id_, {
+                    "post_id": row.get("tweet_id") or row.get("post_id"),
+                    "text": row.get("tweet_text") or row.get("text"),
+                    "event_type": row.get("event_type", "unknown"),
+                    "disaster_type": row.get("disaster_type", "general"),
+                    "humanitarian_category": row.get("class_label") or row.get("humanitarian_category"),
+                }
 ```
-- **Impact:** Enables the global research community to load QCRI HumAID with a single call: `datasets.load_dataset("humaid")`.
+
+---
+
+## 5. Submission Execution Checklist
+- [ ] Student submits PR #1 to `apache/spark` referencing Spark JIRA issue.
+- [ ] Student submits PR #2 to `apache/hadoop` NameNode logging component.
+- [ ] Student submits PR #3 to `coin-or/pulp` resolving Windows CBC resolution.
+- [ ] Student publishes HumAID dataset script to Hugging Face Hub.
+- [ ] Team tracks upstream reviewer feedback until pull requests achieve **MERGED** status.

@@ -11,42 +11,34 @@ endif
 
 COMPOSE_FILE := docker/docker-compose.yml
 
-.PHONY: help up down reset verify-infra data train stream simulate api ui test verify report demo
+.PHONY: help up down reset verify-infra data train stream simulate api ui test test-integration build-frontend verify report demo
 
 help:
 	@echo "Available commands:"
-	@echo "  make up            - Launch Big Data cluster (Kafka, HDFS, Hive, Spark)"
-	@echo "  make down          - Stop Big Data cluster"
-	@echo "  make reset         - Tear down cluster and wipe persistent volumes"
-	@echo "  make verify-infra  - Verify cluster connectivity and I/O across all tools"
-	@echo "  make data          - Download and prepare disaster & synthetic datasets"
-	@echo "  make train         - Train and evaluate Spark MLlib classification pipelines"
-	@echo "  make stream        - Launch Spark Structured Streaming scoring job"
-	@echo "  make simulate      - Run the real-time social & hazard replay simulator"
-	@echo "  make api           - Start the FastAPI backend server"
-	@echo "  make ui            - Start the React/Vite dashboard"
-	@echo "  make test          - Run the test suite"
-	@echo "  make verify        - Run end-to-end validation against rubric criteria"
-	@echo "  make report        - Generate evaluation metrics, ablation tables & plots"
-	@echo "  make demo          - Launch full end-to-end demo"
+	@echo "  make test              - Run fast unit tests (no cluster needed)"
+	@echo "  make test-integration  - Run end-to-end integration tests (needs Kafka/HDFS/Hive)"
+	@echo "  make build-frontend    - Build and type-check React/Vite dashboard bundle"
+	@echo "  make data              - Build real 99k-record disaster corpus"
+	@echo "  make train             - Train Spark MLlib models on real corpus"
+	@echo "  make stream            - Launch Spark Structured Streaming scoring job"
+	@echo "  make api               - Start FastAPI backend server"
+	@echo "  make ui                - Start React/Vite frontend development server"
+	@echo "  make demo              - Launch full end-to-end demonstration"
 
-up:
-	docker compose -f $(COMPOSE_FILE) up -d
+test:
+	$(PYTHON) -m pytest tests/test_real_pipeline.py -v
 
-down:
-	docker compose -f $(COMPOSE_FILE) down
+test-integration:
+	$(PYTHON) -m pytest tests/test_integration.py -v
 
-reset:
-	docker compose -f $(COMPOSE_FILE) down -v --remove-orphans
-
-verify-infra:
-	$(PYTHON) tests/verify_infra.py
+build-frontend:
+	cd frontend && npm run build
 
 data:
-	$(PYTHON) data/download_datasets.py
+	$(PYTHON) data/build_real_corpus.py
 
 train:
-	$(PYTHON) ml/train_models.py
+	$(PYTHON) ml/train_models_real.py
 
 stream:
 	$(PYTHON) streaming/spark_stream_scorer.py
@@ -60,15 +52,8 @@ api:
 ui:
 	cd frontend && npm run dev
 
-test:
-	$(PYTHON) -m pytest tests/ -v
-
-verify: verify-infra test
-	$(PYTHON) tests/verify_pipeline.py
-
 report:
-	$(PYTHON) allocation/run_ablation.py
-	$(PYTHON) results/generate_plots.py
+	$(PYTHON) scripts/build_report_numbers.py
 
 demo:
 	$(PYTHON) scripts/run_demo.py

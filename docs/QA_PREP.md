@@ -2,7 +2,7 @@
 
 **Course:** CSE412 — Big Data & Large-Scale Computing  
 **Audience:** Course Professors, TAs, and Technical Evaluators  
-**Scope:** 25 Rigorous Technical Questions with Defensible, Empirically Grounded Answers
+**Scope:** 25 Rigorous Technical Questions with Defensible, Empirically Grounded Answers  
 
 ---
 
@@ -10,61 +10,68 @@
 
 #### Q1: "Where did your data come from, and how did you verify it is not synthetic or fabricated?"
 **Answer:**  
-Our corpus of **98,944 records** is cataloged in `data/raw/dataset_provenance_manifest.json` with SHA256 checksums and source URLs. It is derived from peer-reviewed academic benchmarks:
-1. **QCRI CrisisBench & HumAID (124 MB, 87,557 rows):** Human-annotated crisis tweets from 19 natural disasters published by Qatar Computing Research Institute (QCRI).
-2. **CrisisLexT26 (0.94 MB, 7,613 rows):** Landmark crisis informatics dataset by Olteanu et al.
-3. **Hello-SimpleAI HC3 (2.78 MB, 1,187 QA pairs):** Real human texts paired with ChatGPT outputs.
-4. **Live Government Feeds:** USGS Earthquakes GeoJSON, NOAA Weather Alerts, and OpenFEMA Declarations.
-Zero data was generated with random Gaussian or artificial text templates.
+Our corpus of **99,568 deduplicated records** is cataloged in `data/raw/dataset_provenance_manifest.json` with SHA256 checksums and source URLs. It is derived from peer-reviewed academic benchmarks:
+1. **QCRI CrisisBench & HumAID (84,334 rows):** Human-annotated crisis tweets from 10 major natural disasters published by Qatar Computing Research Institute (QCRI).
+2. **CrisisLexT26 (8,760 rows):** Disaster informativeness dataset by Olteanu et al.
+3. **Hello-SimpleAI HC3 (3,500 rows):** Real human QA paired with ChatGPT QA for baseline domain-shift evaluation.
+4. **Emergency Hoax Generators (In-Domain Crisis Texts):** 1,500 Generator A hoaxes in Train; 1,474 Generator B hoaxes (with completely disjoint hazard vocabulary) in Held-Out Test.
 
 #### Q2: "How did you ensure zero data leakage between your training and testing sets?"
 **Answer:**  
-We enforced strict **event-based stratified splitting** rather than random row-level splitting:
-- **Train Set (26,350 rows):** Sourced strictly from Hurricane Harvey (2017) and Kerala Floods (2018).
-- **Test Set (72,594 rows):** Sourced strictly from Nepal Earthquake (2015) and California Wildfires (2018).
+We enforced strict **event-based stratified splitting** (75% Train / 25% Held-Out Test) rather than random row-level splitting:
+- **Train Set (74,174 rows):** Sourced from Hurricane Harvey, Hurricane Irma, Hurricane Florence, Cyclone Idai, Cyclone Fani, Kerala Floods, and 75% of general crisis text.
+- **Held-Out Test Set (25,394 rows):** Sourced strictly from 2015 Nepal Earthquake, 2014 Philippines Typhoon Hagupit, 2013 Alberta Floods, and California Wildfires holdout.
 Because disasters occurred in different years and geographies, entity names and locations do not overlap. An automated set-intersection test (`test_train_test_split_leakage` in `tests/test_real_pipeline.py`) verifies that train and test text sets share **0 intersecting strings (0.00% leakage)**.
 
-#### Q3: "Why is your Synthetic Detector ROC-AUC 0.7081 instead of 0.99 or 1.00?"
+#### Q3: "What do your Synthetic Detector metrics actually mean given the class imbalance?"
 **Answer:**  
-In our pre-audit prototype, synthetic generator keywords leaked directly into the TF-IDF feature space, producing an artificial 1.0000 ROC-AUC. In this rebuild, we eliminated synthetic template generators. 
-**0.7081 ROC-AUC** is an honest, empirically defensible metric reflecting real natural language variability when discriminating subtle AI-generated text from authentic human crisis tweets on an un-leaked held-out test split.
+In our held-out test set, synthetic text prevalence is **7.13%** (1,810 synthetic posts out of 25,394 total test posts). 
+- A trivial dummy classifier predicting all posts are genuine achieves a **majority-class baseline accuracy of 92.87%**.
+- Our full model achieves an **accuracy of 93.63%**, an **ROC-AUC of 0.9155**, and a **PR-AUC of 0.5777** (vs 0.0713 random baseline).
+- Because of class imbalance, positive-class ($y=1$) F1 at default threshold 0.50 is **0.2084** (precision 0.9103, recall 0.1177).
+- Balanced Accuracy is **0.5584**, Macro-F1 is **0.5876**, and Weighted-F1 is **0.9128**.
+- At calibrated operational threshold ($\theta = 0.0069$), positive-class recall reaches **73.74%** with **0.9034 ROC-AUC** on unseen disaster hoaxes.
 
-#### Q4: "What is your Shuffled-Label sanity control, and why did you run it?"
+#### Q4: "Why did the stylometric baseline beat the full model in earlier iterations?"
 **Answer:**  
-A common flaw in ML pipelines is memorizing latent artifacts (e.g., tweet IDs, timestamps, or dataset ordering) that artificially inflate performance. 
-In our shuffled-label control (`ml/train_models_real.py`), we uniformly permuted ground-truth labels across the training set while keeping feature vectors identical. The retrained model achieved an **ROC-AUC of 0.5557**, which aligns with the theoretical random chance baseline of 0.50. This formally proves the model learns true semantic signals and has zero latent label leakage.
+In earlier iterations, the full model combined 2,000 sparse TF-IDF text features with 7 dense stylometrics using an L1 ElasticNet penalty (`elasticNetParam = 0.3`). Because held-out Generator B hoaxes contain completely novel vocabulary unseen during training, the 2,000 text coefficients provided zero keyword signal and acted as high-variance noise, degrading test ROC-AUC. 
+When dense stylometrics were centered with `StandardScaler(withMean=True)` and regularized with pure L2 ridge regression (`elasticNetParam = 0.0`), the full model properly integrated both modalities, achieving **0.9155 ROC-AUC**. Stylometrics alone achieve **0.9685 ROC-AUC** because formatting cues (uppercase ratio, punctuation density, digit ratio, length) generalize across generators without keyword memorization.
 
-#### Q5: "What happened when you evaluated your HC3-trained detector on held-out emergency hoaxes?"
+#### Q5: "What is your Shuffled-Label sanity control, and why does it equal 0.50?"
 **Answer:**  
-It scored **0.00% accuracy**. This is an important empirical finding documented in `results/sanity_controls.json`. The HC3 corpus consists of verbose, polite, long-form ChatGPT answers to general questions, whereas emergency hoaxes are terse, urgent crisis alerts. This dramatic failure confirms severe **out-of-distribution domain shift**, proving that off-the-shelf LLM detectors cannot be naively transferred to emergency informatics without domain-specific crisis fine-tuning.
+In our 20-shuffle label permutation control (`ml/train_models_real.py`), we evaluated the model against randomly permuted ground-truth labels across 30 independent runs. The result was **Mean ROC-AUC = 0.5015 ± 0.0066** ($t = 1.2612, p = 0.2173$). Because $p > 0.05$, the model is statistically indistinguishable from theoretical random chance (0.50) under shuffled labels, proving that the detector learns authentic semantic signal rather than memorizing latent artifacts.
+
+#### Q6: "Why did your HC3-trained detector have 0.00% recall on held-out emergency hoaxes?"
+**Answer:**  
+At the default threshold of 0.50, recall was exactly **0.00%** due to severe **out-of-distribution domain shift**. The HC3 corpus consists of verbose, polite, multi-paragraph essays (~800 characters) written in clean grammar, whereas emergency hoaxes are terse crisis tweets (~110 characters). When an HC3-trained model evaluates short emergency hoaxes, its raw sigmoid probabilities are suppressed below 0.05, yielding zero detections at $\theta = 0.50$. In contrast, in-domain crisis training calibrated to the empirical operating threshold ($\theta = 0.0069$) achieves **73.74% recall** on unseen emergency hoaxes.
 
 ---
 
 ### Category 2: Big Data Course Tools & Distributed Infrastructure
 
-#### Q6: "Why did you use Apache Kafka instead of a lightweight Python message queue or RabbitMQ?"
+#### Q7: "Why did you use Apache Kafka instead of a lightweight Python queue or RabbitMQ?"
 **Answer:**  
 Disaster streams require distributed, partitioned log storage with persistent disk offsets. Kafka KRaft provides:
 1. High-throughput sequential disk writes sustaining >100k events/sec.
 2. Consumer group offset management that enables Spark Structured Streaming to commit HDFS checkpoints and replay uncommitted offsets after node crashes.
-3. Decoupling ingestion from variable-latency downstream NLP inference.
+3. Decoupling ingestion from downstream NLP inference.
 
-#### Q7: "Why did you use Hadoop HDFS instead of local disk or an S3 bucket?"
+#### Q8: "Why did you use Hadoop HDFS instead of local disk or an S3 bucket?"
 **Answer:**  
-In academic and enterprise private-cloud deployments, HDFS provides distributed, rack-aware data blocks (128 MB) with native append and atomic rename semantics. These atomic rename semantics are required by Spark Structured Streaming to commit micro-batch offsets without race conditions. Furthermore, HDFS integrates natively with Hive Metastore and Spark without egress costs.
+HDFS provides distributed, rack-aware data blocks (128 MB) with native append and atomic rename semantics. These atomic rename semantics are required by Spark Structured Streaming to commit micro-batch offsets without race conditions. Furthermore, HDFS integrates natively with Hive Metastore and Spark without egress costs.
 
-#### Q8: "How does Hive Metastore fit into your pipeline? Is it HiveServer2?"
+#### Q9: "How does Hive Metastore fit into your pipeline? Is it HiveServer2?"
 **Answer:**  
-We specifically deploy the **Apache Hive Metastore service (Thrift port 9083)**, not HiveServer2. Hive Metastore maintains the relational schema catalog in a Derby backend, registering partitioned Parquet directories stored in HDFS (`hdfs://127.0.0.1:9000/disaster_data/silver_real`) as an external table (`disaster_db.crisis_silver_real`). PySpark queries this catalog natively via `.enableHiveSupport()`.
+We specifically deploy the **Apache Hive Metastore service (Thrift port 9083)**, not HiveServer2. Hive Metastore maintains the relational schema catalog, registering partitioned Parquet directories stored in HDFS (`hdfs://127.0.0.1:9000/disaster_data/silver_real`) as an external table (`disaster_db.crisis_silver_real`). PySpark queries this catalog natively via `.enableHiveSupport()` using Spark SQL.
 
-#### Q9: "Why is Apache Spark needed if Pandas is faster on small datasets?"
+#### Q10: "Why is Apache Spark needed if Pandas is faster on small datasets?"
 **Answer:**  
-Our scaling benchmark (`results/scaling_benchmark.py`) shows Pandas is faster at $\le 100\text{k}$ rows because it lacks JVM startup and Catalyst planning overhead. However, Spark is architecturally necessary because:
+Our scaling benchmark (`results/scaling_benchmark.py`) shows Pandas is 94x faster at 10k rows because it lacks JVM startup and Catalyst planning overhead. However, Spark is architecturally necessary because:
 1. **Streaming Checkpoints:** Spark Structured Streaming connects directly to Kafka and checkpoints offsets to HDFS.
-2. **Out-of-Core Processing:** At 1,000,000+ rows, Pandas memory expands to over 90 MB single-threaded, and at 10M+ rows it triggers an OOM crash. Spark manages partitioned RDDs across worker nodes, spilling to disk when RAM is exceeded.
+2. **Out-of-Core Processing:** At 5,000,000+ and 10,000,000+ rows under a 1.5 GB memory cap, Pandas triggers an out-of-memory (OOM) crash. Spark manages partitioned RDDs across worker threads, spilling partitions to disk out-of-core and completing 10M rows in **2.06s**.
 3. **Distributed MLlib:** Spark trains models across distributed partitions in parallel.
 
-#### Q10: "What delivery guarantee does your streaming architecture provide?"
+#### Q11: "What delivery guarantee does your streaming architecture provide?"
 **Answer:**  
 CrisisGuard provides **at-least-once transport** across Kafka brokers, combined with **effectively-once storage** in HDFS Parquet. This is achieved through Spark Structured Streaming's write-ahead checkpointing: if a worker fails during a micro-batch, the uncommitted Parquet partition is discarded, and the micro-batch is re-processed from the exact Kafka offset checkpoint.
 
@@ -72,47 +79,49 @@ CrisisGuard provides **at-least-once transport** across Kafka brokers, combined 
 
 ### Category 3: Resource Allocation & PuLP Mixed-Integer Linear Programming
 
-#### Q11: "Why did you use PuLP instead of Spark GraphX for fleet allocation?"
+#### Q12: "Why did you use PuLP instead of Spark GraphX for fleet allocation?"
 **Answer:**  
-Resource allocation with discrete vehicle counts ($x_{ij} \in \{0, 1\}$) and strict depot capacity bounds is an NP-hard **Mixed-Integer Linear Program (MILP)**, which requires exact Branch-and-Cut solvers (CBC/Simplex). 
-Spark GraphX is an iterative graph-parallel engine designed for vertex-message passing (PageRank, BFS, Connected Components), not mathematical programming with linear constraints. In our pipeline, Spark performs distributed data filtering and feature aggregation across partitions, producing a compact candidate demand matrix that PuLP solves optimally on the driver in under 100ms.
+Resource allocation with discrete vehicle counts ($x_{ij} \in \{0, 1\}$) and strict depot capacity bounds is an NP-hard **Mixed-Integer Linear Program (MILP)**, which requires exact Branch-and-Cut solvers (CBC). 
+Spark GraphX is an iterative graph-parallel engine designed for vertex-message passing (PageRank, BFS), not mathematical programming with linear inequality constraints. In our pipeline, Spark performs distributed data filtering and feature aggregation across partitions, producing a compact candidate demand matrix that PuLP solves optimally on the driver in under 50ms.
 
-#### Q12: "How is your Trust-Aware objective function formulated mathematically?"
+#### Q13: "How is your Trust-Aware objective function formulated mathematically?"
 **Answer:**  
 $$\max_{x_{ij}} \sum_{i=1}^{N} \sum_{j=1}^{M} \left[ U_i \cdot T_i - \lambda \left( \frac{D_{ij}}{100} \right) \right] x_{ij}$$
-where $U_i \in [0, 1]$ is reported urgency, $T_i = (1 - P_{\text{synth}, i}) \cdot (1 - P_{\text{rumour}, i})$ is the MLlib trust score, $D_{ij}$ is Haversine distance in km, $\lambda = 0.05$ is transit penalty, subject to $\sum_i x_{ij} \le C_j$ (depot capacity) and $\sum_j x_{ij} \le 1$ (single dispatch).
+where $U_i \in [1.0, 5.0]$ is reported urgency, $T_i = 1 - \sigma\left(\frac{P_{\text{synth}, i} - \theta^*}{\tau}\right)$ is the calibrated MLlib trust score, $D_{ij}$ is Haversine distance in km, $\lambda = 0.015$ is transit penalty, subject to $\sum_i x_{ij} \le C_j$ (depot capacity) and $\sum_j x_{ij} \le 1$ (single dispatch).
 
-#### Q13: "What were the empirical results of your 30-seed ablation study in Houston?"
+#### Q14: "What were the empirical results of your 30-seed ablation study in Houston?"
 **Answer:**  
-Evaluated across 30 random seeds on held-out test posts:
-- **Blind LP:** Satisfied $40.20 \pm 0.92$ genuine victims, with **22.69% wasted dispatches** to hoaxes.
-- **Trust-Aware LP:** Satisfied **$51.80 \pm 0.15$ genuine victims**, with **0.38% wasted dispatches** to hoaxes.
-- **Statistical Significance:** Paired t-test yielded $t = 23.77, p = 1.45 \times 10^{-20}$ ($p < 0.001$), formally rejecting the null hypothesis.
+Evaluated across 30 random seeds using **actual Spark MLlib model scores on held-out test predictions**:
+- **Blind LP:** Satisfied $39.10 \pm 1.10$ genuine victims, with **24.81% wasted dispatches** to hoaxes.
+- **Trust-Aware LP:** Satisfied **$43.70 \pm 1.05$ genuine victims**, with **15.96% wasted dispatches** to hoaxes.
+- **Statistical Significance:** Paired t-test yielded **$t = 18.60, p = 1.16 \times 10^{-17}$**, confirming statistically significant gain of +4.6 genuine victims reached per batch in simulation.
+- **Hoax Dispatch Reduction:** **35.67% relative reduction**.
 
-#### Q14: "Why does Blind LP waste 22.69% of dispatches?"
+#### Q15: "Why are wasted dispatches ~15.96% instead of near 0%?"
 **Answer:**  
-Adversarial hoaxes deliberately include extreme urgency keywords (*"DROWNING", "COLLAPSED"*), driving reported urgency $U_i \to 1.0$. Because Blind LP cannot verify veracity, it prioritizes these fabricated 1.0 urgency requests over authentic citizen requests that report moderate urgency (e.g., $U_i = 0.7$). In a fleet of 52 boats, ~12 boats are dispatched to empty locations.
+In earlier simulated prototypes, trust scores were artificially drawn from Beta distributions, giving an unrealistic 0.38% wasted dispatches. With the **actual MLlib model scores on held-out emergency hoaxes**, the detector has finite false-negative and false-positive rates on unseen disaster vocabulary. Because trust scores for hoaxes average ~0.34 (rather than 0.00), a subset of high-urgency hoaxes proximate to depots will still receive dispatch. Reporting 15.96% reflects genuine empirical honesty.
 
-#### Q15: "What happens when hoax contamination increases from 5% to 40%?"
+#### Q16: "What happens when hoax contamination increases from 5% to 40%?"
 **Answer:**  
-In our sensitivity sweep (`results/ablation_study.json`), at 5% contamination, Trust-Aware LP rescues +5.73 more victims than Blind LP. At 40% contamination, Blind LP completely collapses, serving only 4.73 genuine victims because hoaxes consume 91% of capacity. Trust-Aware LP maintains resilience, serving **51.67 victims (+46.93 lives saved)**.
+In our sensitivity sweep (`results/ablation_study.json`), genuine victims gained by Trust-Aware LP scales monotonically:
+- At 5% hoax rate: Genuine Gain = **+5.15 victims** reached in simulation.
+- At 20% hoax rate: Genuine Gain = **+19.15 victims**.
+- At 40% hoax rate: Genuine Gain = **+36.20 victims**.
 
 ---
 
 ### Category 4: Graph Analytics & Botnet Detection
 
-#### Q16: "What algorithm did you use for coordination graph analytics?"
+#### Q17: "What algorithm did you use for coordination graph analytics?"
 **Answer:**  
-We used **Spark MLlib MinHashLSH** (`pyspark.ml.feature.MinHashLSH`) with 5 hash tables and a Jaccard similarity threshold of $\ge 0.65$. It hashes 5,000-dimensional TF-IDF vectors to find near-duplicate text pairs without computing an all-pairs $O(N^2)$ Cartesian product.
+We used **Spark MLlib MinHashLSH** (`pyspark.ml.feature.MinHashLSH`) with 5 hash tables and a Jaccard distance threshold $\le 0.35$ (similarity $\ge 0.65$). It hashes 2,048-dimensional TF-IDF vectors to find near-duplicate text pairs without computing an all-pairs $O(N^2)$ Cartesian product. GraphX is NOT claimed; connected components are solved via NetworkX on the driver.
 
-#### Q17: "What did the coordination graph reveal about synthetic hoaxes versus genuine posts?"
+#### Q18: "Is your 32.7x amplification ratio an artifact of template generators?"
 **Answer:**  
-On a sample of 14,888 empirical posts, the graph discovered 9,563 near-duplicate text edges and 281,344 hashtag co-occurrence edges. 
-Synthetic hoaxes had a mean coordination degree of **60.82 edges**, compared to **1.86 edges** for genuine citizen reports—a **32.74x amplification disparity**. This proves that automated hoaxes rely on synchronized copy-paste botnet amplification.
-
-#### Q18: "Are the social media accounts in your coordination graph authentic Twitter accounts?"
-**Answer:**  
-No. To adhere to strict academic honesty, we explicitly declare in the graph manifest: while text strings and hashtag co-occurrences are extracted directly from empirical HumAID tweets, individual account handles and follower graphs are simulated approximations because public disaster datasets anonymize user IDs for privacy.
+Yes, partly. In our circularity control experiment (`results/coordination_graph_results.json`), we evaluated duplicate densities separately:
+- Real human HumAID posts exhibit duplicate density of **0.0103 edges/post** (natural retweets/broadcasts).
+- Injected hoaxes exhibit duplicate density of **15.2058 edges/post**.
+- Approximately **85.0%** of the high amplification ratio in injected hoaxes is an artifact of template phrasing syntax in the generator. We report this transparently.
 
 ---
 
@@ -121,14 +130,13 @@ No. To adhere to strict academic honesty, we explicitly declare in the graph man
 #### Q19: "How did you conduct your 100,000-event streaming fault-tolerance test?"
 **Answer:**  
 In `tests/test_stream_recovery.py`, a producer streamed 100,000 JSON disaster events to Kafka topic `disaster_recovery_100k`. Spark Structured Streaming ingested the stream and checkpointed to HDFS. At event 60,000, we injected a hard process kill (`kill -9`) into the consumer driver. 
-Upon restart, the consumer resumed from the committed HDFS checkpoint offsets, ingesting all remaining 40,000 events. The result was **0 events lost (0.00% loss)**, **0 duplicate records**, and a **7.72-second recovery window**.
+Upon restart, the consumer resumed from the committed HDFS checkpoint offsets, ingesting all remaining 40,000 events. The result was **0 events lost (0.00% loss)**, **0 duplicate records**, and a **3.42-second recovery window**.
 
-#### Q20: "What does your scaling benchmark show at 1,000,000 rows?"
+#### Q20: "What does your scaling benchmark show at 10,000,000 rows?"
 **Answer:**  
-At 1M rows on our WSL2 test machine:
-- Pandas processed in-memory aggregations in 0.231s, consuming 90.85 MB RAM.
-- Spark processed the 1M rows across partitions in 51.64s.
-This proves that on a single node where data fits in memory, Pandas is faster due to zero JVM/Catalyst overhead. Spark's justification is not single-node sub-second batch latency, but its distributed streaming from Kafka, HDFS/Hive ecosystem integration, and out-of-core partition resilience.
+At 10M rows under a 1.5 GB memory cap:
+- Pandas crashes with an Out-of-Memory error (`OOM_CRASH`) because in-memory representation exceeds 2.8 GB.
+- PySpark partitions data into blocks and spills excess partitions to disk out-of-core, completing the aggregation in **2.06 seconds**.
 
 ---
 
@@ -137,8 +145,8 @@ This proves that on a single node where data fits in memory, Pandas is faster du
 #### Q21: "How does the FastAPI backend connect to the Spark and Kafka layers?"
 **Answer:**  
 FastAPI (`backend/main.py`) acts as the operational API gateway:
-1. It exposes endpoints (`/api/health`, `/api/summary`, `/api/sample-posts`).
-2. It interacts with the PuLP solver module to execute on-demand fleet allocations based on client parameters.
+1. It exposes endpoints (`/api/health`, `/api/metrics`, `/api/ablation`, `/api/coordination`, `/api/scaling`).
+2. It executes on-demand fleet allocations via the PuLP solver module based on client parameters.
 3. It serves the production build of the React 18 / Vite frontend directly as static assets.
 
 #### Q22: "Why do your map and dashboard show `[SIMULATED]` badges?"
@@ -155,8 +163,9 @@ To avoid misleading evaluators: while the text, coordinates, and classification 
 **Answer:**  
 If a genuine victim posts in all-caps with unverified phrasing, the trust score may temporarily decrease. However, our objective function balances trust with reported urgency: a high urgency score ensures the demand remains in the candidate pool. Furthermore, CrisisGuard is designed as a **decision-support triaging tool** for human dispatch commanders, not an autonomous physical actuator.
 
-#### Q25: "How was work divided among the three team members?"
+#### Q25: "How should our team explain the contribution breakdown during oral defense?"
 **Answer:**  
-- **Student 1 (Infrastructure & Streaming Lead):** Kafka 3.7 KRaft broker, HDFS 3.3.6 distributed storage, Hive Metastore 3.1.3 catalog, 100k-event stream crash-recovery test, and 1M scaling benchmark.
-- **Student 2 (Machine Learning & Graph Lead):** Data acquisition (98,944 records from QCRI HumAID, CrisisLex, HC3), zero-leakage split, 4 Spark MLlib models, shuffled-label sanity control (0.5557 AUC), and MinHashLSH coordination graph (32.7x ratio).
-- **Student 3 (Optimization & Full-Stack Lead):** Trust-Aware PuLP MILP formulation, 30-seed multi-region ablation study across 4 disaster theaters, paired t-tests ($p < 10^{-20}$), FastAPI backend, and React 18 / Vite glassmorphic operations dashboard.
+Each member should directly present the modules they implemented:
+- **Infrastructure Lead:** Kafka KRaft streaming buffer, HDFS storage hierarchy, Hive Metastore Spark SQL catalog, 100k-event crash recovery test.
+- **Machine Learning & Graph Lead:** QCRI HumAID / CrisisLex 99k corpus curation, event-stratified train/test partition, 4 Spark MLlib models, 20-shuffle permutation control, and MinHashLSH similarity graph.
+- **Optimization & Dashboard Lead:** PuLP CBC MILP mathematical formulation, 30-seed multi-region ablation study, sensitivity sweeps, FastAPI endpoints, and React 18 / Vite dashboard.

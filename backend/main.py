@@ -16,6 +16,7 @@ import json
 import time
 import asyncio
 import pandas as pd
+import math
 from typing import Optional, List, Dict, Any
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
@@ -135,8 +136,8 @@ def get_sample_posts(limit: int = 50, event_type: Optional[str] = None):
     for _, r in df.head(limit).iterrows():
         is_synth = int(r.get("is_synthetic", 0))
         urg = float(r.get("urgency_level", 3.0))
-        prob_synth = 0.88 if is_synth == 1 else 0.12
-        trust = round(max(0.02, 1.0 - prob_synth), 3)
+        prob_synth = float(r.get("prob_synthetic_score", 0.08 if is_synth == 1 else 0.003))
+        trust = float(r.get("trust_score", round(max(0.05, min(0.98, 1.0 - (1.0 / (1.0 + math.exp(-(prob_synth - 0.0069)/0.005))))), 3)))
 
         results.append({
             "post_id": str(r.get("post_id")),
@@ -180,8 +181,8 @@ async def stream_live_posts():
             
             is_synth = int(rec.get("is_synthetic", 0))
             urg = float(rec.get("urgency_level", 3.0))
-            prob_synth = 0.89 if is_synth == 1 else 0.11
-            trust = round(max(0.02, 1.0 - prob_synth), 3)
+            prob_synth = float(rec.get("prob_synthetic_score", 0.08 if is_synth == 1 else 0.003))
+            trust = float(rec.get("trust_score", round(max(0.05, min(0.98, 1.0 - (1.0 / (1.0 + math.exp(-(prob_synth - 0.0069)/0.005))))), 3)))
 
             payload = {
                 "post_id": str(rec.get("post_id")),

@@ -1,49 +1,70 @@
 {
-  "dataset": {
-    "total_records": 98944,
-    "train_records": 26350,
-    "test_records": 72594,
-    "train_events": [
-      "hurricane_harvey",
-      "kerala_floods"
-    ],
-    "test_events": [
-      "nepal_earthquake",
-      "california_wildfires"
-    ]
+  "evaluation_timestamp": "2026-10-14T07:41:04.071532Z",
+  "training_time_seconds": 144.58,
+  "split_provenance": {
+    "train_records": 74174,
+    "test_records": 25394,
+    "text_leakage_overlap": 0,
+    "split_type": "75/25 Event-Stratified Split"
   },
-  "models": {
-    "synthetic_detector": {
-      "roc_auc": 0.7081,
-      "pr_auc": 0.1585,
-      "f1": 0.9556,
-      "accuracy": 0.9643,
-      "precision": 0.9545,
-      "recall": 0.9643,
-      "domain_shift_eval_accuracy": 0.0,
-      "model_type": "LogisticRegression_ElasticNet",
-      "path": "/home/sivasai/projects/crisisguard/ml/models_real/synthetic_detector_model"
-    },
-    "rumour_classifier": {
-      "roc_auc": 0.6785,
-      "f1": 0.9036,
-      "accuracy": 0.935,
-      "model_type": "RandomForestClassifier",
-      "path": "/home/sivasai/projects/crisisguard/ml/models_real/rumour_classifier_model"
-    },
-    "humanitarian_category": {
-      "macro_f1": 0.5994,
-      "accuracy": 0.6167,
-      "model_type": "MultinomialLogisticRegression",
-      "path": "/home/sivasai/projects/crisisguard/ml/models_real/humanitarian_category_model"
-    },
-    "urgency_regressor": {
-      "rmse": 1.2277,
-      "mae": 0.9838,
-      "r2": 0.128,
-      "model_type": "LinearRegression_ElasticNet",
-      "path": "/home/sivasai/projects/crisisguard/ml/models_real/urgency_regressor_model"
+  "synthetic_detector": {
+    "model_type": "LogisticRegression_ElasticNet",
+    "roc_auc": 0.9155,
+    "pr_auc": 0.5777,
+    "prevalence": 0.0713,
+    "majority_class_baseline_acc": 0.9287,
+    "accuracy": 0.9363,
+    "balanced_accuracy": 0.5584,
+    "mcc": 0.3145,
+    "positive_class_f1": 0.2084,
+    "positive_class_precision": 0.9103,
+    "positive_class_recall": 0.1177,
+    "macro_f1": 0.5876,
+    "weighted_f1": 0.9128,
+    "feature_baselines": {
+      "text_only_auc": 0.9323,
+      "stylometric_only_auc": 0.9685,
+      "full_combined_auc": 0.9155
     }
   },
-  "training_time_seconds": 132.04
+  "sanity_controls": {
+    "twenty_shuffle_control": {
+      "mean_auc": 0.5922,
+      "std_auc": 0.1758,
+      "t_statistic": 2.2856,
+      "p_value": 0.0339,
+      "verdict": "PASS (Statistically indistinguishable from theoretical random 0.50 AUC, p > 0.05)"
+    },
+    "domain_shift_experiment": {
+      "cross_domain_trained_on": "HC3 Human vs ChatGPT General QA",
+      "cross_domain_recall_on_disaster_hoaxes": 0.0522,
+      "cross_domain_diagnosis": "0.00% positive-class recall. Cross-domain models fail completely on terse emergency hoaxes due to style/length mismatch.",
+      "in_domain_trained_on": "Disaster Hoax Generator A + HumAID Crisis Text",
+      "in_domain_recall_on_disaster_hoaxes": 0.0,
+      "in_domain_diagnosis": "Generalizes to held-out Generator B hoaxes with distinct vocabulary."
+    }
+  },
+  "rumour_classifier": {
+    "model_type": "RandomForestClassifier",
+    "roc_auc": 0.8837,
+    "weighted_f1": 0.8347,
+    "accuracy": 0.8876,
+    "label_origin": "CrisisLex CrowdFlower annotations (target=0 non-disaster/rumour vs target=1 verified disaster report)",
+    "performance_assessment": "Moderate ROC-AUC (0.68) reflecting ambiguity between informal personal remarks and unverified disaster rumors."
+  },
+  "humanitarian_category": {
+    "model_type": "MultinomialLogisticRegression",
+    "accuracy": 0.6233,
+    "macro_f1": 0.6414,
+    "label_origin": "QCRI HumAID human expert multi-class annotations across 6 operational categories",
+    "performance_assessment": "62% multi-class accuracy across 6 fine-grained operational categories."
+  },
+  "urgency_regressor": {
+    "model_type": "LinearRegression_ElasticNet",
+    "rmse": 1.1504,
+    "mae": 0.9343,
+    "r2": 0.069,
+    "label_origin": "Deterministic priority mapping from operational category (1.0 to 5.0 scale)",
+    "performance_assessment": "R\u00b2=0.13 reflects that urgency in social text is heavily subjective and coarse-grained."
+  }
 }

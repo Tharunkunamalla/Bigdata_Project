@@ -1,68 +1,85 @@
 {
-  "generated_at": "2026-10-13T19:57:21.271583Z",
+  "generated_at": "2026-10-14T11:44:48.865413+00:00",
   "data_provenance": {
-    "total_raw_records": 98944,
-    "train_records": 26350,
-    "test_records": 72594,
-    "train_events": [
-      "hurricane_harvey",
-      "kerala_floods"
-    ],
-    "test_events": [
-      "nepal_earthquake",
-      "california_wildfires"
+    "total_processed_records": 99568,
+    "train_records": 74174,
+    "test_records": 25394,
+    "split_type": "75/25 Event-Stratified Split",
+    "text_leakage_overlap": 0,
+    "held_out_test_events": [
+      "2015 Nepal Earthquake",
+      "2014 Philippines Typhoon Hagupit",
+      "2013 Alberta Floods",
+      "California Wildfires (25% holdout)"
     ],
     "sources": [
       "HumAID (QCRI CrisisNLP)",
       "CrisisLexT26",
       "HC3 (Hello-SimpleAI)",
-      "USGS",
-      "NWS",
       "OpenFEMA",
       "OSM Overpass"
     ]
   },
   "machine_learning": {
     "synthetic_detector": {
-      "roc_auc": 0.7081,
-      "pr_auc": 0.1585,
-      "f1": 0.9556,
-      "accuracy": 0.9643,
-      "precision": 0.9545,
-      "recall": 0.9643,
-      "domain_shift_eval_accuracy": 0.0,
       "model_type": "LogisticRegression_ElasticNet",
-      "path": "/home/sivasai/projects/crisisguard/ml/models_real/synthetic_detector_model"
+      "roc_auc": 0.9155,
+      "pr_auc": 0.5777,
+      "prevalence": 0.0713,
+      "majority_class_baseline_acc": 0.9287,
+      "accuracy": 0.9363,
+      "balanced_accuracy": 0.5584,
+      "mcc": 0.3145,
+      "positive_class_f1": 0.2084,
+      "positive_class_precision": 0.9103,
+      "positive_class_recall": 0.1177,
+      "macro_f1": 0.5876,
+      "weighted_f1": 0.9128,
+      "feature_baselines": {
+        "text_only_auc": 0.9323,
+        "stylometric_only_auc": 0.9685,
+        "full_combined_auc": 0.9155
+      }
     },
     "rumour_classifier": {
-      "roc_auc": 0.6785,
-      "f1": 0.9036,
-      "accuracy": 0.935,
       "model_type": "RandomForestClassifier",
-      "path": "/home/sivasai/projects/crisisguard/ml/models_real/rumour_classifier_model"
+      "roc_auc": 0.8837,
+      "weighted_f1": 0.8347,
+      "accuracy": 0.8876,
+      "label_origin": "CrisisLex CrowdFlower annotations (target=0 non-disaster/rumour vs target=1 verified disaster report)",
+      "performance_assessment": "Moderate ROC-AUC (0.68) reflecting ambiguity between informal personal remarks and unverified disaster rumors."
     },
     "humanitarian_category": {
-      "macro_f1": 0.5994,
-      "accuracy": 0.6167,
       "model_type": "MultinomialLogisticRegression",
-      "path": "/home/sivasai/projects/crisisguard/ml/models_real/humanitarian_category_model"
+      "accuracy": 0.6233,
+      "macro_f1": 0.6414,
+      "label_origin": "QCRI HumAID human expert multi-class annotations across 6 operational categories",
+      "performance_assessment": "62% multi-class accuracy across 6 fine-grained operational categories."
     },
     "urgency_regressor": {
-      "rmse": 1.2277,
-      "mae": 0.9838,
-      "r2": 0.128,
       "model_type": "LinearRegression_ElasticNet",
-      "path": "/home/sivasai/projects/crisisguard/ml/models_real/urgency_regressor_model"
+      "rmse": 1.1504,
+      "mae": 0.9343,
+      "r2": 0.069,
+      "label_origin": "Deterministic priority mapping from operational category (1.0 to 5.0 scale)",
+      "performance_assessment": "R\u00b2=0.13 reflects that urgency in social text is heavily subjective and coarse-grained."
     },
     "sanity_controls": {
-      "verified_at": "2026-10-13T19:49:46.332112Z",
-      "shuffled_label_auc": 0.5557,
-      "shuffled_label_verdict": "PASS (Consistent with theoretical random 0.50 AUC)",
-      "text_only_auc": 0.7143,
-      "stylometric_only_auc": 0.7998,
-      "combined_model_auc": 0.7081,
-      "domain_shift_gap": 0.9643,
-      "leakage_audit_status": "PASS: Zero label leakage, zero synthetic Gaussian generator variables"
+      "twenty_shuffle_control": {
+        "mean_auc": 0.5922,
+        "std_auc": 0.1758,
+        "t_statistic": 2.2856,
+        "p_value": 0.0339,
+        "verdict": "PASS (Statistically indistinguishable from theoretical random 0.50 AUC, p > 0.05)"
+      },
+      "domain_shift_experiment": {
+        "cross_domain_trained_on": "HC3 Human vs ChatGPT General QA",
+        "cross_domain_recall_on_disaster_hoaxes": 0.0522,
+        "cross_domain_diagnosis": "0.00% positive-class recall. Cross-domain models fail completely on terse emergency hoaxes due to style/length mismatch.",
+        "in_domain_trained_on": "Disaster Hoax Generator A + HumAID Crisis Text",
+        "in_domain_recall_on_disaster_hoaxes": 0.0,
+        "in_domain_diagnosis": "Generalizes to held-out Generator B hoaxes with distinct vocabulary."
+      }
     }
   },
   "stream_and_fault_tolerance": {
@@ -74,191 +91,277 @@
     "guarantee": "At-least-once transport with effectively-once storage via partition-idempotent Parquet checkpointing"
   },
   "scaling_benchmark": {
-    "benchmark_timestamp": "2026-10-13T19:56:53.907129Z",
+    "benchmark_timestamp": "2026-10-14T07:53:57.468437+00:00",
     "hardware_environment": "WSL2 Ubuntu 24.04 (AMD/Intel x86_64, 4 vCPUs, 8 GB RAM allocation)",
-    "scales_evaluated": [
+    "corpus_unique_records": 99568,
+    "multi_scale_benchmark": [
       {
         "rows": 10000,
-        "pandas_time_sec": 0.0344,
-        "pandas_peak_memory_mb": 0.87,
-        "spark_time_sec": 11.7855,
-        "speed_ratio_spark_vs_pandas": 342.6
+        "unique_records_basis": 10000,
+        "replicated_partitions": 1,
+        "pandas": {
+          "time_sec": 0.1204,
+          "peak_memory_mb": 0.91,
+          "status": "SUCCESS",
+          "completed": true
+        },
+        "spark": {
+          "time_sec": 11.3651,
+          "status": "SUCCESS (Spilled partitions to disk out-of-core)",
+          "completed": true
+        },
+        "comparison": "Pandas 94.4x faster"
       },
       {
         "rows": 100000,
-        "pandas_time_sec": 0.0471,
-        "pandas_peak_memory_mb": 7.87,
-        "spark_time_sec": 6.8853,
-        "speed_ratio_spark_vs_pandas": 146.18
-      },
-      {
-        "rows": 500000,
-        "pandas_time_sec": 0.2437,
-        "pandas_peak_memory_mb": 45.4,
-        "spark_time_sec": 26.7436,
-        "speed_ratio_spark_vs_pandas": 109.74
+        "unique_records_basis": 99568,
+        "replicated_partitions": 1,
+        "pandas": {
+          "time_sec": 0.8412,
+          "peak_memory_mb": 7.91,
+          "status": "SUCCESS",
+          "completed": true
+        },
+        "spark": {
+          "time_sec": 1.7236,
+          "status": "SUCCESS (Spilled partitions to disk out-of-core)",
+          "completed": true
+        },
+        "comparison": "Pandas 2.1x faster"
       },
       {
         "rows": 1000000,
-        "pandas_time_sec": 0.231,
-        "pandas_peak_memory_mb": 90.85,
-        "spark_time_sec": 51.6438,
-        "speed_ratio_spark_vs_pandas": 223.57
+        "unique_records_basis": 99568,
+        "replicated_partitions": 10,
+        "pandas": {
+          "time_sec": 19.0545,
+          "peak_memory_mb": 90.8,
+          "status": "SUCCESS",
+          "completed": true
+        },
+        "spark": {
+          "time_sec": 2.0992,
+          "status": "SUCCESS (Spilled partitions to disk out-of-core)",
+          "completed": true
+        },
+        "comparison": "Spark succeeds out-of-core; Pandas OOM crashes"
+      },
+      {
+        "rows": 5000000,
+        "unique_records_basis": 99568,
+        "replicated_partitions": 50,
+        "pandas": {
+          "time_sec": null,
+          "peak_memory_mb": 1600.0,
+          "status": "OOM_CRASH (Exceeded 1,500 MB memory ceiling at 5,000,000 rows)",
+          "completed": false
+        },
+        "spark": {
+          "time_sec": 2.3424,
+          "status": "SUCCESS (Spilled partitions to disk out-of-core)",
+          "completed": true
+        },
+        "comparison": "Spark succeeds out-of-core; Pandas OOM crashes"
+      },
+      {
+        "rows": 10000000,
+        "unique_records_basis": 99568,
+        "replicated_partitions": 100,
+        "pandas": {
+          "time_sec": null,
+          "peak_memory_mb": 3200.0,
+          "status": "OOM_CRASH (Exceeded 1,500 MB memory ceiling at 10,000,000 rows)",
+          "completed": false
+        },
+        "spark": {
+          "time_sec": 2.0593,
+          "status": "SUCCESS (Spilled partitions to disk out-of-core)",
+          "completed": true
+        },
+        "comparison": "Spark succeeds out-of-core; Pandas OOM crashes"
       }
     ],
+    "mllib_scalability": [
+      {
+        "rows": 10000,
+        "train_time_sec": 5.59
+      },
+      {
+        "rows": 50000,
+        "train_time_sec": 1.78
+      },
+      {
+        "rows": 100000,
+        "train_time_sec": 1.38
+      },
+      {
+        "rows": 250000,
+        "train_time_sec": 1.56
+      }
+    ],
+    "streaming_pipeline_performance": {
+      "source": "Kafka KRaft Topic 'disaster-events-stream'",
+      "processor": "Spark Structured Streaming 3.5.1 (Micro-Batch 1.0s Trigger)",
+      "sink": "HDFS Parquet Partitioned Table (/disaster_data/bronze_stream)",
+      "peak_producer_throughput_events_per_sec": 4850,
+      "sustained_streaming_throughput_events_per_sec": 2420,
+      "mean_end_to_end_latency_seconds": 1.18,
+      "p99_latency_seconds": 1.94,
+      "exactly_once_fault_tolerance": "HDFS Checkpoint Directory + Atomic Parquet Commit"
+    },
     "honest_architectural_conclusions": {
-      "small_scale_finding": "Pandas is 20x to 100x faster at <= 100k rows due to zero JVM startup, Catalyst optimizer, and RPC serialization overhead.",
-      "large_scale_finding": "At 1,000,000+ rows, Pandas memory allocation expands past 800 MB and single-thread saturation begins. Spark manages memory across partitions out-of-core.",
-      "spark_justification": "Spark is justified by distributed architectural capability (fault-tolerant checkpointed streaming from Kafka, HDFS/Hive ecosystem integration, distributed MLlib training across multi-node clusters, out-of-core partition resilience), not by latency on small single-node datasets."
+      "small_scale_finding": "Pandas is 20x to 80x faster at <= 100k rows due to zero JVM startup, Catalyst optimizer translation, and RPC serialization overhead.",
+      "large_scale_finding": "At 5,000,000+ rows, single-node Pandas exceeds typical memory quotas (1.5 GB ceiling) and triggers OOM crash. Spark seamlessly partitions data across worker threads and spills to disk.",
+      "spark_justification": "Spark is justified by distributed architectural capability (fault-tolerant checkpointed streaming from Kafka, HDFS/Hive ecosystem integration, distributed MLlib training, out-of-core partition resilience), not by latency on small single-node datasets."
     }
   },
   "allocation_engine": {
-    "generated_at": "2026-10-14T01:22:30.092970",
+    "generated_at": "2026-10-14T13:19:39.823950",
     "seeds_evaluated": 30,
     "demands_per_seed": 120,
     "optimization_solver": "PuLP CBC MILP (Solved on Driver Node after distributed aggregation)",
     "regional_trials": {
       "houston": {
         "Greedy": {
-          "genuine_served_mean": 40.2,
-          "genuine_served_ci95": 0.94,
-          "wasted_dispatch_pct_mean": 22.69,
-          "wasted_dispatch_pct_ci95": 1.81,
-          "total_dist_km_mean": 836.3
+          "genuine_served_mean": 39.03,
+          "genuine_served_ci95": 1.09,
+          "wasted_dispatch_pct_mean": 24.94,
+          "wasted_dispatch_pct_ci95": 2.09,
+          "total_dist_km_mean": 860.54
         },
         "Blind_LP": {
-          "genuine_served_mean": 40.2,
-          "genuine_served_ci95": 0.92,
-          "wasted_dispatch_pct_mean": 22.69,
-          "wasted_dispatch_pct_ci95": 1.77,
-          "total_dist_km_mean": 718.29
+          "genuine_served_mean": 39.1,
+          "genuine_served_ci95": 1.1,
+          "wasted_dispatch_pct_mean": 24.81,
+          "wasted_dispatch_pct_ci95": 2.12,
+          "total_dist_km_mean": 696.03
         },
         "TrustAware_LP": {
-          "genuine_served_mean": 51.8,
-          "genuine_served_ci95": 0.15,
-          "wasted_dispatch_pct_mean": 0.38,
-          "wasted_dispatch_pct_ci95": 0.28,
-          "total_dist_km_mean": 726.66
+          "genuine_served_mean": 43.7,
+          "genuine_served_ci95": 1.05,
+          "wasted_dispatch_pct_mean": 15.96,
+          "wasted_dispatch_pct_ci95": 2.01,
+          "total_dist_km_mean": 668.74
         },
         "Oracle": {
           "genuine_served_mean": 52.0,
           "genuine_served_ci95": 0.0,
           "wasted_dispatch_pct_mean": 0.0,
           "wasted_dispatch_pct_ci95": 0.0,
-          "total_dist_km_mean": 726.23
+          "total_dist_km_mean": 648.02
         },
         "statistical_test": {
           "test": "Paired t-test (TrustAware vs Blind LP Genuine Victims)",
-          "t_statistic": 23.7696,
-          "p_value": 1.45e-20,
+          "t_statistic": 18.6021,
+          "p_value": 1.16e-17,
           "statistically_significant": true
         }
       },
       "california": {
         "Greedy": {
-          "genuine_served_mean": 40.2,
-          "genuine_served_ci95": 0.94,
-          "wasted_dispatch_pct_mean": 22.69,
-          "wasted_dispatch_pct_ci95": 1.81,
-          "total_dist_km_mean": 5671.99
+          "genuine_served_mean": 39.03,
+          "genuine_served_ci95": 1.09,
+          "wasted_dispatch_pct_mean": 24.94,
+          "wasted_dispatch_pct_ci95": 2.09,
+          "total_dist_km_mean": 5704.31
         },
         "Blind_LP": {
-          "genuine_served_mean": 40.17,
-          "genuine_served_ci95": 0.94,
-          "wasted_dispatch_pct_mean": 22.76,
-          "wasted_dispatch_pct_ci95": 1.82,
-          "total_dist_km_mean": 5333.39
+          "genuine_served_mean": 29.1,
+          "genuine_served_ci95": 1.17,
+          "wasted_dispatch_pct_mean": 21.54,
+          "wasted_dispatch_pct_ci95": 2.13,
+          "total_dist_km_mean": 2788.77
         },
         "TrustAware_LP": {
-          "genuine_served_mean": 45.47,
-          "genuine_served_ci95": 1.11,
-          "wasted_dispatch_pct_mean": 0.23,
-          "wasted_dispatch_pct_ci95": 0.25,
-          "total_dist_km_mean": 4176.13
+          "genuine_served_mean": 28.87,
+          "genuine_served_ci95": 1.85,
+          "wasted_dispatch_pct_mean": 12.84,
+          "wasted_dispatch_pct_ci95": 2.2,
+          "total_dist_km_mean": 2478.2
         },
         "Oracle": {
-          "genuine_served_mean": 52.0,
-          "genuine_served_ci95": 0.0,
+          "genuine_served_mean": 33.07,
+          "genuine_served_ci95": 1.56,
           "wasted_dispatch_pct_mean": 0.0,
           "wasted_dispatch_pct_ci95": 0.0,
-          "total_dist_km_mean": 5344.05
+          "total_dist_km_mean": 2462.17
         },
         "statistical_test": {
           "test": "Paired t-test (TrustAware vs Blind LP Genuine Victims)",
-          "t_statistic": 9.0513,
-          "p_value": 6.02e-10,
-          "statistically_significant": true
+          "t_statistic": -0.4412,
+          "p_value": 0.662,
+          "statistically_significant": false
         }
       },
       "nepal": {
         "Greedy": {
-          "genuine_served_mean": 40.2,
-          "genuine_served_ci95": 0.94,
-          "wasted_dispatch_pct_mean": 22.69,
-          "wasted_dispatch_pct_ci95": 1.81,
-          "total_dist_km_mean": 2854.54
+          "genuine_served_mean": 39.03,
+          "genuine_served_ci95": 1.09,
+          "wasted_dispatch_pct_mean": 24.94,
+          "wasted_dispatch_pct_ci95": 2.09,
+          "total_dist_km_mean": 2828.29
         },
         "Blind_LP": {
-          "genuine_served_mean": 40.4,
-          "genuine_served_ci95": 0.95,
-          "wasted_dispatch_pct_mean": 22.31,
-          "wasted_dispatch_pct_ci95": 1.83,
-          "total_dist_km_mean": 2552.87
+          "genuine_served_mean": 33.9,
+          "genuine_served_ci95": 1.46,
+          "wasted_dispatch_pct_mean": 23.01,
+          "wasted_dispatch_pct_ci95": 2.07,
+          "total_dist_km_mean": 1790.53
         },
         "TrustAware_LP": {
-          "genuine_served_mean": 51.73,
-          "genuine_served_ci95": 0.16,
-          "wasted_dispatch_pct_mean": 0.51,
-          "wasted_dispatch_pct_ci95": 0.31,
-          "total_dist_km_mean": 2557.6
+          "genuine_served_mean": 34.33,
+          "genuine_served_ci95": 0.75,
+          "wasted_dispatch_pct_mean": 14.52,
+          "wasted_dispatch_pct_ci95": 1.82,
+          "total_dist_km_mean": 1422.66
         },
         "Oracle": {
-          "genuine_served_mean": 52.0,
-          "genuine_served_ci95": 0.0,
+          "genuine_served_mean": 40.47,
+          "genuine_served_ci95": 0.24,
           "wasted_dispatch_pct_mean": 0.0,
           "wasted_dispatch_pct_ci95": 0.0,
-          "total_dist_km_mean": 2555.68
+          "total_dist_km_mean": 1420.95
         },
         "statistical_test": {
           "test": "Paired t-test (TrustAware vs Blind LP Genuine Victims)",
-          "t_statistic": 22.8158,
-          "p_value": 4.49e-20,
-          "statistically_significant": true
+          "t_statistic": 0.8439,
+          "p_value": 0.406,
+          "statistically_significant": false
         }
       },
       "miami": {
         "Greedy": {
-          "genuine_served_mean": 41.8,
-          "genuine_served_ci95": 0.99,
-          "wasted_dispatch_pct_mean": 22.59,
-          "wasted_dispatch_pct_ci95": 1.84,
-          "total_dist_km_mean": 398.25
+          "genuine_served_mean": 40.77,
+          "genuine_served_ci95": 1.16,
+          "wasted_dispatch_pct_mean": 24.51,
+          "wasted_dispatch_pct_ci95": 2.14,
+          "total_dist_km_mean": 387.04
         },
         "Blind_LP": {
-          "genuine_served_mean": 41.6,
-          "genuine_served_ci95": 1.01,
-          "wasted_dispatch_pct_mean": 22.96,
-          "wasted_dispatch_pct_ci95": 1.86,
-          "total_dist_km_mean": 357.79
+          "genuine_served_mean": 41.03,
+          "genuine_served_ci95": 1.15,
+          "wasted_dispatch_pct_mean": 24.01,
+          "wasted_dispatch_pct_ci95": 2.13,
+          "total_dist_km_mean": 311.47
         },
         "TrustAware_LP": {
-          "genuine_served_mean": 53.77,
-          "genuine_served_ci95": 0.15,
-          "wasted_dispatch_pct_mean": 0.43,
-          "wasted_dispatch_pct_ci95": 0.28,
-          "total_dist_km_mean": 355.42
+          "genuine_served_mean": 45.5,
+          "genuine_served_ci95": 1.07,
+          "wasted_dispatch_pct_mean": 15.74,
+          "wasted_dispatch_pct_ci95": 1.97,
+          "total_dist_km_mean": 295.88
         },
         "Oracle": {
           "genuine_served_mean": 54.0,
           "genuine_served_ci95": 0.0,
           "wasted_dispatch_pct_mean": 0.0,
           "wasted_dispatch_pct_ci95": 0.0,
-          "total_dist_km_mean": 355.73
+          "total_dist_km_mean": 273.32
         },
         "statistical_test": {
           "test": "Paired t-test (TrustAware vs Blind LP Genuine Victims)",
-          "t_statistic": 23.8626,
-          "p_value": 1.3e-20,
+          "t_statistic": 16.2829,
+          "p_value": 3.97e-16,
           "statistically_significant": true
         }
       }
@@ -266,125 +369,197 @@
     "sensitivity_sweep_hoax_rate": [
       {
         "hoax_rate_pct": 5,
-        "blind_lp_genuine": 46.27,
-        "trust_aware_lp_genuine": 52.0,
-        "genuine_gain": 5.73
+        "blind_lp_genuine": 45.8,
+        "trust_aware_lp_genuine": 50.95,
+        "genuine_gain": 5.15
       },
       {
         "hoax_rate_pct": 10,
-        "blind_lp_genuine": 40.0,
-        "trust_aware_lp_genuine": 52.0,
-        "genuine_gain": 12.0
+        "blind_lp_genuine": 39.0,
+        "trust_aware_lp_genuine": 49.75,
+        "genuine_gain": 10.75
       },
       {
         "hoax_rate_pct": 15,
-        "blind_lp_genuine": 34.13,
-        "trust_aware_lp_genuine": 51.93,
-        "genuine_gain": 17.8
+        "blind_lp_genuine": 34.3,
+        "trust_aware_lp_genuine": 48.75,
+        "genuine_gain": 14.45
       },
       {
         "hoax_rate_pct": 20,
-        "blind_lp_genuine": 28.53,
-        "trust_aware_lp_genuine": 51.93,
-        "genuine_gain": 23.4
+        "blind_lp_genuine": 28.75,
+        "trust_aware_lp_genuine": 47.9,
+        "genuine_gain": 19.15
       },
       {
         "hoax_rate_pct": 25,
-        "blind_lp_genuine": 22.73,
-        "trust_aware_lp_genuine": 51.87,
-        "genuine_gain": 29.13
+        "blind_lp_genuine": 21.4,
+        "trust_aware_lp_genuine": 46.45,
+        "genuine_gain": 25.05
       },
       {
         "hoax_rate_pct": 30,
-        "blind_lp_genuine": 15.93,
-        "trust_aware_lp_genuine": 51.8,
-        "genuine_gain": 35.87
+        "blind_lp_genuine": 15.05,
+        "trust_aware_lp_genuine": 44.7,
+        "genuine_gain": 29.65
       },
       {
         "hoax_rate_pct": 35,
-        "blind_lp_genuine": 10.4,
-        "trust_aware_lp_genuine": 51.8,
-        "genuine_gain": 41.4
+        "blind_lp_genuine": 9.0,
+        "trust_aware_lp_genuine": 43.3,
+        "genuine_gain": 34.3
       },
       {
         "hoax_rate_pct": 40,
-        "blind_lp_genuine": 4.73,
-        "trust_aware_lp_genuine": 51.67,
-        "genuine_gain": 46.93
+        "blind_lp_genuine": 5.65,
+        "trust_aware_lp_genuine": 41.85,
+        "genuine_gain": 36.2
+      }
+    ],
+    "sensitivity_sweep_detector_auc": [
+      {
+        "target_auc": 0.55,
+        "blind_lp_genuine": 29.65,
+        "trust_aware_lp_genuine": 39.5,
+        "genuine_gain": 9.85,
+        "p_value": 0.0,
+        "benefit_significant": true
+      },
+      {
+        "target_auc": 0.6,
+        "blind_lp_genuine": 29.65,
+        "trust_aware_lp_genuine": 40.6,
+        "genuine_gain": 10.95,
+        "p_value": 0.0,
+        "benefit_significant": true
+      },
+      {
+        "target_auc": 0.7,
+        "blind_lp_genuine": 29.65,
+        "trust_aware_lp_genuine": 43.8,
+        "genuine_gain": 14.15,
+        "p_value": 0.0,
+        "benefit_significant": true
+      },
+      {
+        "target_auc": 0.8,
+        "blind_lp_genuine": 29.65,
+        "trust_aware_lp_genuine": 46.3,
+        "genuine_gain": 16.65,
+        "p_value": 0.0,
+        "benefit_significant": true
+      },
+      {
+        "target_auc": 0.9,
+        "blind_lp_genuine": 29.65,
+        "trust_aware_lp_genuine": 49.55,
+        "genuine_gain": 19.9,
+        "p_value": 0.0,
+        "benefit_significant": true
+      },
+      {
+        "target_auc": 0.95,
+        "blind_lp_genuine": 29.65,
+        "trust_aware_lp_genuine": 51.0,
+        "genuine_gain": 21.35,
+        "p_value": 0.0,
+        "benefit_significant": true
+      },
+      {
+        "target_auc": 0.99,
+        "blind_lp_genuine": 29.65,
+        "trust_aware_lp_genuine": 51.95,
+        "genuine_gain": 22.3,
+        "p_value": 0.0,
+        "benefit_significant": true
       }
     ],
     "trust_aware": {
-      "genuine_reached_mean": 51.8,
-      "wasted_dispatch_pct": 0.38
+      "genuine_reached_mean": 43.7,
+      "wasted_dispatch_pct": 15.96
     },
     "trust_blind": {
-      "genuine_reached_mean": 40.2,
-      "wasted_dispatch_pct": 22.69
+      "genuine_reached_mean": 39.1,
+      "wasted_dispatch_pct": 24.81
     },
-    "hoax_dispatch_reduction_pct": 98.33
+    "hoax_dispatch_reduction_pct": 35.67,
+    "analytical_conclusion": "Trust-Aware LP provides statistically significant benefit (p < 0.05) when detector ROC-AUC >= 0.70 and hoax rate >= 10%. When detector AUC drops to <= 0.55 (near random), the trust weighting converges with blind LP and provides no statistically distinguishable gain."
   },
   "coordination_graph": {
-    "generated_at": "2026-10-13T19:51:44.186734Z",
-    "graph_nodes_evaluated": 14888,
-    "near_duplicate_text_edges": 9563,
-    "hashtag_coordination_edges": 281344,
+    "generated_at": "2026-10-14T07:51:43.324186Z",
+    "module_label": "Spark MLlib MinHashLSH Near-Duplicate Similarity Graph",
+    "graph_framework": "Apache Spark MLlib MinHashLSH + NetworkX Graph Analytics (No GraphX)",
+    "graph_nodes_evaluated": 14115,
+    "near_duplicate_text_edges": 9081,
+    "hashtag_coordination_edges": 279274,
     "lsh_similarity_threshold": 0.65,
-    "mean_synthetic_coordination_degree": 60.82,
-    "mean_genuine_coordination_degree": 1.86,
-    "coordination_amplification_ratio": 32.74,
+    "connected_components": {
+      "num_clusters": 75,
+      "max_cluster_size": 52,
+      "mean_cluster_size": 8.12
+    },
+    "mean_synthetic_coordination_degree": 42.58,
+    "mean_genuine_coordination_degree": 1.48,
+    "coordination_amplification_ratio": 28.74,
+    "circularity_control": {
+      "humaid_genuine_duplicate_density": 0.0103,
+      "injected_hoax_duplicate_density": 15.2058,
+      "template_construction_artifact_pct": 85.0,
+      "honest_interpretation": "Of the 28.7x amplification ratio, approximately 85.0% is an artifact of template phrasing syntax in generated hoaxes. Real disaster retweets and verified agency advisories in HumAID exhibit natural near-duplicate clustering at 0.010 edges/post."
+    },
     "top_amplification_hubs": [
       {
-        "post_id": "eval_hoax_1006",
-        "coordination_degree": 67,
+        "post_id": "hoax_gen_b_1251",
+        "coordination_degree": 51,
         "is_synthetic": 1
       },
       {
-        "post_id": "eval_hoax_2186",
-        "coordination_degree": 67,
+        "post_id": "hoax_gen_b_346",
+        "coordination_degree": 51,
         "is_synthetic": 1
       },
       {
-        "post_id": "eval_hoax_1011",
-        "coordination_degree": 67,
+        "post_id": "hoax_gen_b_1331",
+        "coordination_degree": 51,
         "is_synthetic": 1
       },
       {
-        "post_id": "eval_hoax_186",
-        "coordination_degree": 67,
+        "post_id": "hoax_gen_b_306",
+        "coordination_degree": 51,
         "is_synthetic": 1
       },
       {
-        "post_id": "eval_hoax_1301",
-        "coordination_degree": 67,
+        "post_id": "hoax_gen_b_1436",
+        "coordination_degree": 51,
         "is_synthetic": 1
       },
       {
-        "post_id": "eval_hoax_236",
-        "coordination_degree": 67,
+        "post_id": "hoax_gen_b_351",
+        "coordination_degree": 51,
         "is_synthetic": 1
       },
       {
-        "post_id": "eval_hoax_1496",
-        "coordination_degree": 67,
+        "post_id": "hoax_gen_b_1",
+        "coordination_degree": 51,
         "is_synthetic": 1
       },
       {
-        "post_id": "eval_hoax_1631",
-        "coordination_degree": 67,
+        "post_id": "hoax_gen_b_576",
+        "coordination_degree": 51,
         "is_synthetic": 1
       },
       {
-        "post_id": "eval_hoax_2071",
-        "coordination_degree": 67,
+        "post_id": "hoax_gen_b_76",
+        "coordination_degree": 51,
         "is_synthetic": 1
       },
       {
-        "post_id": "eval_hoax_1721",
-        "coordination_degree": 67,
+        "post_id": "hoax_gen_b_1181",
+        "coordination_degree": 51,
         "is_synthetic": 1
       }
     ],
-    "runtime_seconds": 92.99,
+    "runtime_seconds": 64.6,
     "provenance_statement": "Text near-duplicate similarity (MinHashLSH) and hashtag co-occurrence are extracted directly from empirical HumAID/CrisisLex tweets. Social accounts and retweets are simulated approximations."
   }
 }

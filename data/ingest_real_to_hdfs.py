@@ -66,8 +66,11 @@ def main():
     print("Writing local partitioned parquet splits...")
     df.write.mode("overwrite").parquet(local_parquet)
     
-    train_df = df.filter(F.col("disaster_type").isin("flood", "hurricane"))
-    test_df = df.filter(~F.col("disaster_type").isin("flood", "hurricane"))
+    train_csv_path = os.path.join(CURATED_DIR, "train_real.csv")
+    test_csv_path = os.path.join(CURATED_DIR, "test_real.csv")
+    
+    train_df = spark.read.option("header", "true").option("multiline", "true").option("escape", "\"").option("inferSchema", "true").csv(train_csv_path)
+    test_df = spark.read.option("header", "true").option("multiline", "true").option("escape", "\"").option("inferSchema", "true").csv(test_csv_path)
     
     train_df.write.mode("overwrite").parquet(train_parquet)
     test_df.write.mode("overwrite").parquet(test_parquet)
