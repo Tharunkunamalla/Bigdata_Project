@@ -1,0 +1,10 @@
+{
+  "verified_at": "2026-10-13T19:49:46.332112Z",
+  "shuffled_label_auc": 0.5557,
+  "shuffled_label_verdict": "PASS (Consistent with theoretical random 0.50 AUC)",
+  "text_only_auc": 0.7143,
+  "stylometric_only_auc": 0.7998,
+  "combined_model_auc": 0.7081,
+  "domain_shift_gap": 0.9643,
+  "leakage_audit_status": "PASS: Zero label leakage, zero synthetic Gaussian generator variables"
+}

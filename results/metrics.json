@@ -1,45 +1,49 @@
 {
   "dataset": {
-    "total_records": 60000,
-    "train_records": 30000,
-    "test_records": 30000,
+    "total_records": 98944,
+    "train_records": 26350,
+    "test_records": 72594,
     "train_events": [
-      "hurricane",
-      "flood"
+      "hurricane_harvey",
+      "kerala_floods"
     ],
     "test_events": [
-      "earthquake",
-      "wildfire"
+      "nepal_earthquake",
+      "california_wildfires"
     ]
   },
   "models": {
     "synthetic_detector": {
-      "roc_auc": 1.0,
-      "pr_auc": 1.0,
-      "f1": 0.957,
-      "accuracy": 0.9589,
+      "roc_auc": 0.7081,
+      "pr_auc": 0.1585,
+      "f1": 0.9556,
+      "accuracy": 0.9643,
+      "precision": 0.9545,
+      "recall": 0.9643,
+      "domain_shift_eval_accuracy": 0.0,
       "model_type": "LogisticRegression_ElasticNet",
-      "path": "/mnt/c/Users/HP/OneDrive/Desktop/bigdata project/ml/models/synthetic_detector_model"
+      "path": "/home/sivasai/projects/crisisguard/ml/models_real/synthetic_detector_model"
     },
     "rumour_classifier": {
-      "roc_auc": 0.9293,
-      "f1": 0.9304,
+      "roc_auc": 0.6785,
+      "f1": 0.9036,
+      "accuracy": 0.935,
       "model_type": "RandomForestClassifier",
-      "path": "/mnt/c/Users/HP/OneDrive/Desktop/bigdata project/ml/models/rumour_classifier_model"
+      "path": "/home/sivasai/projects/crisisguard/ml/models_real/rumour_classifier_model"
     },
     "humanitarian_category": {
-      "macro_f1": 0.4674,
-      "accuracy": 0.5452,
+      "macro_f1": 0.5994,
+      "accuracy": 0.6167,
       "model_type": "MultinomialLogisticRegression",
-      "path": "/mnt/c/Users/HP/OneDrive/Desktop/bigdata project/ml/models/humanitarian_category_model"
+      "path": "/home/sivasai/projects/crisisguard/ml/models_real/humanitarian_category_model"
     },
     "urgency_regressor": {
-      "rmse": 0.2184,
-      "mae": 0.1627,
-      "r2": 0.1871,
+      "rmse": 1.2277,
+      "mae": 0.9838,
+      "r2": 0.128,
       "model_type": "LinearRegression_ElasticNet",
-      "path": "/mnt/c/Users/HP/OneDrive/Desktop/bigdata project/ml/models/urgency_regressor_model"
+      "path": "/home/sivasai/projects/crisisguard/ml/models_real/urgency_regressor_model"
     }
   },
-  "training_time_seconds": 164.63
+  "training_time_seconds": 132.04
 }

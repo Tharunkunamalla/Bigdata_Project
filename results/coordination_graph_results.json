@@ -1,65 +1,64 @@
 {
-  "analysis_name": "Sybil Coordination Graph Analysis",
-  "total_vertices": 50072,
-  "total_coordination_edges": 331466,
+  "generated_at": "2026-10-13T19:51:44.186734Z",
+  "graph_nodes_evaluated": 14888,
+  "near_duplicate_text_edges": 9563,
+  "hashtag_coordination_edges": 281344,
+  "lsh_similarity_threshold": 0.65,
+  "mean_synthetic_coordination_degree": 60.82,
+  "mean_genuine_coordination_degree": 1.86,
+  "coordination_amplification_ratio": 32.74,
   "top_amplification_hubs": [
     {
-      "user_id": "bot_user_0_002",
-      "amplification_degree": 16347
+      "post_id": "eval_hoax_1006",
+      "coordination_degree": 67,
+      "is_synthetic": 1
     },
     {
-      "user_id": "bot_user_0_003",
-      "amplification_degree": 16304
+      "post_id": "eval_hoax_2186",
+      "coordination_degree": 67,
+      "is_synthetic": 1
     },
     {
-      "user_id": "bot_user_10_017",
-      "amplification_degree": 15867
+      "post_id": "eval_hoax_1011",
+      "coordination_degree": 67,
+      "is_synthetic": 1
     },
     {
-      "user_id": "bot_user_0_007",
-      "amplification_degree": 15266
+      "post_id": "eval_hoax_186",
+      "coordination_degree": 67,
+      "is_synthetic": 1
     },
     {
-      "user_id": "bot_user_0_008",
-      "amplification_degree": 15090
+      "post_id": "eval_hoax_1301",
+      "coordination_degree": 67,
+      "is_synthetic": 1
     },
     {
-      "user_id": "bot_user_0_015",
-      "amplification_degree": 14794
+      "post_id": "eval_hoax_236",
+      "coordination_degree": 67,
+      "is_synthetic": 1
     },
     {
-      "user_id": "bot_user_11_001",
-      "amplification_degree": 14781
+      "post_id": "eval_hoax_1496",
+      "coordination_degree": 67,
+      "is_synthetic": 1
     },
     {
-      "user_id": "bot_user_10_006",
-      "amplification_degree": 14754
+      "post_id": "eval_hoax_1631",
+      "coordination_degree": 67,
+      "is_synthetic": 1
     },
     {
-      "user_id": "bot_user_1_011",
-      "amplification_degree": 14620
+      "post_id": "eval_hoax_2071",
+      "coordination_degree": 67,
+      "is_synthetic": 1
     },
     {
-      "user_id": "bot_user_0_011",
-      "amplification_degree": 14320
+      "post_id": "eval_hoax_1721",
+      "coordination_degree": 67,
+      "is_synthetic": 1
     }
   ],
-  "cluster_comparison": [
-    {
-      "cluster_type": "Organic Citizens",
-      "user_count": 46732,
-      "avg_retweet_volume": 14.5,
-      "avg_account_age_days": 2341.4,
-      "avg_follower_count": 7509.1
-    },
-    {
-      "cluster_type": "Synthetic Bot Sybils",
-      "user_count": 3340,
-      "avg_retweet_volume": 297.2,
-      "avg_account_age_days": 103.5,
-      "avg_follower_count": 222.2
-    }
-  ],
-  "execution_time_seconds": 34.39,
-  "timestamp": 1791638419.6422617
+  "runtime_seconds": 92.99,
+  "provenance_statement": "Text near-duplicate similarity (MinHashLSH) and hashtag co-occurrence are extracted directly from empirical HumAID/CrisisLex tweets. Social accounts and retweets are simulated approximations."
 }

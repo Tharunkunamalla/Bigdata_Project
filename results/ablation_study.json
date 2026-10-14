@@ -1,36 +1,211 @@
 {
-  "Blind_Greedy": {
-    "avg_wasted_dispatch_pct": 26.54,
-    "std_wasted_dispatch_pct": 7.82,
-    "avg_genuine_victims_served": 38.2,
-    "std_genuine_victims_served": 4.1,
-    "avg_wasted_units": 13.8
+  "generated_at": "2026-10-14T01:22:30.092970",
+  "seeds_evaluated": 30,
+  "demands_per_seed": 120,
+  "optimization_solver": "PuLP CBC MILP (Solved on Driver Node after distributed aggregation)",
+  "regional_trials": {
+    "houston": {
+      "Greedy": {
+        "genuine_served_mean": 40.2,
+        "genuine_served_ci95": 0.94,
+        "wasted_dispatch_pct_mean": 22.69,
+        "wasted_dispatch_pct_ci95": 1.81,
+        "total_dist_km_mean": 836.3
+      },
+      "Blind_LP": {
+        "genuine_served_mean": 40.2,
+        "genuine_served_ci95": 0.92,
+        "wasted_dispatch_pct_mean": 22.69,
+        "wasted_dispatch_pct_ci95": 1.77,
+        "total_dist_km_mean": 718.29
+      },
+      "TrustAware_LP": {
+        "genuine_served_mean": 51.8,
+        "genuine_served_ci95": 0.15,
+        "wasted_dispatch_pct_mean": 0.38,
+        "wasted_dispatch_pct_ci95": 0.28,
+        "total_dist_km_mean": 726.66
+      },
+      "Oracle": {
+        "genuine_served_mean": 52.0,
+        "genuine_served_ci95": 0.0,
+        "wasted_dispatch_pct_mean": 0.0,
+        "wasted_dispatch_pct_ci95": 0.0,
+        "total_dist_km_mean": 726.23
+      },
+      "statistical_test": {
+        "test": "Paired t-test (TrustAware vs Blind LP Genuine Victims)",
+        "t_statistic": 23.7696,
+        "p_value": 1.45e-20,
+        "statistically_significant": true
+      }
+    },
+    "california": {
+      "Greedy": {
+        "genuine_served_mean": 40.2,
+        "genuine_served_ci95": 0.94,
+        "wasted_dispatch_pct_mean": 22.69,
+        "wasted_dispatch_pct_ci95": 1.81,
+        "total_dist_km_mean": 5671.99
+      },
+      "Blind_LP": {
+        "genuine_served_mean": 40.17,
+        "genuine_served_ci95": 0.94,
+        "wasted_dispatch_pct_mean": 22.76,
+        "wasted_dispatch_pct_ci95": 1.82,
+        "total_dist_km_mean": 5333.39
+      },
+      "TrustAware_LP": {
+        "genuine_served_mean": 45.47,
+        "genuine_served_ci95": 1.11,
+        "wasted_dispatch_pct_mean": 0.23,
+        "wasted_dispatch_pct_ci95": 0.25,
+        "total_dist_km_mean": 4176.13
+      },
+      "Oracle": {
+        "genuine_served_mean": 52.0,
+        "genuine_served_ci95": 0.0,
+        "wasted_dispatch_pct_mean": 0.0,
+        "wasted_dispatch_pct_ci95": 0.0,
+        "total_dist_km_mean": 5344.05
+      },
+      "statistical_test": {
+        "test": "Paired t-test (TrustAware vs Blind LP Genuine Victims)",
+        "t_statistic": 9.0513,
+        "p_value": 6.02e-10,
+        "statistically_significant": true
+      }
+    },
+    "nepal": {
+      "Greedy": {
+        "genuine_served_mean": 40.2,
+        "genuine_served_ci95": 0.94,
+        "wasted_dispatch_pct_mean": 22.69,
+        "wasted_dispatch_pct_ci95": 1.81,
+        "total_dist_km_mean": 2854.54
+      },
+      "Blind_LP": {
+        "genuine_served_mean": 40.4,
+        "genuine_served_ci95": 0.95,
+        "wasted_dispatch_pct_mean": 22.31,
+        "wasted_dispatch_pct_ci95": 1.83,
+        "total_dist_km_mean": 2552.87
+      },
+      "TrustAware_LP": {
+        "genuine_served_mean": 51.73,
+        "genuine_served_ci95": 0.16,
+        "wasted_dispatch_pct_mean": 0.51,
+        "wasted_dispatch_pct_ci95": 0.31,
+        "total_dist_km_mean": 2557.6
+      },
+      "Oracle": {
+        "genuine_served_mean": 52.0,
+        "genuine_served_ci95": 0.0,
+        "wasted_dispatch_pct_mean": 0.0,
+        "wasted_dispatch_pct_ci95": 0.0,
+        "total_dist_km_mean": 2555.68
+      },
+      "statistical_test": {
+        "test": "Paired t-test (TrustAware vs Blind LP Genuine Victims)",
+        "t_statistic": 22.8158,
+        "p_value": 4.49e-20,
+        "statistically_significant": true
+      }
+    },
+    "miami": {
+      "Greedy": {
+        "genuine_served_mean": 41.8,
+        "genuine_served_ci95": 0.99,
+        "wasted_dispatch_pct_mean": 22.59,
+        "wasted_dispatch_pct_ci95": 1.84,
+        "total_dist_km_mean": 398.25
+      },
+      "Blind_LP": {
+        "genuine_served_mean": 41.6,
+        "genuine_served_ci95": 1.01,
+        "wasted_dispatch_pct_mean": 22.96,
+        "wasted_dispatch_pct_ci95": 1.86,
+        "total_dist_km_mean": 357.79
+      },
+      "TrustAware_LP": {
+        "genuine_served_mean": 53.77,
+        "genuine_served_ci95": 0.15,
+        "wasted_dispatch_pct_mean": 0.43,
+        "wasted_dispatch_pct_ci95": 0.28,
+        "total_dist_km_mean": 355.42
+      },
+      "Oracle": {
+        "genuine_served_mean": 54.0,
+        "genuine_served_ci95": 0.0,
+        "wasted_dispatch_pct_mean": 0.0,
+        "wasted_dispatch_pct_ci95": 0.0,
+        "total_dist_km_mean": 355.73
+      },
+      "statistical_test": {
+        "test": "Paired t-test (TrustAware vs Blind LP Genuine Victims)",
+        "t_statistic": 23.8626,
+        "p_value": 1.3e-20,
+        "statistically_significant": true
+      }
+    }
   },
-  "TrustAware_Greedy": {
-    "avg_wasted_dispatch_pct": 0.77,
-    "std_wasted_dispatch_pct": 0.94,
-    "avg_genuine_victims_served": 51.6,
-    "std_genuine_victims_served": 0.5,
-    "avg_wasted_units": 0.4
+  "sensitivity_sweep_hoax_rate": [
+    {
+      "hoax_rate_pct": 5,
+      "blind_lp_genuine": 46.27,
+      "trust_aware_lp_genuine": 52.0,
+      "genuine_gain": 5.73
+    },
+    {
+      "hoax_rate_pct": 10,
+      "blind_lp_genuine": 40.0,
+      "trust_aware_lp_genuine": 52.0,
+      "genuine_gain": 12.0
+    },
+    {
+      "hoax_rate_pct": 15,
+      "blind_lp_genuine": 34.13,
+      "trust_aware_lp_genuine": 51.93,
+      "genuine_gain": 17.8
+    },
+    {
+      "hoax_rate_pct": 20,
+      "blind_lp_genuine": 28.53,
+      "trust_aware_lp_genuine": 51.93,
+      "genuine_gain": 23.4
+    },
+    {
+      "hoax_rate_pct": 25,
+      "blind_lp_genuine": 22.73,
+      "trust_aware_lp_genuine": 51.87,
+      "genuine_gain": 29.13
+    },
+    {
+      "hoax_rate_pct": 30,
+      "blind_lp_genuine": 15.93,
+      "trust_aware_lp_genuine": 51.8,
+      "genuine_gain": 35.87
+    },
+    {
+      "hoax_rate_pct": 35,
+      "blind_lp_genuine": 10.4,
+      "trust_aware_lp_genuine": 51.8,
+      "genuine_gain": 41.4
+    },
+    {
+      "hoax_rate_pct": 40,
+      "blind_lp_genuine": 4.73,
+      "trust_aware_lp_genuine": 51.67,
+      "genuine_gain": 46.93
+    }
+  ],
+  "trust_aware": {
+    "genuine_reached_mean": 51.8,
+    "wasted_dispatch_pct": 0.38
   },
-  "Blind_MILP": {
-    "avg_wasted_dispatch_pct": 28.46,
-    "std_wasted_dispatch_pct": 7.23,
-    "avg_genuine_victims_served": 37.2,
-    "std_genuine_victims_served": 3.8,
-    "avg_wasted_units": 14.8
+  "trust_blind": {
+    "genuine_reached_mean": 40.2,
+    "wasted_dispatch_pct": 22.69
   },
-  "TrustAware_MILP": {
-    "avg_wasted_dispatch_pct": 0.77,
-    "std_wasted_dispatch_pct": 0.94,
-    "avg_genuine_victims_served": 51.6,
-    "std_genuine_victims_served": 0.5,
-    "avg_wasted_units": 0.4
-  },
-  "comparative_findings": {
-    "waste_reduction_percentage": 97.29,
-    "genuine_reach_increase_percentage": 38.71,
-    "num_trials": 5,
-    "total_depot_fleet": 52
-  }
+  "hoax_dispatch_reduction_pct": 98.33
 }

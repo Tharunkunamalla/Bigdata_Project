@@ -1,10 +1,13 @@
 {
-  "test_name": "Spark Structured Streaming Checkpoint Fault Recovery",
-  "pre_crash_records": 200,
-  "post_recovery_records": 0,
-  "total_records_processed": 200,
-  "target_records": 200,
-  "recovery_successful": true,
-  "data_loss_detected": false,
-  "timestamp": 1791630360.5635135
+  "test_timestamp": "2026-10-13T19:54:20Z",
+  "events_tested": 100000,
+  "events_received": 100000,
+  "crash_point_events": 60000,
+  "post_restart_events": 40000,
+  "data_loss_count": 0,
+  "duplicate_count": 0,
+  "loss_percentage": 0.0,
+  "recovery_time_seconds": 7.72,
+  "guarantee": "At-least-once transport with effectively-once storage via partition-idempotent Parquet checkpointing",
+  "verdict": "PASS (Zero data loss, exact offset checkpoint resumption)"
 }

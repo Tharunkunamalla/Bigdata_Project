@@ -1,86 +1,96 @@
-# System Architecture Specification
+# CrisisGuard AI: Complete System Architecture Specification (`ARCHITECTURE.md`)
+
+**Course:** CSE412 — Big Data & Large-Scale Computing  
+**Project:** CrisisGuard AI  
+**Scope:** Distributed Infrastructure Topology, Port Mappings, Dataflow Lifecycles, and Component Specifications
+
+---
 
 ## 1. High-Level Architectural Topology
 
 ```mermaid
 flowchart TD
-    subgraph DataIngestion["1. Stream & Batch Ingestion"]
-        Simulator["Replay Simulator<br/>(ingestion/replay_simulator.py)"]
-        RawFiles["Raw Multi-Disaster Corpus<br/>(60,000 JSON/CSV records)"]
-        Simulator -->|Kafka Producer| KafkaRaw["Kafka Topic: disaster_raw_posts<br/>(4 Partitions, KRaft Broker)"]
-        RawFiles -->|hdfs dfs -put| HDFS_Bronze["HDFS Bronze Layer<br/>(/disaster_data/bronze/)"]
+    subgraph Ingestion["1. Ingestion & Event Ingestion Layer"]
+        RealFeeds["Real Disasters Feed Replay<br/>(98,944 records from HumAID / CrisisLex)"]
+        RealFeeds -->|Kafka Producer| KafkaRaw["Kafka 3.7.0 Topic: disaster_raw_posts<br/>(Port 9092, KRaft Mode)"]
     end
 
-    subgraph BatchETL["2. Storage & Catalog Layer"]
-        HDFS_Bronze -->|PySpark Schema Validation| HDFS_Silver["HDFS Silver Layer<br/>(/disaster_data/silver/)<br/>Partitioned by event_type (Parquet)"]
-        HDFS_Silver -->|MSCK REPAIR| HiveMetastore["Hive Metastore Catalog<br/>(cse412_disaster.disaster_posts_silver)"]
-        HiveMetastore -->|Analytical Aggregations| HiveGold["Hive Gold Table<br/>(gold_emergency_demand_summary)"]
+    subgraph StorageCatalog["2. Distributed Storage & Metastore Catalog"]
+        CuratedCSV["Curated Silver Dataset<br/>(98,944 rows)"] -->|PySpark Ingestion| HDFSSilver["Hadoop HDFS 3.3.6<br/>(/disaster_data/silver_real/)<br/>Partitioned by disaster_type (Parquet)"]
+        HDFSSilver -->|Thrift Port 9083| HiveMeta["Apache Hive Metastore 3.1.3<br/>(disaster_db.crisis_silver_real)"]
     end
 
-    subgraph DistributedML["3. Spark MLlib Intelligence Engine"]
-        HDFS_Silver -->|Event-Stratified Split| MLlibTrain["Spark MLlib Distributed Training<br/>(ml/train_models.py)"]
-        MLlibTrain --> M1["Synthetic Detector (ElasticNet LR)"]
-        MLlibTrain --> M2["Rumour Classifier (RandomForest)"]
-        MLlibTrain --> M3["Humanitarian Category Classifier (Multinomial LR)"]
-        MLlibTrain --> M4["Urgency Regressor (LinearRegression)"]
+    subgraph DistributedML["3. Spark MLlib & Graph Analytics Engine"]
+        HDFSSilver -->|Event-Stratified Split| MLlibTrain["Spark MLlib Suite (PySpark 3.5.1)<br/>(ml/train_models_real.py)"]
+        MLlibTrain --> M1["Synthetic Detector (ElasticNet LR: 0.7081 AUC)"]
+        MLlibTrain --> M2["Rumour Classifier (Random Forest: 0.6785 AUC)"]
+        MLlibTrain --> M3["Humanitarian Categorizer (Multi-LR: 0.5994 F1)"]
+        MLlibTrain --> M4["Urgency Regressor (Linear Elastic: 1.2277 RMSE)"]
+        HDFSSilver --> MinHash["Spark MinHashLSH Coordination Graph<br/>(14,888 nodes, 32.7x amplification disparity)"]
     end
 
-    subgraph StreamScoring["4. Real-Time Structured Streaming"]
-        KafkaRaw -->|Kafka Consumer Stream| SparkStream["Spark Structured Streaming<br/>(streaming/spark_stream_scorer.py)"]
-        M1 & M2 & M3 & M4 -.->|Model Ingestion| SparkStream
-        SparkStream -->|Offset Checkpointing| HDFS_Checkpoints["HDFS Checkpoint Dir<br/>(/disaster_data/checkpoints/)"]
-        SparkStream -->|Curated Micro-batches| HDFS_Sink["HDFS Streaming Sink<br/>(/disaster_data/streaming_sink/)"]
-        SparkStream -->|Enriched Records| KafkaScored["Kafka Topic: disaster_scored_posts"]
+    subgraph StreamingPipeline["4. Fault-Tolerant Structured Streaming"]
+        KafkaRaw -->|Spark Structured Streaming| Scorer["spark_stream_scorer.py<br/>(Driver: local[2])"]
+        M1 & M2 & M3 & M4 -.->|Model Inference| Scorer
+        Scorer -->|Offset Checkpoints| HDFS_Checkpoint["HDFS Checkpoint Dir<br/>(/disaster_data/checkpoints/)"]
+        Scorer -->|Scored Stream| KafkaScored["Kafka Topic: disaster_scored_posts"]
     end
 
-    subgraph OptimizationEngine["5. Emergency Fleet Optimization"]
-        KafkaScored --> AllocationServer["FastAPI Backend<br/>(backend/main.py)"]
-        AllocationServer --> MILP["PuLP MILP Solver<br/>(allocation/optimizer.py)"]
-        AllocationServer --> Greedy["Trust-Aware Greedy Dispatcher"]
-        MILP --> OptimizedPlan["Trust-Weighted Dispatch Schedule<br/>(Wasted Dispatches Reduced by 97.3%)"]
+    subgraph OptimizationEngine["5. Multi-Region Emergency Allocation Engine"]
+        KafkaScored --> Backend["FastAPI Backend (Port 8000)<br/>(backend/main.py)"]
+        Backend --> PuLP["PuLP Mixed-Integer Linear Program (MILP)<br/>(Branch-and-Cut CBC Solver)"]
+        PuLP --> AllocPlan["Trust-Aware Fleet Schedule<br/>(98.3% Wasted Dispatches Avoided)"]
     end
 
-    subgraph PresentationLayer["6. Full-Stack Operations UI"]
-        AllocationServer -->|Server-Sent Events (SSE)| ReactUI["React + Vite Single-Page Dashboard<br/>(frontend/src/App.jsx)"]
-        ReactUI --> MapView["Leaflet Spatial Heatmap & Base Depots"]
-        ReactUI --> LiveFeed["Real-Time Classified Emergency Stream"]
-        ReactUI --> FleetControls["Interactive Dispatch Optimization Panel"]
-        ReactUI --> MetricsView["ML Performance & Cluster Topology"]
+    subgraph Presentation["6. Full-Stack Operations UI"]
+        Backend -->|JSON REST & Static Serving| ReactUI["React 18 / Vite Single-Page Dashboard<br/>(frontend/src/App.jsx)"]
+        ReactUI --> MapView["Leaflet Spatial Map & Depot Pins"]
+        ReactUI --> FeedView["Real-Time Verified Alert Feed"]
+        ReactUI --> AblationView["Multi-Region 30-Seed Ablation & CIs"]
+        ReactUI --> BenchView["Pandas vs Spark 1M Scaling Benchmark"]
     end
 ```
 
 ---
 
-## 2. Component Specifications
+## 2. Infrastructure Port Mappings & Service Specifications
 
-### 2.1 Message Broker: Apache Kafka 3.7.0 (KRaft)
-- **Deployment Mode:** KRaft standalone broker (no Zookeeper dependency).
-- **Listening Ports:** `127.0.0.1:9092` (client plaintext), `127.0.0.1:9093` (controller).
-- **Topics:**
-  - `disaster_raw_posts`: 4 partitions, key: `post_id`, value: raw JSON payload.
-  - `disaster_scored_posts`: 4 partitions, enriched with MLlib predictions, trust scores, and priority ranks.
+| Component | Technology | Version | Network Port | Host Binding | Primary Role & Directory |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **Message Broker** | Apache Kafka (KRaft) | 3.7.0 | `9092` | `127.0.0.1:9092` | Real-time alert ingestion buffer (`disaster_raw_posts`, `disaster_scored_posts`) |
+| **HDFS NameNode** | Apache Hadoop HDFS | 3.3.6 | `9000` / `9870` | `127.0.0.1:9000` | Distributed block storage & RPC (`/disaster_data/silver_real`) |
+| **HDFS DataNode** | Apache Hadoop HDFS | 3.3.6 | `9864` | `127.0.0.1:9864` | Block storage daemon on WSL2 native ext4 |
+| **Hive Metastore** | Apache Hive | 3.1.3 | `9083` | `127.0.0.1:9083` | Thrift metadata catalog service (`disaster_db.crisis_silver_real`) |
+| **Execution Engine** | Apache Spark | 3.5.1 | Driver Local | `local[2]` | Micro-batch structured streaming, MLlib training, and MinHashLSH |
+| **MILP Solver** | PuLP (Coin-OR CBC) | 2.8+ | In-Process | CPU Driver | Exact Mixed-Integer Linear Programming fleet optimizer |
+| **API Backend** | FastAPI / Uvicorn | 0.115+ | `8000` | `0.0.0.0:8000` | Telemetry gateway, REST endpoints, and static React SPA host |
+| **Dashboard UI** | React 18 / Vite | 5.4+ | Bundled | `http://127.0.0.1:8000/` | Interactive 4-tab emergency management console |
 
-### 2.2 Distributed File System: Apache Hadoop HDFS 3.3.6
-- **NameNode RPC:** `hdfs://127.0.0.1:9000` (WebUI: `http://127.0.0.1:9870`).
-- **DataNode Data Port:** `127.0.0.1:9864`.
-- **Directory Layout:**
-  - `/disaster_data/bronze/`: Immutable raw JSON/CSV stream dumps.
-  - `/disaster_data/silver/disaster_posts/`: Partitioned Parquet (`event_type=earthquake|flood|hurricane|wildfire`).
-  - `/disaster_data/streaming_sink/`: Structured Streaming append sink.
-  - `/disaster_data/checkpoints/`: Write-Ahead Log (WAL) and state store for fault-tolerant recovery.
+---
 
-### 2.3 Metadata Catalog: Apache Hive Metastore 3.1.3
-- **Thrift Port:** `0.0.0.0:9083`.
-- **Database:** `cse412_disaster`.
-- **Catalog Management:** Enables schema-on-read querying over HDFS Parquet with partition discovery (`MSCK REPAIR TABLE`) and gold summary materialization.
+## 3. End-to-End Dataflow Lifecycles
 
-### 2.4 Distributed Processing Engine: Apache Spark 3.5.1
-- **Driver:** Local multi-threaded JVM driver (`local[2]`).
-- **Libraries:**
-  - Spark SQL: Medallion transformations and Hive integration.
-  - Spark Structured Streaming: Low-latency micro-batch Kafka consumer.
-  - Spark MLlib: Scalable feature extraction (HashingTF, IDF, StandardScaler) and machine learning classification/regression pipelines.
+### 3.1 Ingestion & Cleansing Lifecycle
+1. Real disaster feeds from QCRI HumAID, CrisisLex, and HC3 are downloaded and deduplicated into `data/curated/real_disaster_corpus.csv` (**98,944 rows**).
+2. Data is written to HDFS Parquet at `hdfs://127.0.0.1:9000/disaster_data/silver_real` partitioned by `disaster_type`.
+3. Hive Metastore registers external table `disaster_db.crisis_silver_real`.
 
-### 2.5 Fleet Optimization: PuLP 2.9.0
-- **Formulation:** Mixed-Integer Linear Programming (MILP) solved via COIN-OR CBC.
-- **Objective:** Maximizes emergency victim survival probability discounted by misinformation penalties and transit distances under finite fleet capacity constraints.
+### 3.2 Machine Learning Lifecycle
+1. Spark loads silver data via Hive Metastore.
+2. An event-stratified Train/Test split is applied (Train: 26,350 rows; Test: 72,594 rows; **0% text leakage**).
+3. 4 Spark MLlib models are trained using 5,010-dimensional feature vectors (5,000 TF-IDF tokens + 10 stylometrics).
+4. Models are audited against Shuffled-Label sanity controls (0.5557 AUC) and MinHashLSH coordination analysis (32.7x amplification disparity). Versioned models are saved to `ml/models_real/`.
+
+### 3.3 Real-Time Streaming & Checkpoint Lifecycle
+1. Disaster posts are produced into Kafka topic `disaster_raw_posts`.
+2. Spark Structured Streaming ingests micro-batches, evaluates MLlib pipelines, and calculates effective urgency:
+   $$\text{Priority}_{\text{eff}} = U \cdot (1 - P_{\text{synth}}) \cdot (1 - P_{\text{rumour}})$$
+3. Micro-batch offsets are checkpointed atomically to HDFS.
+4. Enriched records are published to `disaster_scored_posts`.
+5. Tested under hard crash conditions at 100,000 events: **0% data loss, 0 duplicate records, 7.72s recovery window**.
+
+### 3.4 Allocation & Dispatch Lifecycle
+1. FastAPI pulls candidate demands from the scored stream.
+2. Demands and depot capacities are assembled into a PuLP MILP formulation.
+3. The Coin-OR CBC solver solves the optimal assignment in $< 100\text{ms}$.
+4. Results are visualized on the Leaflet map in the React operations dashboard.
