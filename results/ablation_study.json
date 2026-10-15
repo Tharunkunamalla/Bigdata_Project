@@ -627,5 +627,384 @@
     "houston_continuous_pct_oracle": 0.0,
     "houston_real_cluster_gain": 0.0,
     "houston_simulated_cluster_upper_bound_gain": 0.03
+  },
+  "seeds_evaluated": 30,
+  "regional_trials": {
+    "houston": {
+      "disaster": "Hurricane Harvey (Flood)",
+      "resource": "rescue_boats",
+      "total_depot_capacity": 52,
+      "oracle_maximum_gain": 24.0,
+      "policies": {
+        "Blind_Greedy": {
+          "genuine_served_mean": 28.0,
+          "genuine_served_sem": 0.0,
+          "genuine_served_ci95": 0.0,
+          "wasted_dispatches_mean": 24.0,
+          "wasted_percentage_mean": 46.15,
+          "total_distance_km_mean": 863.95
+        },
+        "Blind_LP": {
+          "genuine_served_mean": 28.0,
+          "genuine_served_sem": 0.0,
+          "genuine_served_ci95": 0.0,
+          "wasted_dispatches_mean": 24.0,
+          "wasted_percentage_mean": 46.15,
+          "total_distance_km_mean": 704.45
+        },
+        "TrustAware_Continuous": {
+          "genuine_served_mean": 28.0,
+          "genuine_served_sem": 0.0,
+          "genuine_served_ci95": 0.0,
+          "wasted_dispatches_mean": 24.0,
+          "wasted_percentage_mean": 46.15,
+          "total_distance_km_mean": 704.73
+        },
+        "TrustAware_ValidationThresh": {
+          "genuine_served_mean": 28.63,
+          "genuine_served_sem": 0.1625,
+          "genuine_served_ci95": 0.32,
+          "wasted_dispatches_mean": 23.37,
+          "wasted_percentage_mean": 44.93,
+          "total_distance_km_mean": 706.27
+        },
+        "TrustAware_RealClusterPenalty": {
+          "genuine_served_mean": 28.0,
+          "genuine_served_sem": 0.0,
+          "genuine_served_ci95": 0.0,
+          "wasted_dispatches_mean": 24.0,
+          "wasted_percentage_mean": 46.15,
+          "total_distance_km_mean": 704.73
+        },
+        "TrustAware_SimulatedClusterPenalty_UpperBound": {
+          "genuine_served_mean": 28.03,
+          "genuine_served_sem": 0.0333,
+          "genuine_served_ci95": 0.07,
+          "wasted_dispatches_mean": 23.97,
+          "wasted_percentage_mean": 46.09,
+          "total_distance_km_mean": 704.41
+        },
+        "Oracle": {
+          "genuine_served_mean": 52.0,
+          "genuine_served_sem": 0.0,
+          "genuine_served_ci95": 0.0,
+          "wasted_dispatches_mean": 0.0,
+          "wasted_percentage_mean": 0.0,
+          "total_distance_km_mean": 673.29
+        }
+      },
+      "statistical_evaluations": {
+        "TrustAware_Continuous": {
+          "gain_vs_blind_lp": 0.0,
+          "pct_of_oracle_achieved": 0.0,
+          "paired_t_stat": 0.0,
+          "paired_t_pvalue": 1.0,
+          "is_significant_p05": false
+        },
+        "TrustAware_ValidationThresh": {
+          "gain_vs_blind_lp": 0.63,
+          "pct_of_oracle_achieved": 2.6,
+          "paired_t_stat": 3.898,
+          "paired_t_pvalue": 0.000527347,
+          "is_significant_p05": true
+        },
+        "TrustAware_RealClusterPenalty": {
+          "gain_vs_blind_lp": 0.0,
+          "pct_of_oracle_achieved": 0.0,
+          "paired_t_stat": 0.0,
+          "paired_t_pvalue": 1.0,
+          "is_significant_p05": false
+        },
+        "TrustAware_SimulatedClusterPenalty_UpperBound": {
+          "gain_vs_blind_lp": 0.03,
+          "pct_of_oracle_achieved": 0.1,
+          "paired_t_stat": 1.0,
+          "paired_t_pvalue": 0.325582,
+          "is_significant_p05": false
+        }
+      }
+    },
+    "california": {
+      "disaster": "California Wildfires",
+      "resource": "wildfire_units",
+      "total_depot_capacity": 52,
+      "oracle_maximum_gain": 20.4,
+      "policies": {
+        "Blind_Greedy": {
+          "genuine_served_mean": 28.0,
+          "genuine_served_sem": 0.0,
+          "genuine_served_ci95": 0.0,
+          "wasted_dispatches_mean": 24.0,
+          "wasted_percentage_mean": 46.15,
+          "total_distance_km_mean": 5694.22
+        },
+        "Blind_LP": {
+          "genuine_served_mean": 17.03,
+          "genuine_served_sem": 0.2856,
+          "genuine_served_ci95": 0.56,
+          "wasted_dispatches_mean": 24.0,
+          "wasted_percentage_mean": 58.57,
+          "total_distance_km_mean": 3358.63
+        },
+        "TrustAware_Continuous": {
+          "genuine_served_mean": 16.53,
+          "genuine_served_sem": 0.257,
+          "genuine_served_ci95": 0.5,
+          "wasted_dispatches_mean": 24.0,
+          "wasted_percentage_mean": 59.28,
+          "total_distance_km_mean": 3272.75
+        },
+        "TrustAware_ValidationThresh": {
+          "genuine_served_mean": 17.43,
+          "genuine_served_sem": 0.2864,
+          "genuine_served_ci95": 0.56,
+          "wasted_dispatches_mean": 23.37,
+          "wasted_percentage_mean": 57.33,
+          "total_distance_km_mean": 3314.26
+        },
+        "TrustAware_RealClusterPenalty": {
+          "genuine_served_mean": 16.53,
+          "genuine_served_sem": 0.257,
+          "genuine_served_ci95": 0.5,
+          "wasted_dispatches_mean": 24.0,
+          "wasted_percentage_mean": 59.28,
+          "total_distance_km_mean": 3272.75
+        },
+        "TrustAware_SimulatedClusterPenalty_UpperBound": {
+          "genuine_served_mean": 16.57,
+          "genuine_served_sem": 0.2741,
+          "genuine_served_ci95": 0.54,
+          "wasted_dispatches_mean": 23.93,
+          "wasted_percentage_mean": 59.16,
+          "total_distance_km_mean": 3266.45
+        },
+        "Oracle": {
+          "genuine_served_mean": 37.43,
+          "genuine_served_sem": 0.2612,
+          "genuine_served_ci95": 0.51,
+          "wasted_dispatches_mean": 0.0,
+          "wasted_percentage_mean": 0.0,
+          "total_distance_km_mean": 2821.4
+        }
+      },
+      "statistical_evaluations": {
+        "TrustAware_Continuous": {
+          "gain_vs_blind_lp": -0.5,
+          "pct_of_oracle_achieved": -2.5,
+          "paired_t_stat": -4.0139,
+          "paired_t_pvalue": 0.000385277,
+          "is_significant_p05": false
+        },
+        "TrustAware_ValidationThresh": {
+          "gain_vs_blind_lp": 0.4,
+          "pct_of_oracle_achieved": 2.0,
+          "paired_t_stat": 2.8448,
+          "paired_t_pvalue": 0.00806767,
+          "is_significant_p05": true
+        },
+        "TrustAware_RealClusterPenalty": {
+          "gain_vs_blind_lp": -0.5,
+          "pct_of_oracle_achieved": -2.5,
+          "paired_t_stat": -4.0139,
+          "paired_t_pvalue": 0.000385277,
+          "is_significant_p05": false
+        },
+        "TrustAware_SimulatedClusterPenalty_UpperBound": {
+          "gain_vs_blind_lp": -0.47,
+          "pct_of_oracle_achieved": -2.3,
+          "paired_t_stat": -3.7509,
+          "paired_t_pvalue": 0.000783294,
+          "is_significant_p05": false
+        }
+      }
+    },
+    "nepal": {
+      "disaster": "Nepal Earthquake",
+      "resource": "earthquake_rescue_teams",
+      "total_depot_capacity": 52,
+      "oracle_maximum_gain": 13.57,
+      "policies": {
+        "Blind_Greedy": {
+          "genuine_served_mean": 28.0,
+          "genuine_served_sem": 0.0,
+          "genuine_served_ci95": 0.0,
+          "wasted_dispatches_mean": 24.0,
+          "wasted_percentage_mean": 46.15,
+          "total_distance_km_mean": 2835.4
+        },
+        "Blind_LP": {
+          "genuine_served_mean": 28.0,
+          "genuine_served_sem": 0.0,
+          "genuine_served_ci95": 0.0,
+          "wasted_dispatches_mean": 24.0,
+          "wasted_percentage_mean": 46.15,
+          "total_distance_km_mean": 2520.26
+        },
+        "TrustAware_Continuous": {
+          "genuine_served_mean": 28.0,
+          "genuine_served_sem": 0.0,
+          "genuine_served_ci95": 0.0,
+          "wasted_dispatches_mean": 24.0,
+          "wasted_percentage_mean": 46.15,
+          "total_distance_km_mean": 2521.61
+        },
+        "TrustAware_ValidationThresh": {
+          "genuine_served_mean": 28.63,
+          "genuine_served_sem": 0.1625,
+          "genuine_served_ci95": 0.32,
+          "wasted_dispatches_mean": 23.37,
+          "wasted_percentage_mean": 44.93,
+          "total_distance_km_mean": 2523.08
+        },
+        "TrustAware_RealClusterPenalty": {
+          "genuine_served_mean": 28.0,
+          "genuine_served_sem": 0.0,
+          "genuine_served_ci95": 0.0,
+          "wasted_dispatches_mean": 24.0,
+          "wasted_percentage_mean": 46.15,
+          "total_distance_km_mean": 2521.61
+        },
+        "TrustAware_SimulatedClusterPenalty_UpperBound": {
+          "genuine_served_mean": 28.0,
+          "genuine_served_sem": 0.0,
+          "genuine_served_ci95": 0.0,
+          "wasted_dispatches_mean": 24.0,
+          "wasted_percentage_mean": 46.15,
+          "total_distance_km_mean": 2521.61
+        },
+        "Oracle": {
+          "genuine_served_mean": 41.57,
+          "genuine_served_sem": 0.302,
+          "genuine_served_ci95": 0.59,
+          "wasted_dispatches_mean": 0.0,
+          "wasted_percentage_mean": 0.0,
+          "total_distance_km_mean": 1583.38
+        }
+      },
+      "statistical_evaluations": {
+        "TrustAware_Continuous": {
+          "gain_vs_blind_lp": 0.0,
+          "pct_of_oracle_achieved": 0.0,
+          "paired_t_stat": 0.0,
+          "paired_t_pvalue": 1.0,
+          "is_significant_p05": false
+        },
+        "TrustAware_ValidationThresh": {
+          "gain_vs_blind_lp": 0.63,
+          "pct_of_oracle_achieved": 4.7,
+          "paired_t_stat": 3.898,
+          "paired_t_pvalue": 0.000527347,
+          "is_significant_p05": true
+        },
+        "TrustAware_RealClusterPenalty": {
+          "gain_vs_blind_lp": 0.0,
+          "pct_of_oracle_achieved": 0.0,
+          "paired_t_stat": 0.0,
+          "paired_t_pvalue": 1.0,
+          "is_significant_p05": false
+        },
+        "TrustAware_SimulatedClusterPenalty_UpperBound": {
+          "gain_vs_blind_lp": 0.0,
+          "pct_of_oracle_achieved": 0.0,
+          "paired_t_stat": 0.0,
+          "paired_t_pvalue": 1.0,
+          "is_significant_p05": false
+        }
+      }
+    },
+    "miami": {
+      "disaster": "Hurricane & Tropical Storm",
+      "resource": "ambulances",
+      "total_depot_capacity": 54,
+      "oracle_maximum_gain": 24.0,
+      "policies": {
+        "Blind_Greedy": {
+          "genuine_served_mean": 30.0,
+          "genuine_served_sem": 0.0,
+          "genuine_served_ci95": 0.0,
+          "wasted_dispatches_mean": 24.0,
+          "wasted_percentage_mean": 44.44,
+          "total_distance_km_mean": 392.41
+        },
+        "Blind_LP": {
+          "genuine_served_mean": 30.0,
+          "genuine_served_sem": 0.0,
+          "genuine_served_ci95": 0.0,
+          "wasted_dispatches_mean": 24.0,
+          "wasted_percentage_mean": 44.44,
+          "total_distance_km_mean": 321.36
+        },
+        "TrustAware_Continuous": {
+          "genuine_served_mean": 30.0,
+          "genuine_served_sem": 0.0,
+          "genuine_served_ci95": 0.0,
+          "wasted_dispatches_mean": 24.0,
+          "wasted_percentage_mean": 44.44,
+          "total_distance_km_mean": 321.85
+        },
+        "TrustAware_ValidationThresh": {
+          "genuine_served_mean": 30.63,
+          "genuine_served_sem": 0.1625,
+          "genuine_served_ci95": 0.32,
+          "wasted_dispatches_mean": 23.37,
+          "wasted_percentage_mean": 43.27,
+          "total_distance_km_mean": 323.34
+        },
+        "TrustAware_RealClusterPenalty": {
+          "genuine_served_mean": 30.0,
+          "genuine_served_sem": 0.0,
+          "genuine_served_ci95": 0.0,
+          "wasted_dispatches_mean": 24.0,
+          "wasted_percentage_mean": 44.44,
+          "total_distance_km_mean": 322.21
+        },
+        "TrustAware_SimulatedClusterPenalty_UpperBound": {
+          "genuine_served_mean": 30.0,
+          "genuine_served_sem": 0.0,
+          "genuine_served_ci95": 0.0,
+          "wasted_dispatches_mean": 24.0,
+          "wasted_percentage_mean": 44.44,
+          "total_distance_km_mean": 321.85
+        },
+        "Oracle": {
+          "genuine_served_mean": 54.0,
+          "genuine_served_sem": 0.0,
+          "genuine_served_ci95": 0.0,
+          "wasted_dispatches_mean": 0.0,
+          "wasted_percentage_mean": 0.0,
+          "total_distance_km_mean": 304.83
+        }
+      },
+      "statistical_evaluations": {
+        "TrustAware_Continuous": {
+          "gain_vs_blind_lp": 0.0,
+          "pct_of_oracle_achieved": 0.0,
+          "paired_t_stat": 0.0,
+          "paired_t_pvalue": 1.0,
+          "is_significant_p05": false
+        },
+        "TrustAware_ValidationThresh": {
+          "gain_vs_blind_lp": 0.63,
+          "pct_of_oracle_achieved": 2.6,
+          "paired_t_stat": 3.898,
+          "paired_t_pvalue": 0.000527347,
+          "is_significant_p05": true
+        },
+        "TrustAware_RealClusterPenalty": {
+          "gain_vs_blind_lp": 0.0,
+          "pct_of_oracle_achieved": 0.0,
+          "paired_t_stat": 0.0,
+          "paired_t_pvalue": 1.0,
+          "is_significant_p05": false
+        },
+        "TrustAware_SimulatedClusterPenalty_UpperBound": {
+          "gain_vs_blind_lp": 0.0,
+          "pct_of_oracle_achieved": 0.0,
+          "paired_t_stat": 0.0,
+          "paired_t_pvalue": 1.0,
+          "is_significant_p05": false
+        }
+      }
+    }
   }
 }

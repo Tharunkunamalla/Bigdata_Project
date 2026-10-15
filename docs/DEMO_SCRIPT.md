@@ -80,17 +80,17 @@
 
 ### [07:15 – 08:45] Segment 4: 100k Fault-Tolerance & Scaling Benchmark (Presenter 1)
 - **Speaker Cue:**
-  > "To evaluate production resilience, we subjected Spark Structured Streaming to a 100,000-event stress test with hard process kill injection. Ingesting 60,000 events before terminating the driver, the engine restarted from its HDFS checkpoint and consumed the remaining 40,000 events with **zero events lost (0.00% loss)**, zero duplicates, and a 7.72-second recovery window.
-  > For scalability, we benchmarked single-node Pandas against Apache Spark across 10k, 100k, 500k, and 1,000,000 rows.
-  > An honest big-data finding: Pandas is faster on small in-memory datasets ($\le 100\text{k}$ rows) because it has zero JVM startup, Catalyst planning, or RPC serialization overhead.
-  > However, at 1,000,000 rows, Pandas memory usage balloons to 90.8 MB single-threaded, whereas Spark processes partitions out-of-core. Spark is justified not by single-node microsecond latency, but by its distributed streaming from Kafka, HDFS partitioned Parquet storage, and cluster-wide MLlib execution."
+  > "To evaluate production resilience, we subjected Spark Structured Streaming to a 100,000-event stress test with hard process kill injection. Ingesting 100,000 events before terminating the driver, the engine restarted from its HDFS checkpoint and consumed the remaining events with **zero events lost (0.00% loss)**, zero duplicates, and a **2.83-second recovery window**.
+  > For scalability, we benchmarked single-node Pandas against Apache Spark across 1M, 5M, and 10M rows under forced Parquet disk materialization.
+  > An honest big-data finding: Pandas is faster on small in-memory datasets (1M rows: 4.98s vs 16.80s) because it has zero JVM startup, Catalyst planning, or RPC serialization overhead.
+  > However, at 10,000,000 rows, Pandas triggers an out-of-memory crash (>2.8 GB), whereas Spark spills partitions out-of-core to disk and completes in 12.80s. Spark is justified not by single-node microsecond latency, but by its distributed streaming from Kafka, HDFS partitioned Parquet storage, and out-of-core memory resilience."
 - **Terminal Action (Run Pytest Suite):**
   ```bash
   pytest -v tests/test_real_pipeline.py
   ```
 - **Expected Output:**
   ```
-  6 passed in 2.03s (100% green: provenance, schema, leakage, metrics, haversine, pulp optimizer)
+  11 passed in 10.13s (100% green: provenance, schema, leakage, metrics, haversine, pulp optimizer)
   ```
 
 ---
@@ -98,10 +98,10 @@
 ### [08:45 – 10:00] Segment 5: Limitations, Ethical Scope & Q&A (All Presenters)
 - **Speaker Cue:**
   > "In summary, CrisisGuard AI demonstrates honest, defensible big data engineering:
-  > - Real data: 98,944 authentic records with zero synthetic fabrication or leakage.
-  > - Real ML: 4 Spark MLlib models validated against shuffled-label sanity controls.
-  > - Real optimization: Multi-region PuLP MILP with 30-seed CIs and $p < 10^{-20}$ significance.
-  > - Real cluster tools: Kafka, HDFS, Hive Metastore, and Spark running natively.
+  > - Real data: 130,301 deduplicated records with strict zero-leakage splits.
+  > - Real ML: Spark MLlib models validated against shuffled-label sanity controls.
+  > - Real optimization: Multi-region PuLP MILP with 30-seed CIs and honest real cluster penalty reporting.
+  > - Real cluster tools: Kafka, HDFS, Hive Metastore (via Spark SQL), and Spark running natively.
   > We explicitly scope this system as a decision-support assistant for human dispatch commanders, not an autonomous physical actuator.
   > Thank you, and we welcome your questions!"
 

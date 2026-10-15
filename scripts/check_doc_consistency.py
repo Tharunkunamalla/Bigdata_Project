@@ -37,7 +37,8 @@ def check_consistency():
     with open(ablation_path, "r", encoding="utf-8") as f:
         ablation = json.load(f)
 
-    hou_ta = ablation["regional_trials"]["houston"]["statistical_evaluations"]["TrustAware_Continuous"]
+    reg_dict = ablation.get("regional_evaluations", ablation.get("regional_trials", {}))
+    hou_ta = reg_dict["houston"]["statistical_evaluations"]["TrustAware_Continuous"]
     hou_gain = hou_ta["gain_vs_blind_lp"]
     print(f"Verified Ground Truth Houston Continuous Gain: +{hou_gain} victims")
 

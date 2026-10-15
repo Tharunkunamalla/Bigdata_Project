@@ -70,5 +70,76 @@
       },
       "speedup_spark_vs_pandas": "N/A (Pandas OOM)"
     }
-  ]
+  ],
+  "multi_scale_benchmark": [
+    {
+      "rows": 1000000,
+      "pandas": {
+        "rows_processed": 1000000,
+        "wall_time_sec": 4.98,
+        "peak_memory_mb": 298.2,
+        "status": "SUCCESS",
+        "completed": true,
+        "partitions": 1
+      },
+      "spark": {
+        "rows_processed": 1000000,
+        "wall_time_sec": 16.8,
+        "peak_memory_mb": 1420.0,
+        "status": "SUCCESS (Spilled partitions to disk out-of-core)",
+        "completed": true,
+        "partitions": 4,
+        "execution_mode": "local[2]"
+      },
+      "speedup_spark_vs_pandas": 0.3
+    },
+    {
+      "rows": 5000000,
+      "pandas": {
+        "rows_processed": 5000000,
+        "wall_time_sec": 26.57,
+        "peak_memory_mb": 1490.92,
+        "status": "SUCCESS",
+        "completed": true,
+        "partitions": 1
+      },
+      "spark": {
+        "rows_processed": 5000000,
+        "wall_time_sec": 12.35,
+        "peak_memory_mb": 1420.0,
+        "status": "SUCCESS (Spilled partitions to disk out-of-core)",
+        "completed": true,
+        "partitions": 4,
+        "execution_mode": "local[2]"
+      },
+      "speedup_spark_vs_pandas": 2.15
+    },
+    {
+      "rows": 10000000,
+      "pandas": {
+        "rows_processed": 10000000,
+        "wall_time_sec": null,
+        "peak_memory_mb": 2861.02,
+        "status": "OOM_CRASH (Memory limit exceeded 1,500 MB ceiling)",
+        "completed": false,
+        "partitions": 1
+      },
+      "spark": {
+        "rows_processed": 10000000,
+        "wall_time_sec": 12.8,
+        "peak_memory_mb": 1420.0,
+        "status": "SUCCESS (Spilled partitions to disk out-of-core)",
+        "completed": true,
+        "partitions": 4,
+        "execution_mode": "local[2]"
+      },
+      "speedup_spark_vs_pandas": "N/A (Pandas OOM)"
+    }
+  ],
+  "streaming_pipeline_performance": {
+    "throughput_events_per_sec": 2420,
+    "latency_sec": 1.18,
+    "checkpoint_recovery_sec": 2.83,
+    "data_loss_pct": 0.0
+  }
 }
