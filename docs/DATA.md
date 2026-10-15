@@ -9,15 +9,16 @@
 
 ## 1. Overview and Real Corpus Provenance
 
-CrisisGuard AI operates on **128,860 curated disaster and verification records** compiled from open academic benchmarks, professional journalistic fact-checking archives, and live government feeds. 
+CrisisGuard AI operates on **130,301 curated disaster and verification records** compiled from open academic benchmarks, professional journalistic fact-checking archives, and live government feeds. 
 
 ### 1.1 Data Realism & Fabrication Transparency Declaration
-- **Authentic Records (97.85%):** 126,091 records are authentic human posts, open QA benchmarks, and multi-generator benchmark texts from QCRI HumAID, CrisisLexT26, Hello-SimpleAI HC3, MAGE Benchmark, PHEME Rumour Dataset, and LIAR.
-- **Generated Adversarial Hoaxes (2.15%):** Exactly **2,769 unique records** (from 3,000 raw generated instances) are synthetic emergency distress hoaxes:
-  - **Generator A (1,295 unique records in Train only):** In-domain disaster hoaxes mimicking urgent hazard collapses (dam breaches, chemical plumes, levee failures).
-  - **Generator B (1,474 unique records in Held-Out Test only):** In-domain disaster hoaxes with **completely disjoint vocabulary** (hospital fires, seismic fault ruptures, municipal water reservoir poisoning).
+- **Authentic Records (96.77%):** 126,091 records are authentic human posts, open QA benchmarks, and multi-generator benchmark texts from QCRI HumAID, CrisisLexT26, Hello-SimpleAI HC3, MAGE Benchmark, PHEME Rumour Dataset, and LIAR.
+- **Generated Adversarial Hoaxes (3.23%):** Exactly **4,210 unique records** (from 4,500 raw generated instances) are synthetic emergency distress hoaxes created via local parametric prompt engines:
+  - **Generator A (1,367 unique records in Train only):** In-domain disaster hoaxes mimicking urgent hazard collapses (dam breaches, chemical plumes, levee failures).
+  - **Generator B (1,488 unique records in Train only):** In-domain disaster hoaxes with distinct collapse vocabulary (hospital fires, seismic fault ruptures, municipal water reservoir poisoning).
+  - **Generator C (1,355 unique records in Held-Out Test only):** In-domain civilian panic distress calls (~80-140 chars) with **0% train overlap**, providing strict out-of-distribution evaluation for the tweet-domain synthetic detector.
   - *Technical Necessity:* Because authentic historical disaster tweets do not contain coordinated LLM-generated emergency dispatch attacks, synthetic hoaxes are strictly necessary to evaluate the system under adversarial conditions.
-- **Geographic Coordinates (Simulated for Social Media Posts):** Because public disaster datasets (QCRI HumAID, CrisisLex, PHEME) strip exact GPS coordinates to protect citizen privacy in accordance with Twitter/X developer terms, **latitude and longitude coordinates for social posts are assigned from regional disaster bounding boxes (simulated)**. In contrast, **emergency dispatch depot locations are 100% authentic physical facilities** retrieved via the OpenStreetMap (OSM) Overpass API.
+- **Geographic Coordinates (Simulated for Social Media Posts):** Because public disaster datasets (QCRI HumAID, CrisisLex, PHEME) strip exact GPS coordinates to protect citizen privacy in accordance with Twitter/X developer terms, **latitude and longitude coordinates for social posts are assigned from regional disaster bounding boxes (simulated)**. In contrast, **emergency dispatch depot locations are 100% authentic physical facilities** retrieved via the OpenStreetMap (OSM) Overpass API. Every record carries the `coords_simulated: true` provenance flag.
 
 ---
 
@@ -54,17 +55,18 @@ All external and raw corpora are registered in `data/raw/dataset_provenance_mani
 
 ## 3. Stratified Train / Test Partitioning & Data Ingestion Funnel
 
-To maintain strict empirical honesty, the dataset partition is formally designated as a **75/25 Random Stratified Split** (stratified across dataset source, `is_synthetic`, and `is_hoax` with seed 42). Disaster events and categories are balanced proportionally across both partitions to maintain regional and operational coverage, rather than claiming an event-held-out split. **Adversarial hoaxes remain strictly isolated**: Generator A (1,295 unique records) is 100% in Train, while Generator B (1,474 unique records with completely disjoint vocabulary) is 100% in Test.
+To maintain strict empirical honesty, the dataset partition is formally designated as a **75/25 Random Stratified Split** (stratified across dataset source, `is_synthetic`, and `is_hoax` with seed 42). Disaster events and categories are balanced proportionally across both partitions to maintain regional and operational coverage, rather than claiming an event-held-out split. **Adversarial hoaxes remain strictly isolated**: Generator A (1,367 unique records) and Generator B (1,488 unique records) are 100% in Train, while Generator C (1,355 unique records with completely disjoint civilian distress style) is 100% in Test.
 
 ```
-                       128,860 Curated Disaster Records
+                       130,301 Curated Disaster Records
                                        │
         ┌──────────────────────────────┴──────────────────────────────┐
         ▼                                                             ▼
-   Train Partition (74.39%)                                      Test Partition (25.61%)
-   - Rows: 95,862                                                - Rows: 32,998
+   Train Partition (74.77%)                                      Test Partition (25.23%)
+   - Rows: 97,422                                                - Rows: 32,879
    - Balanced across all 6 real sources                          - Balanced across all 6 real sources
-   - Generator A (In-Domain Hoaxes: 1,295)                       - Generator B (Disjoint Vocab Hoaxes: 1,474)
+   - Generator A (Hazard Collapse Hoaxes: 1,367)                 - Generator C (Held-Out Civilian Panic Hoaxes: 1,355)
+   - Generator B (Facility Alert Hoaxes: 1,488)
 ```
 
 ### 3.1 End-to-End Data Funnel Table (Per Source)
@@ -78,15 +80,16 @@ The table below traces every source from raw ingestion on disk through text clea
 | **PHEME Rumour Dataset** | 6,425 | 6,424 | 6,280 | 6,280 | 4,710 | 1,570 | Stratified 75/25 |
 | **LIAR Benchmark** | 11,507 | 11,484 | 11,466 | 11,466 | 8,599 | 2,867 | Stratified 75/25 |
 | **MAGE Benchmark** | 11,562 | 11,562 | 11,557 | 11,557 | 8,667 | 2,890 | Stratified 75/25 |
-| **Hoax Generator A** | 1,500 | 1,500 | 1,295 | 1,295 | 1,295 | 0 | Train Only (100%) |
-| **Hoax Generator B** | 1,500 | 1,500 | 1,474 | 1,474 | 0 | 1,474 | Test Only (100%) |
-| **TOTAL** | **130,038** | **129,935** | **128,860** | **128,860** | **95,862** | **32,998** | **Exact: 95,862 + 32,998 = 128,860** |
+| **Hoax Generator A** | 1,500 | 1,500 | 1,367 | 1,367 | 1,367 | 0 | Train Only (100%) |
+| **Hoax Generator B** | 1,500 | 1,500 | 1,488 | 1,488 | 1,488 | 0 | Train Only (100%) |
+| **Hoax Generator C** | 1,500 | 1,500 | 1,355 | 1,355 | 0 | 1,355 | Held-Out Test Only (100%) |
+| **TOTAL** | **131,538** | **131,435** | **130,301** | **130,301** | **97,422** | **32,879** | **Exact: 97,422 + 32,879 = 130,301** |
 
 ### 3.2 Zero-Leakage Audit
 - **Set-Intersection Test:** Evaluated directly in `test_train_test_split_leakage` (`tests/test_real_pipeline.py`):
   $$\text{Overlap} = \{ \text{Text}_{\text{train}} \} \cap \{ \text{Text}_{\text{test}} \} = \emptyset \quad (\mathbf{0 \text{ overlapping texts, } 0.00\% \text{ Leakage}})$$
 - **Case-Insensitive Normalization:** Text strings are lowercased and stripped of whitespace and URLs prior to collision hashing.
-- **Disjoint Hoax Vocabularies:** Hoax Generator A and Hoax Generator B share zero hazard keywords or template phrases.
+- **Disjoint Hoax Vocabularies:** Hoax Generators A, B, and C share zero hazard keywords or template phrases. Generator C serves as the held-out test distribution.
 ---
 
 ## 4. Origin and Meaning of Every Label
