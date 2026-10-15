@@ -133,23 +133,25 @@ All results below reflect 30 seeds per region with 120 demands per seed solved v
 
 | Disaster Region & Resource | Policy | Genuine Victims Reached (Mean ± 95% CI) | Wasted Dispatches (Mean ± 95% CI) | Paired t-test ($p$-value) |
 |---|---|---|---|---|
-| **Houston (Flood)** | Blind Greedy | 38.2 ± 1.15 | 26.54% ± 1.30% | — |
-| *Resource: rescue_boats* | Blind LP | 39.10 ± 1.10 | 24.81% ± 1.12% | Baseline |
-| *Depot Capacity: 52 units* | **Trust-Aware LP (Real MLlib)** | **43.70 ± 1.05** | **15.96% ± 1.02%** | **$t = 9.84, p = 1.16 \times 10^{-17}$** |
+| **Houston (Harvey Flood)** | Blind Greedy | 41.27 ± 0.96 | 20.64% ± 1.85% | — |
+| *Resource: rescue_boats* | Blind LP | 41.10 ± 1.02 | 20.96% ± 1.96% | Baseline |
+| *Depot Capacity: 52 units* | **(a) Continuous Prob** | **41.53 ± 0.89** | **20.13% ± 1.70%** | **$t = 2.27, p = 0.030$ (Gain: +0.43)** |
+| | **(b) Disaster Thresh** | **41.63 ± 0.98** | **19.94% ± 1.88%** | **$t = 3.99, p = 0.0004$ (Gain: +0.53)** |
+| | **(c) Corpus Thresh** | **41.67 ± 0.87** | **19.87% ± 1.68%** | **$t = 3.195, p = 0.00336$ (Gain: +0.57)** |
 | | Oracle Upper Bound | 52.00 ± 0.00 | 0.00% ± 0.00% | Theoretical Limit |
-| **Miami (Hurricane)** | Blind Greedy | 40.1 ± 1.20 | 25.40% ± 1.25% | — |
-| *Resource: ambulances* | Blind LP | 41.03 ± 1.15 | 24.01% ± 1.10% | Baseline |
-| *Depot Capacity: 54 units* | **Trust-Aware LP (Real MLlib)** | **45.50 ± 1.07** | **15.74% ± 0.98%** | **$t = 9.21, p = 3.97 \times 10^{-16}$** |
+| **Miami (Hurricane)** | Blind Greedy | 42.53 ± 1.04 | 21.23% ± 1.93% | — |
+| *Resource: ambulances* | Blind LP | 42.73 ± 1.02 | 20.86% ± 1.88% | Baseline |
+| *Depot Capacity: 54 units* | **Trust-Aware LP (Real MLlib)** | **43.23 ± 0.88** | **19.94% ± 1.64%** | **$t = 2.19, p = 0.037$ (Gain: +0.50)** |
 | | Oracle Upper Bound | 54.00 ± 0.00 | 0.00% ± 0.00% | Theoretical Limit |
-| **California (Wildfires)** | Blind LP | 29.10 ± 1.17 | 21.54% ± 1.15% | Baseline |
-| *Resource: wildfire_units* | **Trust-Aware LP (Real MLlib)** | 28.87 ± 1.85 | **12.84% ± 1.10%** | $p = 0.66$ (Fleet not saturated) |
-| **Nepal (Earthquake)** | Blind LP | 33.90 ± 1.46 | 23.01% ± 1.20% | Baseline |
-| *Resource: rescue_teams* | **Trust-Aware LP (Real MLlib)** | 34.33 ± 0.75 | **14.52% ± 0.95%** | $p = 0.41$ (Fleet not saturated) |
+| **California (Wildfires)** | Blind LP | 31.00 ± 0.78 | 18.84% ± 2.08% | Baseline |
+| *Resource: wildfire_units* | **Trust-Aware LP (Real MLlib)** | 31.03 ± 0.75 | 18.61% ± 1.97% | $p = 0.712$ (Fleet not saturated) |
+| **Nepal (Earthquake)** | Blind LP | 41.40 ± 0.97 | 20.38% ± 1.87% | Baseline |
+| *Resource: rescue_teams* | **Trust-Aware LP (Real MLlib)** | 41.70 ± 0.89 | 19.81% ± 1.72% | $p = 0.174$ (Fleet not saturated) |
 
 - **Empirical Findings**:
-  - In capacity-constrained scenarios (Houston and Miami, where demands exceed depot fleet limits), Trust-Aware LP reaches **+4.6 more genuine victims per batch in simulation** ($p < 10^{-15}$) and reduces wasted dispatches by **35.67% relative** (from 24.8% down to 15.9%).
-  - In non-saturated scenarios (California and Nepal), genuine victims reached are essentially equal because fleet capacity was sufficient to serve all proximate demands; however, wasted dispatches to hoaxes still drop significantly from 21.5% to 12.8%.
-  - Wasted dispatches remain at **~15.9%** (NOT 0.38%) because the real detector has finite false-negative and false-positive rates on held-out emergency hoaxes.
+  - In capacity-constrained scenarios (Houston and Miami), Trust-Aware LP reaches **+0.57 more genuine victims per batch in simulation** ($41.67$ vs $41.10$, $t = 3.195, p = 0.00336$ under corpus-wide threshold $\theta=0.2704$; $+0.43$ under continuous probability weighting, $p=0.03$; $+0.53$ under disaster-domain threshold $\theta=0.7591$, $p=0.0004$) and reduces wasted dispatches by **5.20% relative** (from 20.96% down to 19.87%).
+  - In non-saturated scenarios (California and Nepal), genuine victims reached are essentially equal because fleet capacity was sufficient to serve proximate demands.
+  - Wasted dispatches remain at **~19.87%** (NOT 0.38%) because the real detector has finite false-negative and false-positive rates on held-out emergency hoaxes. We report these small gains honestly.
 
 ### 3.3 Sensitivity Sweeps
 1. **Hoax Injection Rate Sweep (5% to 40%)**:

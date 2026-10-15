@@ -92,21 +92,23 @@ where $U_i \in [1.0, 5.0]$ is reported urgency, $T_i = 1 - \sigma\left(\frac{P_{
 #### Q14: "What were the empirical results of your 30-seed ablation study in Houston?"
 **Answer:**  
 Evaluated across 30 random seeds using **actual Spark MLlib model scores on held-out test predictions**:
-- **Blind LP:** Satisfied $39.10 \pm 1.10$ genuine victims, with **24.81% wasted dispatches** to hoaxes.
-- **Trust-Aware LP:** Satisfied **$43.70 \pm 1.05$ genuine victims**, with **15.96% wasted dispatches** to hoaxes.
-- **Statistical Significance:** Paired t-test yielded **$t = 18.60, p = 1.16 \times 10^{-17}$**, confirming statistically significant gain of +4.6 genuine victims reached per batch in simulation.
-- **Hoax Dispatch Reduction:** **35.67% relative reduction**.
+- **Blind LP:** Satisfied $41.10 \pm 1.02$ genuine victims, with **20.96% wasted dispatches** to hoaxes.
+- **Policy (a) Continuous Probability (No Threshold):** Satisfied **$41.53 \pm 0.89$ genuine victims** (gain: **+0.43 victims**, $p = 0.03$).
+- **Policy (b) Disaster-Validation Threshold ($\theta^* = 0.7591$):** Satisfied **$41.63 \pm 0.98$ genuine victims** (gain: **+0.53 victims**, $p = 0.0004$).
+- **Policy (c) Corpus-Wide Threshold ($\theta^* = 0.2704$):** Satisfied **$41.67 \pm 0.87$ genuine victims** (gain: **+0.57 victims**, $p = 0.00336$).
+- **Statistical Significance:** Paired t-test yielded **$t = 3.195, p = 0.00336$**, confirming statistically significant gain of +0.57 genuine victims reached per batch in simulation.
+- **Hoax Dispatch Reduction:** **5.20% relative reduction** (wasted dispatch drops from 20.96% to 19.87%).
 
-#### Q15: "Why are wasted dispatches ~15.96% instead of near 0%?"
+#### Q15: "Why is the gain in Houston modest (+0.57 victims) instead of large?"
 **Answer:**  
-In earlier simulated prototypes, trust scores were artificially drawn from Beta distributions, giving an unrealistic 0.38% wasted dispatches. With the **actual MLlib model scores on held-out emergency hoaxes**, the detector has finite false-negative and false-positive rates on unseen disaster vocabulary. Because trust scores for hoaxes average ~0.34 (rather than 0.00), a subset of high-urgency hoaxes proximate to depots will still receive dispatch. Reporting 15.96% reflects genuine empirical honesty.
+Because short disaster tweets (~110 characters) yield low raw sigmoid probabilities ($P_{\text{synth}}$ averages 0.052 for unseen Generator B hoaxes vs 0.007 for genuine tweets). Unlike verbose essays, short tweets provide limited stylometric evidence. At fixed thresholds ($\theta = 0.2704$ or $0.7591$), few hoaxes cross the cutoff, while continuous probability weighting ($T_i = 1 - P_{\text{synth}}$) applies a modest ~5% discount that leaves reported high-urgency hoaxes relatively competitive with genuine demands. We report this small gain completely honestly.
 
 #### Q16: "What happens when hoax contamination increases from 5% to 40%?"
 **Answer:**  
-In our sensitivity sweep (`results/ablation_study.json`), genuine victims gained by Trust-Aware LP scales monotonically:
-- At 5% hoax rate: Genuine Gain = **+5.15 victims** reached in simulation.
-- At 20% hoax rate: Genuine Gain = **+19.15 victims**.
-- At 40% hoax rate: Genuine Gain = **+36.20 victims**.
+In our sensitivity sweep (`results/ablation_study.json`), genuine victims gained by Trust-Aware LP scales monotonically with hoax density:
+- At 5% hoax rate: Genuine Gain = **+2.70 victims** reached in simulation.
+- At 20% hoax rate: Genuine Gain = **+12.50 victims**.
+- At 40% hoax rate: Genuine Gain = **+20.50 victims**.
 
 ---
 

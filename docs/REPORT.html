@@ -6,12 +6,12 @@
 <style>
     @page {
         size: letter;
-        margin: 16mm 16mm 16mm 16mm;
+        margin: 15mm 15mm 15mm 15mm;
     }
     body {
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-        font-size: 10pt;
-        line-height: 1.45;
+        font-size: 9.5pt;
+        line-height: 1.38;
         color: #1e293b;
         background: #ffffff;
         margin: 0;
@@ -184,11 +184,13 @@
 <h4>4. Emergency Resource Allocation Ablation (PuLP MILP with Real MLlib Scores & OSM Depots)</h4>
 <li><strong>Houston Flood (30 Seeds, 95% CI)</strong>:</li>
 <li>Blind-LP: Genuine Reached = <strong>41.10 ± 1.02</strong> | Wasted Dispatches = <strong>20.96%</strong></li>
-<li>TrustAware-LP: Genuine Reached = <strong>41.67 ± 0.87</strong> | Wasted Dispatches = <strong>19.87%</strong></li>
-<li>Paired t-test: <strong>t = 3.195, p = 0.00336</strong> (statistically significant gain of +4.6 genuine victims reached per batch in simulation).</li>
+<li>Policy (a) Continuous Probability (No Threshold): Genuine Reached = <strong>41.53 ± 0.89</strong> | Gain = <strong>+0.43 victims</strong> (<em>p = 0.030</em>)</li>
+<li>Policy (b) Disaster-Validation Threshold (<em>\theta^* = 0.7591</em>): Genuine Reached = <strong>41.63 ± 0.98</strong> | Gain = <strong>+0.53 victims</strong> (<em>p = 0.0004</em>)</li>
+<li>Policy (c) Corpus-Wide Threshold (<em>\theta^* = 0.2704</em>): Genuine Reached = <strong>41.67 ± 0.87</strong> | Gain = <strong>+0.57 victims</strong> (<em>p = 0.00336</em>)</li>
+<li>Paired t-test: <strong>t = 3.195, p = 0.00336</strong> (statistically significant gain of +0.57 genuine victims reached per batch in simulation).</li>
 <li>Hoax Dispatch Reduction: <strong>5.20%</strong> relative reduction.</li>
 <li><strong>Sensitivity Sweeps</strong>:</li>
-<li>Hoax Rate (5% → 40%): Genuine gain increases monotonically from +2.70 to +20.10 victims.</li>
+<li>Hoax Rate (5% → 40%): Genuine gain increases monotonically from +2.70 to +20.50 victims.</li>
 <li>Detector AUC (0.55 → 0.99): Genuine gain increases from +9.85 to +22.30 victims; benefit disappears at AUC <= 0.55.</li>
 <p class='spacer'></p>
 <h4>5. Scaling Benchmark & Streaming Resiliency</h4>
@@ -311,18 +313,23 @@
 <p class='spacer'></p>
 <hr/>
 <p class='spacer'></p>
-<h2>7. Multi-Region Resource Allocation Ablation</h2>
+<h2>7. Multi-Region Resource Allocation Ablation (Three Policy Evaluation)</h2>
 <p class='spacer'></p>
-<p>Evaluated across 30 seeds with 120 demands per seed using actual Spark MLlib model scores from <code>test_predictions.csv</code> and real OpenStreetMap Overpass depot facilities:</p>
+<p>Evaluated across 30 seeds with 120 demands per seed using actual Spark MLlib model scores from <code>test_predictions.csv</code> and real OpenStreetMap Overpass depot facilities. Rather than relying solely on a single corpus-wide threshold, three allocation policies are evaluated:</p>
+<p>1. <strong>Policy (a) Continuous Probability</strong>: Trust weight <em>T_i = 1 - P_{\text{synth}, i}</em> (no threshold, continuous discount).</p>
+<p>2. <strong>Policy (b) Disaster-Validation Threshold</strong>: Threshold <em>\theta^* = 0.7591</em> tuned strictly on an 80/20 training validation split of disaster tweets & hoaxes only.</p>
+<p>3. <strong>Policy (c) Corpus-Wide Threshold</strong>: Threshold <em>\theta^* = 0.2704</em> tuned on the full corpus validation split.</p>
 <p class='spacer'></p>
 <div class='table-container'><table>
 <tr><th>Region & Fleet</th><th>Policy</th><th>Genuine Reached (Mean ± 95% CI)</th><th>Wasted Dispatches (%)</th><th>Paired t-Test vs Blind LP</th></tr>
 <tr><td><strong>Houston (Flood)</strong></td><td>Blind Greedy</td><td>41.27 ± 0.96</td><td>20.64% ± 1.85%</td><td>—</td></tr>
 <tr><td>*52 Rescue Boats*</td><td>Blind LP</td><td>41.10 ± 1.02</td><td>20.96% ± 1.96%</td><td>Baseline</td></tr>
-<tr><td></td><td><strong>Trust-Aware LP</strong></td><td><strong>41.67 ± 0.87</strong></td><td><strong>19.87% ± 1.68%</strong></td><td><strong><em>t = 3.20, p = 3.36 \times 10^{-3}</em></strong></td></tr>
+<tr><td></td><td><strong>(a) Continuous Prob</strong></td><td><strong>41.53 ± 0.89</strong></td><td><strong>20.13% ± 1.70%</strong></td><td><strong><em>t = 2.27, p = 3.00 \times 10^{-2}</em> (Gain: +0.43)</strong></td></tr>
+<tr><td></td><td><strong>(b) Disaster Thresh</strong></td><td><strong>41.63 ± 0.98</strong></td><td><strong>19.94% ± 1.88%</strong></td><td><strong><em>t = 3.99, p = 4.00 \times 10^{-4}</em> (Gain: +0.53)</strong></td></tr>
+<tr><td></td><td><strong>(c) Corpus Thresh</strong></td><td><strong>41.67 ± 0.87</strong></td><td><strong>19.87% ± 1.68%</strong></td><td><strong><em>t = 3.20, p = 3.36 \times 10^{-3}</em> (Gain: +0.57)</strong></td></tr>
 <tr><td></td><td>Oracle Upper Bound</td><td>52.00 ± 0.00</td><td>0.00% ± 0.00%</td><td>Theoretical Limit</td></tr>
 <tr><td><strong>Miami (Surge)</strong></td><td>Blind LP</td><td>42.73 ± 1.02</td><td>20.86% ± 1.88%</td><td>Baseline</td></tr>
-<tr><td>*54 Ambulances*</td><td><strong>Trust-Aware LP</strong></td><td><strong>43.23 ± 0.88</strong></td><td><strong>19.94% ± 1.64%</strong></td><td><strong><em>t = 2.18, p = 3.70 \times 10^{-2}</em></strong></td></tr>
+<tr><td>*54 Ambulances*</td><td><strong>Trust-Aware LP</strong></td><td><strong>43.23 ± 0.88</strong></td><td><strong>19.94% ± 1.64%</strong></td><td><strong><em>t = 2.18, p = 3.70 \times 10^{-2}</em> (Gain: +0.50)</strong></td></tr>
 <tr><td><strong>California (Fire)</strong></td><td>Blind LP</td><td>31.00 ± 0.78</td><td>18.84% ± 2.08%</td><td>Baseline</td></tr>
 <tr><td>*52 Fire Units*</td><td><strong>Trust-Aware LP</strong></td><td>31.03 ± 0.75</td><td><strong>18.61% ± 1.97%</strong></td><td><em>t = 0.37, p = 7.12 \times 10^{-1}</em> (ns)</td></tr>
 <tr><td><strong>Nepal (Quake)</strong></td><td>Blind LP</td><td>41.40 ± 0.97</td><td>20.38% ± 1.87%</td><td>Baseline</td></tr>
@@ -330,12 +337,20 @@
 </table></div>
 <p class='spacer'></p>
 <li><strong>Sensitivity Sweeps</strong>:</li>
-<li><strong>Hoax Rate (5% → 40%)</strong>: Genuine gain scales monotonically from +4.30 victims to +32.50 victims reached in simulation.</li>
+<li><strong>Hoax Rate (5% → 40%)</strong>: Genuine gain scales monotonically from +2.70 to +20.50 victims reached in simulation.</li>
 <li><strong>Detector Quality (AUC 0.55 → 0.99)</strong>: Genuine gain ranges from +9.85 victims at AUC 0.55 to +22.30 victims at AUC 0.99. Benefit diminishes as detector approaches random chance.</li>
 <p class='spacer'></p>
 <hr/>
 <p class='spacer'></p>
-<h2>8. Scaling Benchmark & Architectural Justification</h2>
+<h2>8. Methodological Limitations & Empirical Disclaimers</h2>
+<p class='spacer'></p>
+<p>1. <strong>Random Split Optimism</strong>: The 75/25 train/test split is a random stratified split inside each source dataset. Consequently, tweets from the same natural disasters appear in both training and test partitions. The humanitarian classification (F1 = 0.7564) and urgency regression metrics (<em>R^2 = 0.3896</em>, MAE = 0.6649) are therefore optimistic and not comparable to earlier event-held-out numbers where entire disaster events were held out.</p>
+<p>2. <strong>Unconfirmed Cause for Rumour-Classifier Drop</strong>: The rumour classifier's performance drop when incorporating multi-source data (CrisisLex + PHEME + LIAR) has no confirmed cause. Domain divergence between Twitter conversational rumour threads (PHEME) and political fact-checking claims (LIAR) is suspected, but no single root cause has been conclusively proven.</p>
+<p>3. <strong>Disaster-Domain Hoax Detector Weakness at Fixed Threshold</strong>: On short crisis tweets (~110 characters), the synthetic detector produces low raw sigmoid probabilities (<em>P_{\text{synth}}</em> averages 0.052 for unseen Generator B hoaxes vs 0.007 for genuine tweets). At a fixed decision threshold (<em>\theta = 0.2704</em> or <em>\theta = 0.7591</em>), the detector is weak and misses most short tweet hoaxes. Continuous probability weighting (<em>T_i = 1 - P_{\text{synth}}</em>) avoids threshold starvation but yields small, honest gains in allocation (+0.43 to +0.57 victims in Houston).</p>
+<p class='spacer'></p>
+<hr/>
+<p class='spacer'></p>
+<h2>9. Scaling Benchmark & Architectural Justification</h2>
 <p class='spacer'></p>
 <p>Evaluated across scales from 10k to 10,000,000 rows (99,568 unique crisis records replicated across partitions) under a 1.5 GB memory cap:</p>
 <p class='spacer'></p>
@@ -353,7 +368,7 @@
 <p class='spacer'></p>
 <hr/>
 <p class='spacer'></p>
-<h2>9. Course Rubric Evaluation Scorecard</h2>
+<h2>10. Course Rubric Evaluation Scorecard</h2>
 <p class='spacer'></p>
 <div class='table-container'><table>
 <tr><th>Rubric Criteria</th><th>Score Weight</th><th>Status</th><th>Evidence & Verification Link</th></tr>
@@ -367,13 +382,13 @@
 <p class='spacer'></p>
 <hr/>
 <p class='spacer'></p>
-<h2>10. AI Assistance Disclosure</h2>
+<h2>11. AI Assistance Disclosure</h2>
 <p class='spacer'></p>
 <blockquote><strong>AI Assistance Disclosure</strong>: An AI coding assistant (Antigravity IDE / Gemini 2.5 Flash) was utilized during the development of this project to assist with pipeline scaffolding, boilerplate code generation, data cleaning scripts, unit test creation, and LaTeX/Markdown formatting. All data ingestion, model training runs, statistical ablation studies, and architectural benchmarks were executed locally by the team on system daemons (Kafka, HDFS, Spark, Hive), and all empirical outputs were reviewed and validated against course guidelines.</blockquote>
 <p class='spacer'></p>
 <hr/>
 <p class='spacer'></p>
-<h2>11. Individual Contribution Breakdown (Team of 3 Students)</h2>
+<h2>12. Individual Contribution Breakdown (Team of 3 Students)</h2>
 <p class='spacer'></p>
 <p>*To be completed by the team members prior to final submission:*</p>
 <p class='spacer'></p>
@@ -394,7 +409,7 @@
 <p class='spacer'></p>
 <hr/>
 <p class='spacer'></p>
-<h2>12. Conclusion</h2>
+<h2>13. Conclusion</h2>
 <p class='spacer'></p>
 <p>CrisisGuard AI demonstrates that big data analytics pipelines can provide defensible immunity against generative AI misinformation during natural disasters. By grounding every empirical claim in authentic corpora, subjecting MLlib models to anti-leakage sanity controls, validating streaming fault-tolerance across 100,000 events, and proving statistical significance across 30 random seeds, this project satisfies all requirements for rigorous, reproducible large-scale computing.</p>
 </body>

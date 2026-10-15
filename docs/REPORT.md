@@ -52,11 +52,13 @@ Every metric in this report is derived from an authentic, curated disaster corpu
 #### 4. Emergency Resource Allocation Ablation (PuLP MILP with Real MLlib Scores & OSM Depots)
 - **Houston Flood (30 Seeds, 95% CI)**:
   - Blind-LP: Genuine Reached = **41.10 ± 1.02** | Wasted Dispatches = **20.96%**
-  - TrustAware-LP: Genuine Reached = **41.67 ± 0.87** | Wasted Dispatches = **19.87%**
-  - Paired t-test: **t = 3.195, p = 0.00336** (statistically significant gain of +4.6 genuine victims reached per batch in simulation).
+  - Policy (a) Continuous Probability (No Threshold): Genuine Reached = **41.53 ± 0.89** | Gain = **+0.43 victims** ($p = 0.030$)
+  - Policy (b) Disaster-Validation Threshold ($\theta^* = 0.7591$): Genuine Reached = **41.63 ± 0.98** | Gain = **+0.53 victims** ($p = 0.0004$)
+  - Policy (c) Corpus-Wide Threshold ($\theta^* = 0.2704$): Genuine Reached = **41.67 ± 0.87** | Gain = **+0.57 victims** ($p = 0.00336$)
+  - Paired t-test: **t = 3.195, p = 0.00336** (statistically significant gain of +0.57 genuine victims reached per batch in simulation).
   - Hoax Dispatch Reduction: **5.20%** relative reduction.
 - **Sensitivity Sweeps**:
-  - Hoax Rate (5% → 40%): Genuine gain increases monotonically from +2.70 to +20.10 victims.
+  - Hoax Rate (5% → 40%): Genuine gain increases monotonically from +2.70 to +20.50 victims.
   - Detector AUC (0.55 → 0.99): Genuine gain increases from +9.85 to +22.30 victims; benefit disappears at AUC <= 0.55.
 
 #### 5. Scaling Benchmark & Streaming Resiliency
@@ -177,30 +179,43 @@ The curated corpus consists of **128,860 deduplicated records** partitioned into
 
 ---
 
-## 7. Multi-Region Resource Allocation Ablation
+## 7. Multi-Region Resource Allocation Ablation (Three Policy Evaluation)
 
-Evaluated across 30 seeds with 120 demands per seed using actual Spark MLlib model scores from `test_predictions.csv` and real OpenStreetMap Overpass depot facilities:
+Evaluated across 30 seeds with 120 demands per seed using actual Spark MLlib model scores from `test_predictions.csv` and real OpenStreetMap Overpass depot facilities. Rather than relying solely on a single corpus-wide threshold, three allocation policies are evaluated:
+1. **Policy (a) Continuous Probability**: Trust weight $T_i = 1 - P_{\text{synth}, i}$ (no threshold, continuous discount).
+2. **Policy (b) Disaster-Validation Threshold**: Threshold $\theta^* = 0.7591$ tuned strictly on an 80/20 training validation split of disaster tweets & hoaxes only.
+3. **Policy (c) Corpus-Wide Threshold**: Threshold $\theta^* = 0.2704$ tuned on the full corpus validation split.
 
 | Region & Fleet | Policy | Genuine Reached (Mean ± 95% CI) | Wasted Dispatches (%) | Paired t-Test vs Blind LP |
 |---|---|---|---|---|
 | **Houston (Flood)** | Blind Greedy | 41.27 ± 0.96 | 20.64% ± 1.85% | — |
 | *52 Rescue Boats* | Blind LP | 41.10 ± 1.02 | 20.96% ± 1.96% | Baseline |
-| | **Trust-Aware LP** | **41.67 ± 0.87** | **19.87% ± 1.68%** | **$t = 3.20, p = 3.36 \times 10^{-3}$** |
+| | **(a) Continuous Prob** | **41.53 ± 0.89** | **20.13% ± 1.70%** | **$t = 2.27, p = 3.00 \times 10^{-2}$ (Gain: +0.43)** |
+| | **(b) Disaster Thresh** | **41.63 ± 0.98** | **19.94% ± 1.88%** | **$t = 3.99, p = 4.00 \times 10^{-4}$ (Gain: +0.53)** |
+| | **(c) Corpus Thresh** | **41.67 ± 0.87** | **19.87% ± 1.68%** | **$t = 3.20, p = 3.36 \times 10^{-3}$ (Gain: +0.57)** |
 | | Oracle Upper Bound | 52.00 ± 0.00 | 0.00% ± 0.00% | Theoretical Limit |
 | **Miami (Surge)** | Blind LP | 42.73 ± 1.02 | 20.86% ± 1.88% | Baseline |
-| *54 Ambulances* | **Trust-Aware LP** | **43.23 ± 0.88** | **19.94% ± 1.64%** | **$t = 2.18, p = 3.70 \times 10^{-2}$** |
+| *54 Ambulances* | **Trust-Aware LP** | **43.23 ± 0.88** | **19.94% ± 1.64%** | **$t = 2.18, p = 3.70 \times 10^{-2}$ (Gain: +0.50)** |
 | **California (Fire)** | Blind LP | 31.00 ± 0.78 | 18.84% ± 2.08% | Baseline |
 | *52 Fire Units* | **Trust-Aware LP** | 31.03 ± 0.75 | **18.61% ± 1.97%** | $t = 0.37, p = 7.12 \times 10^{-1}$ (ns) |
 | **Nepal (Quake)** | Blind LP | 41.40 ± 0.97 | 20.38% ± 1.87% | Baseline |
 | *52 SAR Squads* | **Trust-Aware LP** | 41.70 ± 0.89 | **19.81% ± 1.72%** | $t = 1.39, p = 1.74 \times 10^{-1}$ (ns) |
 
 - **Sensitivity Sweeps**:
-  - **Hoax Rate (5% → 40%)**: Genuine gain scales monotonically from +4.30 victims to +32.50 victims reached in simulation.
+  - **Hoax Rate (5% → 40%)**: Genuine gain scales monotonically from +2.70 to +20.50 victims reached in simulation.
   - **Detector Quality (AUC 0.55 → 0.99)**: Genuine gain ranges from +9.85 victims at AUC 0.55 to +22.30 victims at AUC 0.99. Benefit diminishes as detector approaches random chance.
 
 ---
 
-## 8. Scaling Benchmark & Architectural Justification
+## 8. Methodological Limitations & Empirical Disclaimers
+
+1. **Random Split Optimism**: The 75/25 train/test split is a random stratified split inside each source dataset. Consequently, tweets from the same natural disasters appear in both training and test partitions. The humanitarian classification (F1 = 0.7564) and urgency regression metrics ($R^2 = 0.3896$, MAE = 0.6649) are therefore optimistic and not comparable to earlier event-held-out numbers where entire disaster events were held out.
+2. **Unconfirmed Cause for Rumour-Classifier Drop**: The rumour classifier's performance drop when incorporating multi-source data (CrisisLex + PHEME + LIAR) has no confirmed cause. Domain divergence between Twitter conversational rumour threads (PHEME) and political fact-checking claims (LIAR) is suspected, but no single root cause has been conclusively proven.
+3. **Disaster-Domain Hoax Detector Weakness at Fixed Threshold**: On short crisis tweets (~110 characters), the synthetic detector produces low raw sigmoid probabilities ($P_{\text{synth}}$ averages 0.052 for unseen Generator B hoaxes vs 0.007 for genuine tweets). At a fixed decision threshold ($\theta = 0.2704$ or $\theta = 0.7591$), the detector is weak and misses most short tweet hoaxes. Continuous probability weighting ($T_i = 1 - P_{\text{synth}}$) avoids threshold starvation but yields small, honest gains in allocation (+0.43 to +0.57 victims in Houston).
+
+---
+
+## 9. Scaling Benchmark & Architectural Justification
 
 Evaluated across scales from 10k to 10,000,000 rows (99,568 unique crisis records replicated across partitions) under a 1.5 GB memory cap:
 
@@ -217,7 +232,7 @@ Spark is **NOT** justified by raw speed at small sizes ($\le 100k$ rows), where 
 
 ---
 
-## 9. Course Rubric Evaluation Scorecard
+## 10. Course Rubric Evaluation Scorecard
 
 | Rubric Criteria | Score Weight | Status | Evidence & Verification Link |
 |---|---|---|---|
@@ -230,13 +245,13 @@ Spark is **NOT** justified by raw speed at small sizes ($\le 100k$ rows), where 
 
 ---
 
-## 10. AI Assistance Disclosure
+## 11. AI Assistance Disclosure
 
 > **AI Assistance Disclosure**: An AI coding assistant (Antigravity IDE / Gemini 2.5 Flash) was utilized during the development of this project to assist with pipeline scaffolding, boilerplate code generation, data cleaning scripts, unit test creation, and LaTeX/Markdown formatting. All data ingestion, model training runs, statistical ablation studies, and architectural benchmarks were executed locally by the team on system daemons (Kafka, HDFS, Spark, Hive), and all empirical outputs were reviewed and validated against course guidelines.
 
 ---
 
-## 11. Individual Contribution Breakdown (Team of 3 Students)
+## 12. Individual Contribution Breakdown (Team of 3 Students)
 
 *To be completed by the team members prior to final submission:*
 
@@ -257,6 +272,6 @@ Spark is **NOT** justified by raw speed at small sizes ($\le 100k$ rows), where 
 
 ---
 
-## 12. Conclusion
+## 13. Conclusion
 
 CrisisGuard AI demonstrates that big data analytics pipelines can provide defensible immunity against generative AI misinformation during natural disasters. By grounding every empirical claim in authentic corpora, subjecting MLlib models to anti-leakage sanity controls, validating streaming fault-tolerance across 100,000 events, and proving statistical significance across 30 random seeds, this project satisfies all requirements for rigorous, reproducible large-scale computing.
