@@ -1,0 +1,22 @@
+{
+  "leave_one_out": {
+    "train_ab_test_c": {
+      "raw_auc": 0.9986,
+      "normalized_auc": 0.9985
+    },
+    "train_ac_test_b": {
+      "raw_auc": 0.9989,
+      "normalized_auc": 0.9989
+    },
+    "train_bc_test_a": {
+      "raw_auc": 1.0,
+      "normalized_auc": 1.0
+    }
+  },
+  "length_matched_auc": 0.9983,
+  "permutation_test": {
+    "mean_auc": 0.5032,
+    "std": 0.0087,
+    "p_val": 0.1318
+  }
+}
