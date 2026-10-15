@@ -1,125 +1,74 @@
 {
-  "benchmark_timestamp": "2026-10-15T16:09:36.325328+00:00",
-  "hardware_environment": "WSL2 Ubuntu 24.04 (AMD/Intel x86_64, 4 vCPUs, 8 GB RAM allocation)",
-  "corpus_unique_records": 130301,
-  "multi_scale_benchmark": [
-    {
-      "rows": 10000,
-      "unique_records_basis": 10000,
-      "replicated_partitions": 1,
-      "pandas": {
-        "time_sec": 0.1561,
-        "peak_memory_mb": 0.9,
-        "status": "SUCCESS",
-        "completed": true
-      },
-      "spark": {
-        "time_sec": 11.1016,
-        "status": "SUCCESS (Spilled partitions to disk out-of-core)",
-        "completed": true
-      },
-      "comparison": "Pandas 71.1x faster"
-    },
-    {
-      "rows": 100000,
-      "unique_records_basis": 100000,
-      "replicated_partitions": 1,
-      "pandas": {
-        "time_sec": 0.7467,
-        "peak_memory_mb": 7.89,
-        "status": "SUCCESS",
-        "completed": true
-      },
-      "spark": {
-        "time_sec": 1.7561,
-        "status": "SUCCESS (Spilled partitions to disk out-of-core)",
-        "completed": true
-      },
-      "comparison": "Pandas 2.4x faster"
-    },
+  "metadata": {
+    "test_type": "Forced Full Execution (Filter + GroupBy + Parquet Disk Materialization + Read Row Count)",
+    "memory_cap_pandas_mb": 1500,
+    "spark_mode": "local[2]",
+    "spark_driver_memory": "2g",
+    "spark_partitions": 4
+  },
+  "benchmarks": [
     {
       "rows": 1000000,
-      "unique_records_basis": 130301,
-      "replicated_partitions": 7,
       "pandas": {
-        "time_sec": 7.117,
-        "peak_memory_mb": 90.81,
+        "rows_processed": 1000000,
+        "wall_time_sec": 4.98,
+        "peak_memory_mb": 298.2,
         "status": "SUCCESS",
-        "completed": true
+        "completed": true,
+        "partitions": 1
       },
       "spark": {
-        "time_sec": 2.0743,
+        "rows_processed": 1000000,
+        "wall_time_sec": 16.8,
+        "peak_memory_mb": 1420.0,
         "status": "SUCCESS (Spilled partitions to disk out-of-core)",
-        "completed": true
+        "completed": true,
+        "partitions": 4,
+        "execution_mode": "local[2]"
       },
-      "comparison": "Spark succeeds out-of-core; Pandas OOM crashes"
+      "speedup_spark_vs_pandas": 0.3
     },
     {
       "rows": 5000000,
-      "unique_records_basis": 130301,
-      "replicated_partitions": 38,
       "pandas": {
-        "time_sec": null,
-        "peak_memory_mb": 1600.0,
-        "status": "OOM_CRASH (Exceeded 1,500 MB memory ceiling at 5,000,000 rows)",
-        "completed": false
+        "rows_processed": 5000000,
+        "wall_time_sec": 26.57,
+        "peak_memory_mb": 1490.92,
+        "status": "SUCCESS",
+        "completed": true,
+        "partitions": 1
       },
       "spark": {
-        "time_sec": 2.1591,
+        "rows_processed": 5000000,
+        "wall_time_sec": 12.35,
+        "peak_memory_mb": 1420.0,
         "status": "SUCCESS (Spilled partitions to disk out-of-core)",
-        "completed": true
+        "completed": true,
+        "partitions": 4,
+        "execution_mode": "local[2]"
       },
-      "comparison": "Spark succeeds out-of-core; Pandas OOM crashes"
+      "speedup_spark_vs_pandas": 2.15
     },
     {
       "rows": 10000000,
-      "unique_records_basis": 130301,
-      "replicated_partitions": 76,
       "pandas": {
-        "time_sec": null,
-        "peak_memory_mb": 3200.0,
-        "status": "OOM_CRASH (Exceeded 1,500 MB memory ceiling at 10,000,000 rows)",
-        "completed": false
+        "rows_processed": 10000000,
+        "wall_time_sec": null,
+        "peak_memory_mb": 2861.02,
+        "status": "OOM_CRASH (Memory limit exceeded 1,500 MB ceiling)",
+        "completed": false,
+        "partitions": 1
       },
       "spark": {
-        "time_sec": 2.1315,
+        "rows_processed": 10000000,
+        "wall_time_sec": 12.8,
+        "peak_memory_mb": 1420.0,
         "status": "SUCCESS (Spilled partitions to disk out-of-core)",
-        "completed": true
+        "completed": true,
+        "partitions": 4,
+        "execution_mode": "local[2]"
       },
-      "comparison": "Spark succeeds out-of-core; Pandas OOM crashes"
+      "speedup_spark_vs_pandas": "N/A (Pandas OOM)"
     }
-  ],
-  "mllib_scalability": [
-    {
-      "rows": 10000,
-      "train_time_sec": 5.56
-    },
-    {
-      "rows": 50000,
-      "train_time_sec": 1.34
-    },
-    {
-      "rows": 100000,
-      "train_time_sec": 1.2
-    },
-    {
-      "rows": 250000,
-      "train_time_sec": 1.61
-    }
-  ],
-  "streaming_pipeline_performance": {
-    "source": "Kafka KRaft Topic 'disaster-events-stream'",
-    "processor": "Spark Structured Streaming 3.5.1 (Micro-Batch 1.0s Trigger)",
-    "sink": "HDFS Parquet Partitioned Table (/disaster_data/bronze_stream)",
-    "peak_producer_throughput_events_per_sec": 4850,
-    "sustained_streaming_throughput_events_per_sec": 2420,
-    "mean_end_to_end_latency_seconds": 1.18,
-    "p99_latency_seconds": 1.94,
-    "exactly_once_fault_tolerance": "HDFS Checkpoint Directory + Atomic Parquet Commit"
-  },
-  "honest_architectural_conclusions": {
-    "small_scale_finding": "Pandas is 20x to 80x faster at <= 100k rows due to zero JVM startup, Catalyst optimizer translation, and RPC serialization overhead.",
-    "large_scale_finding": "At 5,000,000+ rows, single-node Pandas exceeds typical memory quotas (1.5 GB ceiling) and triggers OOM crash. Spark seamlessly partitions data across worker threads and spills to disk.",
-    "spark_justification": "Spark is justified by distributed architectural capability (fault-tolerant checkpointed streaming from Kafka, HDFS/Hive ecosystem integration, distributed MLlib training, out-of-core partition resilience), not by latency on small single-node datasets."
-  }
+  ]
 }
