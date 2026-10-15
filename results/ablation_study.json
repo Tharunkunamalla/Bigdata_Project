@@ -1,528 +1,508 @@
 {
-  "generated_at": "2026-10-15T02:10:21.968558",
+  "generated_at": "2026-10-15T16:02:17.483990",
   "seeds_evaluated": 30,
   "demands_per_seed": 120,
   "optimization_solver": "PuLP CBC MILP (Solved on Driver Node after distributed aggregation)",
   "policies_evaluated": {
-    "policy_a_continuous": "Policy (a): Continuous detector probability as trust weight T_i = 1 - P_synth (no threshold)",
-    "policy_b_disaster_thresh": "Policy (b): Validation threshold tuned strictly on disaster tweets & hoaxes (theta* = 0.7591)",
-    "policy_c_corpus_thresh": "Policy (c): Current setting with corpus-wide threshold (theta* = 0.2704)"
-  },
-  "houston_policy_comparison": {
-    "blind_lp": {
-      "genuine_served_mean": 41.1,
-      "wasted_dispatch_pct_mean": 20.96
-    },
-    "policy_a_continuous": {
-      "genuine_served_mean": 41.53,
-      "genuine_served_ci95": 0.89,
-      "wasted_dispatch_pct_mean": 20.13,
-      "wasted_dispatch_pct_ci95": 1.7,
-      "genuine_gain": 0.43,
-      "p_value": 0.03,
-      "statistically_significant": true
-    },
-    "policy_b_disaster_thresh": {
-      "genuine_served_mean": 41.63,
-      "genuine_served_ci95": 0.98,
-      "wasted_dispatch_pct_mean": 19.94,
-      "wasted_dispatch_pct_ci95": 1.88,
-      "genuine_gain": 0.53,
-      "p_value": 0.0004,
-      "statistically_significant": true
-    },
-    "policy_c_corpus_thresh": {
-      "genuine_served_mean": 41.67,
-      "genuine_served_ci95": 0.87,
-      "wasted_dispatch_pct_mean": 19.87,
-      "wasted_dispatch_pct_ci95": 1.68,
-      "genuine_gain": 0.57,
-      "p_value": 0.00336,
-      "statistically_significant": true
-    }
+    "policy_1_blind_greedy": "Policy 1: Heuristic sorting by reported urgency, picks nearest available depot",
+    "policy_2_blind_lp": "Policy 2: Trust-Blind cost-minimizing LP (trust = 1.0)",
+    "policy_3_trust_aware_continuous": "Policy 3: Misinformation-discounted LP with continuous trust T_i = 1 - p_synth",
+    "policy_4_trust_aware_validation_thresh": "Policy 4: LP with validation threshold theta* = 0.1786",
+    "policy_5_trust_aware_cluster_penalty": "Policy 5: LP with MinHash coordination cluster penalty T_i = 1 - p_synth - Delta T(S_i)",
+    "policy_6_oracle": "Policy 6: Ground-truth upper bound (discards all hoaxes, serves genuine victims only)"
   },
   "regional_trials": {
     "houston": {
-      "Greedy": {
-        "genuine_served_mean": 41.27,
-        "genuine_served_ci95": 0.96,
-        "wasted_dispatch_pct_mean": 20.64,
-        "wasted_dispatch_pct_ci95": 1.85,
-        "total_dist_km_mean": 861.49
+      "Blind_Greedy": {
+        "genuine_served_mean": 40.4,
+        "genuine_served_sem": 0.54,
+        "genuine_served_ci95": 1.06,
+        "wasted_dispatches_mean": 11.6,
+        "wasted_dispatch_pct_mean": 22.31,
+        "wasted_dispatch_pct_ci95": 2.02,
+        "total_distance_km_mean": 849.22
       },
       "Blind_LP": {
-        "genuine_served_mean": 41.1,
-        "genuine_served_ci95": 1.02,
-        "wasted_dispatch_pct_mean": 20.96,
-        "wasted_dispatch_pct_ci95": 1.96,
-        "total_dist_km_mean": 711.66
+        "genuine_served_mean": 40.83,
+        "genuine_served_sem": 0.53,
+        "genuine_served_ci95": 1.04,
+        "wasted_dispatches_mean": 11.17,
+        "wasted_dispatch_pct_mean": 21.47,
+        "wasted_dispatch_pct_ci95": 2.0,
+        "total_distance_km_mean": 709.16
       },
       "TrustAware_Continuous": {
-        "genuine_served_mean": 41.53,
-        "genuine_served_ci95": 0.89,
-        "wasted_dispatch_pct_mean": 20.13,
-        "wasted_dispatch_pct_ci95": 1.7,
-        "total_dist_km_mean": 728.33
+        "genuine_served_mean": 41.4,
+        "genuine_served_sem": 0.53,
+        "genuine_served_ci95": 1.04,
+        "wasted_dispatches_mean": 10.6,
+        "wasted_dispatch_pct_mean": 20.38,
+        "wasted_dispatch_pct_ci95": 2.0,
+        "total_distance_km_mean": 718.88
       },
-      "TrustAware_DisasterThresh": {
-        "genuine_served_mean": 41.63,
+      "TrustAware_ValidationThresh": {
+        "genuine_served_mean": 41.4,
+        "genuine_served_sem": 0.5,
         "genuine_served_ci95": 0.98,
-        "wasted_dispatch_pct_mean": 19.94,
+        "wasted_dispatches_mean": 10.6,
+        "wasted_dispatch_pct_mean": 20.38,
         "wasted_dispatch_pct_ci95": 1.88,
-        "total_dist_km_mean": 714.31
+        "total_distance_km_mean": 717.73
       },
-      "TrustAware_CorpusThresh": {
-        "genuine_served_mean": 41.67,
-        "genuine_served_ci95": 0.87,
-        "wasted_dispatch_pct_mean": 19.87,
-        "wasted_dispatch_pct_ci95": 1.68,
-        "total_dist_km_mean": 724.94
-      },
-      "TrustAware_LP": {
-        "genuine_served_mean": 41.53,
-        "genuine_served_ci95": 0.89,
-        "wasted_dispatch_pct_mean": 20.13,
-        "wasted_dispatch_pct_ci95": 1.7,
-        "total_dist_km_mean": 728.33
+      "TrustAware_ClusterPenalty": {
+        "genuine_served_mean": 42.77,
+        "genuine_served_sem": 0.54,
+        "genuine_served_ci95": 1.06,
+        "wasted_dispatches_mean": 9.23,
+        "wasted_dispatch_pct_mean": 17.76,
+        "wasted_dispatch_pct_ci95": 2.02,
+        "total_distance_km_mean": 723.95
       },
       "Oracle": {
         "genuine_served_mean": 52.0,
+        "genuine_served_sem": 0.0,
         "genuine_served_ci95": 0.0,
+        "wasted_dispatches_mean": 0.0,
         "wasted_dispatch_pct_mean": 0.0,
         "wasted_dispatch_pct_ci95": 0.0,
-        "total_dist_km_mean": 716.05
+        "total_distance_km_mean": 703.01
       },
-      "test_trustaware_continuous": {
-        "policy": "Policy (a) Continuous Probability",
-        "t_statistic": 2.2822,
-        "p_value": 0.03,
-        "statistically_significant": true,
-        "genuine_gain_mean": 0.43
+      "statistical_evaluations": {
+        "TrustAware_Continuous": {
+          "gain_vs_blind_lp": 0.57,
+          "gain_vs_blind_greedy": 1.0,
+          "paired_t_statistic": 2.9844,
+          "paired_t_pvalue": 0.00572,
+          "wilcoxon_statistic": 16.0,
+          "wilcoxon_pvalue": 0.0104,
+          "statistically_significant": true,
+          "pct_of_oracle_achieved": 5.1
+        },
+        "TrustAware_ValidationThresh": {
+          "gain_vs_blind_lp": 0.57,
+          "gain_vs_blind_greedy": 1.0,
+          "paired_t_statistic": 2.8935,
+          "paired_t_pvalue": 0.00716,
+          "wilcoxon_statistic": 24.5,
+          "wilcoxon_pvalue": 0.0113,
+          "statistically_significant": true,
+          "pct_of_oracle_achieved": 5.1
+        },
+        "TrustAware_ClusterPenalty": {
+          "gain_vs_blind_lp": 1.93,
+          "gain_vs_blind_greedy": 2.37,
+          "paired_t_statistic": 7.9181,
+          "paired_t_pvalue": 9.86e-09,
+          "wilcoxon_statistic": 0.0,
+          "wilcoxon_pvalue": 6.76e-06,
+          "statistically_significant": true,
+          "pct_of_oracle_achieved": 17.3
+        }
       },
-      "test_trustaware_disasterthresh": {
-        "policy": "Policy (b) Disaster-Validation Threshold (0.7591)",
-        "t_statistic": 4.0,
-        "p_value": 0.0004,
-        "statistically_significant": true,
-        "genuine_gain_mean": 0.53
-      },
-      "test_trustaware_corpusthresh": {
-        "policy": "Policy (c) Corpus-Wide Threshold (0.2704)",
-        "t_statistic": 3.195,
-        "p_value": 0.00336,
-        "statistically_significant": true,
-        "genuine_gain_mean": 0.57
-      },
-      "statistical_test": {
-        "policy": "Policy (a) Continuous Probability",
-        "t_statistic": 2.2822,
-        "p_value": 0.03,
-        "statistically_significant": true,
-        "genuine_gain_mean": 0.43
-      }
+      "oracle_maximum_gain": 11.17
     },
     "california": {
-      "Greedy": {
-        "genuine_served_mean": 41.27,
-        "genuine_served_ci95": 0.96,
-        "wasted_dispatch_pct_mean": 20.64,
-        "wasted_dispatch_pct_ci95": 1.85,
-        "total_dist_km_mean": 5691.08
+      "Blind_Greedy": {
+        "genuine_served_mean": 40.4,
+        "genuine_served_sem": 0.54,
+        "genuine_served_ci95": 1.06,
+        "wasted_dispatches_mean": 11.6,
+        "wasted_dispatch_pct_mean": 22.31,
+        "wasted_dispatch_pct_ci95": 2.02,
+        "total_distance_km_mean": 5710.88
       },
       "Blind_LP": {
-        "genuine_served_mean": 31.0,
-        "genuine_served_ci95": 0.78,
-        "wasted_dispatch_pct_mean": 18.84,
-        "wasted_dispatch_pct_ci95": 2.08,
-        "total_dist_km_mean": 2854.24
+        "genuine_served_mean": 30.7,
+        "genuine_served_sem": 0.45,
+        "genuine_served_ci95": 0.88,
+        "wasted_dispatches_mean": 7.47,
+        "wasted_dispatch_pct_mean": 19.57,
+        "wasted_dispatch_pct_ci95": 2.25,
+        "total_distance_km_mean": 2859.33
       },
       "TrustAware_Continuous": {
-        "genuine_served_mean": 30.93,
-        "genuine_served_ci95": 0.79,
-        "wasted_dispatch_pct_mean": 18.88,
-        "wasted_dispatch_pct_ci95": 2.06,
-        "total_dist_km_mean": 2845.63
+        "genuine_served_mean": 30.57,
+        "genuine_served_sem": 0.45,
+        "genuine_served_ci95": 0.88,
+        "wasted_dispatches_mean": 7.53,
+        "wasted_dispatch_pct_mean": 19.77,
+        "wasted_dispatch_pct_ci95": 2.31,
+        "total_distance_km_mean": 2847.51
       },
-      "TrustAware_DisasterThresh": {
-        "genuine_served_mean": 30.93,
-        "genuine_served_ci95": 0.8,
-        "wasted_dispatch_pct_mean": 18.88,
-        "wasted_dispatch_pct_ci95": 2.09,
-        "total_dist_km_mean": 2842.98
+      "TrustAware_ValidationThresh": {
+        "genuine_served_mean": 30.7,
+        "genuine_served_sem": 0.43,
+        "genuine_served_ci95": 0.84,
+        "wasted_dispatches_mean": 7.47,
+        "wasted_dispatch_pct_mean": 19.56,
+        "wasted_dispatch_pct_ci95": 2.2,
+        "total_distance_km_mean": 2860.12
       },
-      "TrustAware_CorpusThresh": {
-        "genuine_served_mean": 31.03,
-        "genuine_served_ci95": 0.75,
-        "wasted_dispatch_pct_mean": 18.61,
-        "wasted_dispatch_pct_ci95": 1.97,
-        "total_dist_km_mean": 2845.78
-      },
-      "TrustAware_LP": {
-        "genuine_served_mean": 30.93,
-        "genuine_served_ci95": 0.79,
-        "wasted_dispatch_pct_mean": 18.88,
-        "wasted_dispatch_pct_ci95": 2.06,
-        "total_dist_km_mean": 2845.63
+      "TrustAware_ClusterPenalty": {
+        "genuine_served_mean": 32.0,
+        "genuine_served_sem": 0.39,
+        "genuine_served_ci95": 0.76,
+        "wasted_dispatches_mean": 6.1,
+        "wasted_dispatch_pct_mean": 16.01,
+        "wasted_dispatch_pct_ci95": 2.0,
+        "total_distance_km_mean": 2858.82
       },
       "Oracle": {
         "genuine_served_mean": 38.07,
-        "genuine_served_ci95": 0.09,
+        "genuine_served_sem": 0.05,
+        "genuine_served_ci95": 0.1,
+        "wasted_dispatches_mean": 0.0,
         "wasted_dispatch_pct_mean": 0.0,
         "wasted_dispatch_pct_ci95": 0.0,
-        "total_dist_km_mean": 2868.74
+        "total_distance_km_mean": 2875.73
       },
-      "test_trustaware_continuous": {
-        "policy": "Policy (a) Continuous Probability",
-        "t_statistic": -1.4392,
-        "p_value": 0.161,
-        "statistically_significant": false,
-        "genuine_gain_mean": -0.07
+      "statistical_evaluations": {
+        "TrustAware_Continuous": {
+          "gain_vs_blind_lp": -0.13,
+          "gain_vs_blind_greedy": -9.83,
+          "paired_t_statistic": -2.1122,
+          "paired_t_pvalue": 0.0434,
+          "wilcoxon_statistic": 0.0,
+          "wilcoxon_pvalue": 0.0455,
+          "statistically_significant": true,
+          "pct_of_oracle_achieved": -1.8
+        },
+        "TrustAware_ValidationThresh": {
+          "gain_vs_blind_lp": 0.0,
+          "gain_vs_blind_greedy": -9.7,
+          "paired_t_statistic": 0.0,
+          "paired_t_pvalue": 1.0,
+          "wilcoxon_statistic": 5.0,
+          "wilcoxon_pvalue": 1.0,
+          "statistically_significant": false,
+          "pct_of_oracle_achieved": 0.0
+        },
+        "TrustAware_ClusterPenalty": {
+          "gain_vs_blind_lp": 1.3,
+          "gain_vs_blind_greedy": -8.4,
+          "paired_t_statistic": 5.8957,
+          "paired_t_pvalue": 2.12e-06,
+          "wilcoxon_statistic": 17.0,
+          "wilcoxon_pvalue": 3.38e-05,
+          "statistically_significant": true,
+          "pct_of_oracle_achieved": 17.6
+        }
       },
-      "test_trustaware_disasterthresh": {
-        "policy": "Policy (b) Disaster-Validation Threshold (0.7591)",
-        "t_statistic": -1.4392,
-        "p_value": 0.161,
-        "statistically_significant": false,
-        "genuine_gain_mean": -0.07
-      },
-      "test_trustaware_corpusthresh": {
-        "policy": "Policy (c) Corpus-Wide Threshold (0.2704)",
-        "t_statistic": 0.3725,
-        "p_value": 0.712,
-        "statistically_significant": false,
-        "genuine_gain_mean": 0.03
-      },
-      "statistical_test": {
-        "policy": "Policy (a) Continuous Probability",
-        "t_statistic": -1.4392,
-        "p_value": 0.161,
-        "statistically_significant": false,
-        "genuine_gain_mean": -0.07
-      }
+      "oracle_maximum_gain": 7.37
     },
     "nepal": {
-      "Greedy": {
-        "genuine_served_mean": 41.27,
-        "genuine_served_ci95": 0.96,
-        "wasted_dispatch_pct_mean": 20.64,
-        "wasted_dispatch_pct_ci95": 1.85,
-        "total_dist_km_mean": 2833.83
+      "Blind_Greedy": {
+        "genuine_served_mean": 40.4,
+        "genuine_served_sem": 0.54,
+        "genuine_served_ci95": 1.06,
+        "wasted_dispatches_mean": 11.6,
+        "wasted_dispatch_pct_mean": 22.31,
+        "wasted_dispatch_pct_ci95": 2.02,
+        "total_distance_km_mean": 2825.51
       },
       "Blind_LP": {
-        "genuine_served_mean": 41.4,
-        "genuine_served_ci95": 0.97,
-        "wasted_dispatch_pct_mean": 20.38,
-        "wasted_dispatch_pct_ci95": 1.87,
-        "total_dist_km_mean": 2526.53
+        "genuine_served_mean": 40.67,
+        "genuine_served_sem": 0.53,
+        "genuine_served_ci95": 1.04,
+        "wasted_dispatches_mean": 11.33,
+        "wasted_dispatch_pct_mean": 21.79,
+        "wasted_dispatch_pct_ci95": 1.98,
+        "total_distance_km_mean": 2527.34
       },
       "TrustAware_Continuous": {
-        "genuine_served_mean": 41.67,
-        "genuine_served_ci95": 0.9,
-        "wasted_dispatch_pct_mean": 19.87,
-        "wasted_dispatch_pct_ci95": 1.73,
-        "total_dist_km_mean": 2546.02
+        "genuine_served_mean": 41.13,
+        "genuine_served_sem": 0.48,
+        "genuine_served_ci95": 0.94,
+        "wasted_dispatches_mean": 10.8,
+        "wasted_dispatch_pct_mean": 20.79,
+        "wasted_dispatch_pct_ci95": 1.84,
+        "total_distance_km_mean": 2537.41
       },
-      "TrustAware_DisasterThresh": {
-        "genuine_served_mean": 41.8,
-        "genuine_served_ci95": 0.93,
-        "wasted_dispatch_pct_mean": 19.62,
-        "wasted_dispatch_pct_ci95": 1.79,
-        "total_dist_km_mean": 2532.16
+      "TrustAware_ValidationThresh": {
+        "genuine_served_mean": 41.17,
+        "genuine_served_sem": 0.49,
+        "genuine_served_ci95": 0.96,
+        "wasted_dispatches_mean": 10.77,
+        "wasted_dispatch_pct_mean": 20.73,
+        "wasted_dispatch_pct_ci95": 1.86,
+        "total_distance_km_mean": 2535.26
       },
-      "TrustAware_CorpusThresh": {
-        "genuine_served_mean": 41.7,
-        "genuine_served_ci95": 0.89,
-        "wasted_dispatch_pct_mean": 19.81,
-        "wasted_dispatch_pct_ci95": 1.72,
-        "total_dist_km_mean": 2542.36
-      },
-      "TrustAware_LP": {
-        "genuine_served_mean": 41.67,
-        "genuine_served_ci95": 0.9,
-        "wasted_dispatch_pct_mean": 19.87,
-        "wasted_dispatch_pct_ci95": 1.73,
-        "total_dist_km_mean": 2546.02
+      "TrustAware_ClusterPenalty": {
+        "genuine_served_mean": 42.73,
+        "genuine_served_sem": 0.52,
+        "genuine_served_ci95": 1.02,
+        "wasted_dispatches_mean": 9.17,
+        "wasted_dispatch_pct_mean": 17.66,
+        "wasted_dispatch_pct_ci95": 1.96,
+        "total_distance_km_mean": 2539.78
       },
       "Oracle": {
-        "genuine_served_mean": 49.3,
-        "genuine_served_ci95": 1.04,
+        "genuine_served_mean": 48.0,
+        "genuine_served_sem": 0.7,
+        "genuine_served_ci95": 1.37,
+        "wasted_dispatches_mean": 0.0,
         "wasted_dispatch_pct_mean": 0.0,
         "wasted_dispatch_pct_ci95": 0.0,
-        "total_dist_km_mean": 2305.5
+        "total_distance_km_mean": 2186.25
       },
-      "test_trustaware_continuous": {
-        "policy": "Policy (a) Continuous Probability",
-        "t_statistic": 1.1876,
-        "p_value": 0.245,
-        "statistically_significant": false,
-        "genuine_gain_mean": 0.27
+      "statistical_evaluations": {
+        "TrustAware_Continuous": {
+          "gain_vs_blind_lp": 0.47,
+          "gain_vs_blind_greedy": 0.73,
+          "paired_t_statistic": 2.0878,
+          "paired_t_pvalue": 0.0457,
+          "wilcoxon_statistic": 63.0,
+          "wilcoxon_pvalue": 0.0513,
+          "statistically_significant": true,
+          "pct_of_oracle_achieved": 6.4
+        },
+        "TrustAware_ValidationThresh": {
+          "gain_vs_blind_lp": 0.5,
+          "gain_vs_blind_greedy": 0.77,
+          "paired_t_statistic": 2.3466,
+          "paired_t_pvalue": 0.026,
+          "wilcoxon_statistic": 48.0,
+          "wilcoxon_pvalue": 0.0249,
+          "statistically_significant": true,
+          "pct_of_oracle_achieved": 6.8
+        },
+        "TrustAware_ClusterPenalty": {
+          "gain_vs_blind_lp": 2.07,
+          "gain_vs_blind_greedy": 2.33,
+          "paired_t_statistic": 8.1556,
+          "paired_t_pvalue": 5.41e-09,
+          "wilcoxon_statistic": 4.0,
+          "wilcoxon_pvalue": 7.39e-06,
+          "statistically_significant": true,
+          "pct_of_oracle_achieved": 28.2
+        }
       },
-      "test_trustaware_disasterthresh": {
-        "policy": "Policy (b) Disaster-Validation Threshold (0.7591)",
-        "t_statistic": 2.6926,
-        "p_value": 0.0117,
-        "statistically_significant": true,
-        "genuine_gain_mean": 0.4
-      },
-      "test_trustaware_corpusthresh": {
-        "policy": "Policy (c) Corpus-Wide Threshold (0.2704)",
-        "t_statistic": 1.3939,
-        "p_value": 0.174,
-        "statistically_significant": false,
-        "genuine_gain_mean": 0.3
-      },
-      "statistical_test": {
-        "policy": "Policy (a) Continuous Probability",
-        "t_statistic": 1.1876,
-        "p_value": 0.245,
-        "statistically_significant": false,
-        "genuine_gain_mean": 0.27
-      }
+      "oracle_maximum_gain": 7.33
     },
     "miami": {
-      "Greedy": {
-        "genuine_served_mean": 42.53,
-        "genuine_served_ci95": 1.04,
-        "wasted_dispatch_pct_mean": 21.23,
-        "wasted_dispatch_pct_ci95": 1.93,
-        "total_dist_km_mean": 404.34
+      "Blind_Greedy": {
+        "genuine_served_mean": 41.67,
+        "genuine_served_sem": 0.54,
+        "genuine_served_ci95": 1.06,
+        "wasted_dispatches_mean": 12.33,
+        "wasted_dispatch_pct_mean": 22.84,
+        "wasted_dispatch_pct_ci95": 1.96,
+        "total_distance_km_mean": 392.24
       },
       "Blind_LP": {
-        "genuine_served_mean": 42.73,
-        "genuine_served_ci95": 1.02,
-        "wasted_dispatch_pct_mean": 20.86,
-        "wasted_dispatch_pct_ci95": 1.88,
-        "total_dist_km_mean": 340.93
+        "genuine_served_mean": 41.9,
+        "genuine_served_sem": 0.51,
+        "genuine_served_ci95": 1.0,
+        "wasted_dispatches_mean": 12.1,
+        "wasted_dispatch_pct_mean": 22.41,
+        "wasted_dispatch_pct_ci95": 1.86,
+        "total_distance_km_mean": 336.37
       },
       "TrustAware_Continuous": {
-        "genuine_served_mean": 43.07,
-        "genuine_served_ci95": 0.88,
-        "wasted_dispatch_pct_mean": 20.25,
-        "wasted_dispatch_pct_ci95": 1.63,
-        "total_dist_km_mean": 353.22
+        "genuine_served_mean": 42.47,
+        "genuine_served_sem": 0.53,
+        "genuine_served_ci95": 1.04,
+        "wasted_dispatches_mean": 11.53,
+        "wasted_dispatch_pct_mean": 21.36,
+        "wasted_dispatch_pct_ci95": 1.92,
+        "total_distance_km_mean": 348.45
       },
-      "TrustAware_DisasterThresh": {
-        "genuine_served_mean": 42.87,
-        "genuine_served_ci95": 0.92,
-        "wasted_dispatch_pct_mean": 20.62,
-        "wasted_dispatch_pct_ci95": 1.7,
-        "total_dist_km_mean": 342.49
+      "TrustAware_ValidationThresh": {
+        "genuine_served_mean": 42.53,
+        "genuine_served_sem": 0.53,
+        "genuine_served_ci95": 1.04,
+        "wasted_dispatches_mean": 11.47,
+        "wasted_dispatch_pct_mean": 21.23,
+        "wasted_dispatch_pct_ci95": 1.92,
+        "total_distance_km_mean": 347.16
       },
-      "TrustAware_CorpusThresh": {
-        "genuine_served_mean": 43.23,
-        "genuine_served_ci95": 0.88,
-        "wasted_dispatch_pct_mean": 19.94,
-        "wasted_dispatch_pct_ci95": 1.64,
-        "total_dist_km_mean": 349.66
-      },
-      "TrustAware_LP": {
-        "genuine_served_mean": 43.07,
-        "genuine_served_ci95": 0.88,
-        "wasted_dispatch_pct_mean": 20.25,
-        "wasted_dispatch_pct_ci95": 1.63,
-        "total_dist_km_mean": 353.22
+      "TrustAware_ClusterPenalty": {
+        "genuine_served_mean": 43.93,
+        "genuine_served_sem": 0.62,
+        "genuine_served_ci95": 1.22,
+        "wasted_dispatches_mean": 10.07,
+        "wasted_dispatch_pct_mean": 18.64,
+        "wasted_dispatch_pct_ci95": 2.23,
+        "total_distance_km_mean": 353.39
       },
       "Oracle": {
         "genuine_served_mean": 54.0,
+        "genuine_served_sem": 0.0,
         "genuine_served_ci95": 0.0,
+        "wasted_dispatches_mean": 0.0,
         "wasted_dispatch_pct_mean": 0.0,
         "wasted_dispatch_pct_ci95": 0.0,
-        "total_dist_km_mean": 341.05
+        "total_distance_km_mean": 338.43
       },
-      "test_trustaware_continuous": {
-        "policy": "Policy (a) Continuous Probability",
-        "t_statistic": 1.3061,
-        "p_value": 0.202,
-        "statistically_significant": false,
-        "genuine_gain_mean": 0.33
+      "statistical_evaluations": {
+        "TrustAware_Continuous": {
+          "gain_vs_blind_lp": 0.57,
+          "gain_vs_blind_greedy": 0.8,
+          "paired_t_statistic": 2.9844,
+          "paired_t_pvalue": 0.00572,
+          "wilcoxon_statistic": 44.0,
+          "wilcoxon_pvalue": 0.00865,
+          "statistically_significant": true,
+          "pct_of_oracle_achieved": 4.7
+        },
+        "TrustAware_ValidationThresh": {
+          "gain_vs_blind_lp": 0.63,
+          "gain_vs_blind_greedy": 0.87,
+          "paired_t_statistic": 3.0725,
+          "paired_t_pvalue": 0.00459,
+          "wilcoxon_statistic": 48.5,
+          "wilcoxon_pvalue": 0.00448,
+          "statistically_significant": true,
+          "pct_of_oracle_achieved": 5.2
+        },
+        "TrustAware_ClusterPenalty": {
+          "gain_vs_blind_lp": 2.03,
+          "gain_vs_blind_greedy": 2.27,
+          "paired_t_statistic": 7.5581,
+          "paired_t_pvalue": 2.48e-08,
+          "wilcoxon_statistic": 0.0,
+          "wilcoxon_pvalue": 4.49e-06,
+          "statistically_significant": true,
+          "pct_of_oracle_achieved": 16.8
+        }
       },
-      "test_trustaware_disasterthresh": {
-        "policy": "Policy (b) Disaster-Validation Threshold (0.7591)",
-        "t_statistic": 1.2782,
-        "p_value": 0.211,
-        "statistically_significant": false,
-        "genuine_gain_mean": 0.13
-      },
-      "test_trustaware_corpusthresh": {
-        "policy": "Policy (c) Corpus-Wide Threshold (0.2704)",
-        "t_statistic": 2.1864,
-        "p_value": 0.037,
-        "statistically_significant": true,
-        "genuine_gain_mean": 0.5
-      },
-      "statistical_test": {
-        "policy": "Policy (a) Continuous Probability",
-        "t_statistic": 1.3061,
-        "p_value": 0.202,
-        "statistically_significant": false,
-        "genuine_gain_mean": 0.33
-      }
+      "oracle_maximum_gain": 12.1
     }
   },
-  "sensitivity_sweep_hoax_rate": [
-    {
-      "hoax_rate_pct": 5,
-      "blind_lp_genuine": 46.35,
-      "continuous_genuine": 49.05,
-      "disaster_thresh_genuine": 47.65,
-      "corpus_thresh_genuine": 49.05,
-      "gain_continuous": 2.7,
-      "gain_disaster_thresh": 1.3,
-      "gain_corpus_thresh": 2.7,
-      "trust_aware_lp_genuine": 49.05,
-      "genuine_gain": 2.7
-    },
-    {
-      "hoax_rate_pct": 10,
-      "blind_lp_genuine": 39.9,
-      "continuous_genuine": 46.15,
-      "disaster_thresh_genuine": 43.15,
-      "corpus_thresh_genuine": 46.15,
-      "gain_continuous": 6.25,
-      "gain_disaster_thresh": 3.25,
-      "gain_corpus_thresh": 6.25,
-      "trust_aware_lp_genuine": 46.15,
-      "genuine_gain": 6.25
-    },
-    {
-      "hoax_rate_pct": 15,
-      "blind_lp_genuine": 34.6,
-      "continuous_genuine": 42.8,
-      "disaster_thresh_genuine": 39.15,
-      "corpus_thresh_genuine": 42.9,
-      "gain_continuous": 8.2,
-      "gain_disaster_thresh": 4.55,
-      "gain_corpus_thresh": 8.3,
-      "trust_aware_lp_genuine": 42.8,
-      "genuine_gain": 8.2
-    },
-    {
-      "hoax_rate_pct": 20,
-      "blind_lp_genuine": 27.45,
-      "continuous_genuine": 39.95,
-      "disaster_thresh_genuine": 33.7,
-      "corpus_thresh_genuine": 39.95,
-      "gain_continuous": 12.5,
-      "gain_disaster_thresh": 6.25,
-      "gain_corpus_thresh": 12.5,
-      "trust_aware_lp_genuine": 39.95,
-      "genuine_gain": 12.5
-    },
-    {
-      "hoax_rate_pct": 25,
-      "blind_lp_genuine": 21.2,
-      "continuous_genuine": 36.45,
-      "disaster_thresh_genuine": 28.95,
-      "corpus_thresh_genuine": 36.35,
-      "gain_continuous": 15.25,
-      "gain_disaster_thresh": 7.75,
-      "gain_corpus_thresh": 15.15,
-      "trust_aware_lp_genuine": 36.45,
-      "genuine_gain": 15.25
-    },
-    {
-      "hoax_rate_pct": 30,
-      "blind_lp_genuine": 15.3,
-      "continuous_genuine": 33.25,
-      "disaster_thresh_genuine": 24.45,
-      "corpus_thresh_genuine": 32.95,
-      "gain_continuous": 17.95,
-      "gain_disaster_thresh": 9.15,
-      "gain_corpus_thresh": 17.65,
-      "trust_aware_lp_genuine": 33.25,
-      "genuine_gain": 17.95
-    },
-    {
-      "hoax_rate_pct": 35,
-      "blind_lp_genuine": 11.3,
-      "continuous_genuine": 30.9,
-      "disaster_thresh_genuine": 20.7,
-      "corpus_thresh_genuine": 30.65,
-      "gain_continuous": 19.6,
-      "gain_disaster_thresh": 9.4,
-      "gain_corpus_thresh": 19.35,
-      "trust_aware_lp_genuine": 30.9,
-      "genuine_gain": 19.6
-    },
-    {
-      "hoax_rate_pct": 40,
-      "blind_lp_genuine": 7.4,
-      "continuous_genuine": 27.9,
-      "disaster_thresh_genuine": 16.4,
-      "corpus_thresh_genuine": 27.5,
-      "gain_continuous": 20.5,
-      "gain_disaster_thresh": 9.0,
-      "gain_corpus_thresh": 20.1,
-      "trust_aware_lp_genuine": 27.9,
-      "genuine_gain": 20.5
-    }
-  ],
   "sensitivity_sweep_detector_auc": [
     {
-      "target_auc": 0.55,
-      "blind_lp_genuine": 29.65,
-      "trust_aware_lp_genuine": 39.5,
-      "genuine_gain": 9.85,
-      "p_value": 0.0,
-      "benefit_significant": true
+      "target_auc": 0.5,
+      "blind_lp_genuine": 29.44,
+      "trust_aware_lp_genuine": 29.48,
+      "genuine_gain": 0.04,
+      "p_value": 0.95,
+      "pct_of_oracle_achieved": 0.2,
+      "benefit_significant": false
     },
     {
       "target_auc": 0.6,
-      "blind_lp_genuine": 29.65,
-      "trust_aware_lp_genuine": 40.6,
-      "genuine_gain": 10.95,
+      "blind_lp_genuine": 29.44,
+      "trust_aware_lp_genuine": 40.52,
+      "genuine_gain": 11.08,
       "p_value": 0.0,
+      "pct_of_oracle_achieved": 44.6,
       "benefit_significant": true
     },
     {
       "target_auc": 0.7,
-      "blind_lp_genuine": 29.65,
-      "trust_aware_lp_genuine": 43.8,
-      "genuine_gain": 14.15,
+      "blind_lp_genuine": 29.44,
+      "trust_aware_lp_genuine": 43.32,
+      "genuine_gain": 13.88,
       "p_value": 0.0,
+      "pct_of_oracle_achieved": 55.9,
       "benefit_significant": true
     },
     {
       "target_auc": 0.8,
-      "blind_lp_genuine": 29.65,
-      "trust_aware_lp_genuine": 46.3,
-      "genuine_gain": 16.65,
+      "blind_lp_genuine": 29.44,
+      "trust_aware_lp_genuine": 46.12,
+      "genuine_gain": 16.68,
       "p_value": 0.0,
+      "pct_of_oracle_achieved": 67.1,
       "benefit_significant": true
     },
     {
       "target_auc": 0.9,
-      "blind_lp_genuine": 29.65,
-      "trust_aware_lp_genuine": 49.55,
-      "genuine_gain": 19.9,
+      "blind_lp_genuine": 29.44,
+      "trust_aware_lp_genuine": 49.28,
+      "genuine_gain": 19.84,
       "p_value": 0.0,
+      "pct_of_oracle_achieved": 79.8,
       "benefit_significant": true
     },
     {
       "target_auc": 0.95,
-      "blind_lp_genuine": 29.65,
-      "trust_aware_lp_genuine": 51.0,
-      "genuine_gain": 21.35,
+      "blind_lp_genuine": 29.44,
+      "trust_aware_lp_genuine": 50.84,
+      "genuine_gain": 21.4,
       "p_value": 0.0,
+      "pct_of_oracle_achieved": 86.1,
       "benefit_significant": true
     },
     {
       "target_auc": 0.99,
-      "blind_lp_genuine": 29.65,
-      "trust_aware_lp_genuine": 51.95,
-      "genuine_gain": 22.3,
+      "blind_lp_genuine": 29.44,
+      "trust_aware_lp_genuine": 51.92,
+      "genuine_gain": 22.48,
       "p_value": 0.0,
+      "pct_of_oracle_achieved": 90.5,
       "benefit_significant": true
     }
   ],
+  "sensitivity_sweep_hoax_rate": [
+    {
+      "hoax_rate_pct": 5,
+      "blind_lp_genuine": 45.95,
+      "trust_aware_lp_genuine": 52.0,
+      "genuine_gain": 6.05
+    },
+    {
+      "hoax_rate_pct": 10,
+      "blind_lp_genuine": 39.35,
+      "trust_aware_lp_genuine": 52.0,
+      "genuine_gain": 12.65
+    },
+    {
+      "hoax_rate_pct": 15,
+      "blind_lp_genuine": 32.3,
+      "trust_aware_lp_genuine": 52.0,
+      "genuine_gain": 19.7
+    },
+    {
+      "hoax_rate_pct": 20,
+      "blind_lp_genuine": 27.25,
+      "trust_aware_lp_genuine": 52.0,
+      "genuine_gain": 24.75
+    },
+    {
+      "hoax_rate_pct": 25,
+      "blind_lp_genuine": 21.7,
+      "trust_aware_lp_genuine": 52.0,
+      "genuine_gain": 30.3
+    },
+    {
+      "hoax_rate_pct": 30,
+      "blind_lp_genuine": 16.9,
+      "trust_aware_lp_genuine": 52.0,
+      "genuine_gain": 35.1
+    },
+    {
+      "hoax_rate_pct": 35,
+      "blind_lp_genuine": 10.9,
+      "trust_aware_lp_genuine": 52.0,
+      "genuine_gain": 41.1
+    },
+    {
+      "hoax_rate_pct": 40,
+      "blind_lp_genuine": 6.8,
+      "trust_aware_lp_genuine": 52.0,
+      "genuine_gain": 45.2
+    }
+  ],
+  "houston_summary": {
+    "blind_lp_genuine": 40.83,
+    "blind_lp_wasted_pct": 21.47,
+    "trust_aware_continuous_genuine": 41.4,
+    "trust_aware_continuous_wasted_pct": 20.38,
+    "continuous_gain": 0.57,
+    "cluster_penalty_gain": 1.93,
+    "oracle_max_gain": 11.17,
+    "pct_of_oracle_achieved": 5.1,
+    "p_value": 0.00572
+  },
   "trust_aware": {
-    "genuine_reached_mean": 41.53,
-    "wasted_dispatch_pct": 20.13
+    "genuine_reached_mean": 41.4,
+    "wasted_dispatch_pct": 20.38
   },
   "trust_blind": {
-    "genuine_reached_mean": 41.1,
-    "wasted_dispatch_pct": 20.96
+    "genuine_reached_mean": 40.83,
+    "wasted_dispatch_pct": 21.47
   },
-  "hoax_dispatch_reduction_pct": 3.96,
-  "analytical_conclusion": "Evaluation of all three allocation policies reveals: Policy (a) Continuous Probability achieves +0.43 genuine victims in Houston (p=0.03); Policy (b) Disaster-Validation Threshold (theta*=0.7591) achieves +0.53 victims because the threshold tuned on Generator A does not transfer well to unseen Generator B test tweets; Policy (c) Corpus-Wide Threshold (theta*=0.2704) achieves +0.57 victims. When detector AUC >= 0.70 in sensitivity sweeps, trust-aware LP provides robust gains (+14 to +22 victims)."
+  "hoax_dispatch_reduction_pct": 5.08,
+  "analytical_conclusion": "Across 30 seeds in Houston, Trust-Aware Continuous allocation reaches 41.4 genuine victims vs 40.83 for Blind LP (gain: +0.57, p=0.00572), capturing 5.1% of the theoretical Oracle upper bound (+11.17). Adding the MinHash cluster size penalty yields +1.93 victims by neutralizing coordinated campaigns. The detector quality sweep confirms the AUC 0.50 control gain is 0.0 victims (no unearned gain from random noise) and increases monotonically to +22.48 victims at AUC 0.99."
 }
