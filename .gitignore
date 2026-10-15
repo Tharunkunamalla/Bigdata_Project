@@ -27,6 +27,7 @@ data/curated/*
 !data/curated/.gitkeep
 checkpoint/
 checkpoints/
+ml/models_real/
 metastore_db/
 derby.log
 warehouse/

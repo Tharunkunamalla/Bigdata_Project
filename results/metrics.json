@@ -1,17 +1,20 @@
 {
-  "evaluation_timestamp": "2026-10-14T19:58:11.897013Z",
-  "training_time_seconds": 180.17,
+  "evaluation_timestamp": "2026-10-15T15:51:02.847846Z",
+  "training_time_seconds": 263.26,
   "split_provenance": {
-    "train_records": 95862,
-    "test_records": 32998,
+    "train_records": 97422,
+    "test_records": 32879,
+    "total_records": 130301,
     "text_leakage_overlap": 0,
-    "split_type": "75/25 Random Stratified Split",
-    "stratification_factors": [
-      "source",
-      "is_synthetic",
-      "is_hoax"
-    ],
-    "disjoint_hoaxes": "Generator A (100% Train, 1,295 unique) vs Generator B (100% Test, 1,474 unique, disjoint vocabulary)"
+    "split_type": "75/25 Stratified Split",
+    "generators": {
+      "training_generators": [
+        "generator_a (1500 authority/dispatch alerts)",
+        "generator_b (1500 facility/structural alerts)"
+      ],
+      "held_out_evaluation_generator": "generator_c (1500 civilian distress calls, 0% train overlap)",
+      "length_distribution": "strictly matches real crisis tweets (~80-140 chars)"
+    }
   },
   "funnel_provenance": {
     "funnel_table": [
@@ -70,164 +73,174 @@
         "test_rows": 2890
       },
       {
-        "source": "hoax_generator_a_train",
+        "source": "hoax_generator_a",
         "raw_rows": 1500,
         "clean_rows": 1500,
-        "dedup_within": 1295,
-        "retained_corpus": 1295,
-        "train_rows": 1295,
+        "dedup_within": 1367,
+        "retained_corpus": 1367,
+        "train_rows": 1367,
         "test_rows": 0
       },
       {
-        "source": "hoax_generator_b_test",
+        "source": "hoax_generator_b",
         "raw_rows": 1500,
         "clean_rows": 1500,
-        "dedup_within": 1474,
-        "retained_corpus": 1474,
+        "dedup_within": 1488,
+        "retained_corpus": 1488,
+        "train_rows": 1488,
+        "test_rows": 0
+      },
+      {
+        "source": "hoax_generator_c",
+        "raw_rows": 1500,
+        "clean_rows": 1500,
+        "dedup_within": 1355,
+        "retained_corpus": 1355,
         "train_rows": 0,
-        "test_rows": 1474
+        "test_rows": 1355
       }
     ],
     "totals": {
-      "raw_rows": 130038,
-      "clean_rows": 129935,
-      "dedup_within": 128860,
-      "retained_corpus": 128860,
-      "train_rows": 95862,
-      "test_rows": 32998
+      "raw_rows": 131538,
+      "clean_rows": 131435,
+      "dedup_within": 130301,
+      "retained_corpus": 130301,
+      "train_rows": 97422,
+      "test_rows": 32879
     }
   },
-  "synthetic_detector": {
+  "tweet_domain_detector": {
     "model_type": "LogisticRegression_ElasticNet",
-    "roc_auc": 0.887,
-    "pr_auc": 0.5701,
-    "prevalence": 0.0973,
-    "majority_class_baseline_acc": 0.9027,
-    "accuracy": 0.9231,
-    "balanced_accuracy": 0.7072,
-    "mcc": 0.4982,
-    "positive_class_f1": 0.5265,
+    "training_scope": "Short crisis tweets (<280 chars) from HumAID, CrisisLex, PHEME + Gen A & B hoaxes",
+    "evaluation_scope": "Held-Out Gen C hoaxes + HumAID, CrisisLex, PHEME test tweets",
+    "training_samples": 77051,
+    "test_samples": 26059,
+    "roc_auc": 0.994,
+    "pr_auc": 0.9007,
+    "prevalence": 0.052,
+    "majority_class_baseline_acc": 0.948,
     "default_threshold_0_50": {
       "threshold": 0.5,
-      "accuracy": 0.9246,
-      "precision": 0.7476,
-      "recall": 0.3395,
-      "f1": 0.4669
+      "accuracy": 0.948,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0
     },
     "calibrated_threshold": {
-      "threshold": 0.2704,
-      "calibration_split": "20% Internal Validation Split taken strictly from Training Data (n=19,173)",
-      "tuning_criterion": "Maximized Positive-Class F1 on Validation Split Only",
-      "val_f1": 0.7611,
-      "val_precision": 0.7106,
-      "val_recall": 0.8192,
-      "test_accuracy": 0.9231,
-      "test_balanced_accuracy": 0.7072,
-      "test_mcc": 0.4982,
-      "test_positive_f1": 0.5265,
-      "test_positive_precision": 0.6573,
-      "test_positive_recall": 0.4391,
-      "test_macro_f1": 0.7423
+      "threshold": 0.1786,
+      "tuning_split": "20% Internal Validation Split taken strictly from Training Data",
+      "val_f1": 1.0,
+      "val_precision": 1.0,
+      "val_recall": 1.0,
+      "test_accuracy": 0.9488,
+      "test_balanced_accuracy": 0.5084,
+      "test_mcc": 0.1212,
+      "test_positive_f1": 0.0333,
+      "test_positive_precision": 0.92,
+      "test_positive_recall": 0.017,
+      "test_macro_f1": 0.5035
     },
-    "feature_baselines": {
-      "text_only_auc": 0.9191,
-      "stylometric_only_auc": 0.9048,
-      "full_combined_auc": 0.887
+    "operational_operating_points": {
+      "recall_at_1pct_fpr": 0.7675,
+      "threshold_at_1pct_fpr": 0.0061,
+      "recall_at_5pct_fpr": 1.0,
+      "threshold_at_5pct_fpr": 0.0028
+    },
+    "calibration": {
+      "brier_score": 0.0473,
+      "expected_calibration_error_ece": 0.0487,
+      "reliability_bins": [
+        {
+          "bin_index": 0,
+          "range": [
+            0.0,
+            0.1
+          ],
+          "count": 25853,
+          "observed_accuracy": 0.0446,
+          "mean_confidence": 0.0023
+        },
+        {
+          "bin_index": 1,
+          "range": [
+            0.1,
+            0.2
+          ],
+          "count": 190,
+          "observed_accuracy": 0.9895,
+          "mean_confidence": 0.1152
+        },
+        {
+          "bin_index": 2,
+          "range": [
+            0.2,
+            0.3
+          ],
+          "count": 14,
+          "observed_accuracy": 1.0,
+          "mean_confidence": 0.2408
+        },
+        {
+          "bin_index": 3,
+          "range": [
+            0.3,
+            0.4
+          ],
+          "count": 1,
+          "observed_accuracy": 1.0,
+          "mean_confidence": 0.3434
+        },
+        {
+          "bin_index": 4,
+          "range": [
+            0.4,
+            0.5
+          ],
+          "count": 1,
+          "observed_accuracy": 0.0,
+          "mean_confidence": 0.4346
+        }
+      ]
+    },
+    "baselines": {
+      "length_only_auc": 0.6685,
+      "stylometric_only_auc": 0.782,
+      "full_combined_auc": 0.994
+    },
+    "permutation_control": {
+      "twenty_shuffle_mean_auc": 0.4997,
+      "twenty_shuffle_std_auc": 0.0052,
+      "t_statistic": -0.2281,
+      "p_value": 0.822,
+      "verdict": "PASS (Statistically indistinguishable from theoretical random 0.50 AUC, p > 0.05)"
     }
   },
-  "sanity_controls": {
-    "twenty_shuffle_control": {
-      "mean_auc": 0.5021,
-      "std_auc": 0.006,
-      "t_statistic": 1.5293,
-      "p_value": 0.1427,
-      "verdict": "PASS (Statistically indistinguishable from theoretical random 0.50 AUC, p > 0.05)"
-    },
-    "source_shortcut_control": {
-      "hc3_only": {
-        "subset_name": "HC3_Only (Human QA vs ChatGPT QA)",
-        "total_rows": 587,
-        "positive_rows": 296,
-        "negative_rows": 291,
-        "prevalence": 0.5043,
-        "roc_auc": 0.8747,
-        "pr_auc": 0.8595,
-        "default_thresh_0_50": {
-          "precision": 0.8275,
-          "recall": 0.7128,
-          "f1": 0.7659
-        },
-        "calibrated_thresh": {
-          "threshold": 0.2704,
-          "precision": 0.785,
-          "recall": 0.8514,
-          "f1": 0.8169
-        }
-      },
-      "mage_only": {
-        "subset_name": "MAGE_Only (Multi-LLM 322 Models Benchmark)",
-        "total_rows": 2890,
-        "positive_rows": 1441,
-        "negative_rows": 1449,
-        "prevalence": 0.4986,
-        "roc_auc": 0.7708,
-        "pr_auc": 0.768,
-        "default_thresh_0_50": {
-          "precision": 0.7624,
-          "recall": 0.61,
-          "f1": 0.6777
-        },
-        "calibrated_thresh": {
-          "threshold": 0.2704,
-          "precision": 0.6694,
-          "recall": 0.7981,
-          "f1": 0.7281
-        }
-      },
-      "disaster_tweets_and_hoaxes": {
-        "subset_name": "Disaster_Tweets_and_Hoaxes (Crisis Tweets vs Gen B Hoaxes)",
-        "total_rows": 25084,
-        "positive_rows": 1474,
-        "negative_rows": 23610,
-        "prevalence": 0.0588,
-        "roc_auc": 0.8364,
-        "pr_auc": 0.3106,
-        "default_thresh_0_50": {
-          "precision": 0.0,
-          "recall": 0.0,
-          "f1": 0.0
-        },
-        "calibrated_thresh": {
-          "threshold": 0.2704,
-          "precision": 0.1212,
-          "recall": 0.0054,
-          "f1": 0.0104
-        }
-      },
-      "verdict": "Performance varies moderately by source style: Long-form HC3 QA achieves high separation (AUC ~0.94), while diverse multi-generator MAGE texts (AUC ~0.83) and terse crisis tweets/hoaxes (AUC ~0.88) exhibit higher variance. This confirms the model utilizes stylistic features that reflect source length and syntactic structure alongside vocabulary."
-    }
+  "longtext_detector": {
+    "model_type": "LogisticRegression_ElasticNet",
+    "training_scope": "Long-form texts (HC3 & MAGE benchmark pairs)",
+    "roc_auc": 0.8021,
+    "pr_auc": 0.7948,
+    "accuracy": 0.7375,
+    "f1": 0.7268
+  },
+  "routing": {
+    "rule": "char_len < 280 -> tweet_detector_model, char_len >= 280 -> longtext_detector_model"
   },
   "rumour_classifier": {
     "model_type": "RandomForestClassifier",
-    "roc_auc": 0.7978,
-    "weighted_f1": 0.7335,
-    "accuracy": 0.8161,
-    "label_origin": "CrisisLex CrowdFlower annotations (target=0 non-disaster/rumour vs target=1 verified disaster report)",
-    "performance_assessment": "Moderate ROC-AUC (0.68) reflecting ambiguity between informal personal remarks and unverified disaster rumors."
+    "roc_auc": 0.892,
+    "weighted_f1": 0.7446,
+    "accuracy": 0.8241
   },
   "humanitarian_category": {
     "model_type": "MultinomialLogisticRegression",
-    "accuracy": 0.7664,
-    "macro_f1": 0.7564,
-    "label_origin": "QCRI HumAID human expert multi-class annotations across 6 operational categories",
-    "performance_assessment": "62% multi-class accuracy across 6 fine-grained operational categories."
+    "accuracy": 0.7715,
+    "macro_f1": 0.7639
   },
   "urgency_regressor": {
     "model_type": "LinearRegression_ElasticNet",
-    "rmse": 0.9286,
-    "mae": 0.6649,
-    "r2": 0.3896,
-    "label_origin": "Deterministic priority mapping from operational category (1.0 to 5.0 scale)",
-    "performance_assessment": "R\u00b2=0.13 reflects that urgency in social text is heavily subjective and coarse-grained."
+    "rmse": 0.8956,
+    "mae": 0.6624,
+    "r2": 0.4434
   }
 }

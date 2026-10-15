@@ -2,19 +2,25 @@
 data/build_real_corpus.py
 =========================
 Constructs the verified, multi-source empirical disaster corpus for CSE412:
-1. Ingests authentic QCRI CrisisBench / HumAID multi-event TSVs (87,557 rows across 50+ disasters).
-2. Ingests CrisisLex / CrowdFlower Real Disaster Tweets (7,613 records).
-3. Ingests Hello-SimpleAI / HC3 Human vs ChatGPT text pairs (2,348 records).
-4. Generates two strictly separated disaster hoax sets:
-   - Generator A (In-Domain Training Hoaxes): 1,500 rows with vocabulary A.
-   - Generator B (Held-Out Test Evaluation Hoaxes): 1,500 rows with completely disjoint vocabulary B.
-5. Implements a clean, balanced 75/25 Event-Stratified Train/Test Split:
-   - Held-Out Test Events: 2015 Nepal Earthquake, 2014 Philippines Typhoon Hagupit,
-     2013 Alberta Floods, California Wildfires, and 50% HC3 + Generator B hoaxes.
-   - Training Events: All other 45+ HumAID events (Hurricane Maria, Irma, Sandy, Queensland Floods,
-     Oklahoma Tornado, Chile Earthquake, Pakistan Floods, etc.) + Generator A hoaxes.
-   - Strict 0% text leakage guarantee.
-6. Outputs curated CSV and Parquet files in data/curated/ and registers manifest.
+1. Ingests authentic QCRI CrisisBench / HumAID multi-event TSVs (87,557 raw rows across 50+ disasters).
+2. Ingests CrisisLex / CrowdFlower Real Disaster Tweets (7,613 raw records).
+3. Ingests Hello-SimpleAI / HC3 Human vs ChatGPT text pairs (2,374 raw records).
+4. Ingests PHEME Rumour & Non-Rumour Crisis Tweets (6,425 raw records).
+5. Ingests LIAR Fact-Checking Statements (11,507 raw records).
+6. Ingests MAGE Human vs Machine-Generated Text Benchmark (11,562 raw records).
+7. Generates three strictly separated disaster hoax sets:
+   - Generator A (In-Domain Training Hoaxes): 1,500 rows (authority/dispatch hazard templates).
+   - Generator B (In-Domain Training Hoaxes): 1,500 rows (facility/structural collapse templates).
+   - Generator C (Held-Out Test Evaluation Hoaxes): 1,500 rows (first-person civilian distress calls).
+   - All synthetic disaster tweets strictly match real tweet lengths (~80-140 chars).
+8. Partitions into Train (75%) and Test (25%):
+   - Generator A & B -> 100% Train (training generators).
+   - Generator C -> 100% Held-Out Test (evaluation generator, zero training overlap).
+   - All other empirical sources -> 75% Train / 25% Test (stratified).
+   - Strict 0% text leakage across splits.
+9. Enriches every row with complete provenance:
+   - source, label_origin, is_generated, generator_id, coords_simulated.
+10. Saves verified CSV, Parquet, and funnel provenance metadata.
 """
 
 import os
@@ -109,7 +115,6 @@ def parse_crisisbench():
     raw_df["disaster_type"] = raw_df["event"].apply(map_disaster_type)
     raw_df["event_type"] = raw_df["event"].astype(str).str.lower()
     
-    # Assign urgency from category
     def get_urgency(cat):
         if cat == "rescue_and_urgent_needs":
             return 4.5
@@ -118,11 +123,16 @@ def parse_crisisbench():
         elif cat == "not_humanitarian":
             return 1.0
         return 2.5
+        
     raw_df["urgency_level"] = raw_df["humanitarian_category"].apply(get_urgency)
     raw_df["is_synthetic"] = 0
     raw_df["is_hoax"] = 0
     raw_df["post_id"] = ["cb_" + str(i) for i in range(len(raw_df))]
     raw_df["source"] = "HumAID_CrisisBench"
+    raw_df["label_origin"] = "HUMAN_VERIFIED"
+    raw_df["is_generated"] = 0
+    raw_df["generator_id"] = ""
+    raw_df["coords_simulated"] = True
     
     # Coordinates
     lats, lons = [], []
@@ -147,7 +157,8 @@ def parse_crisisbench():
     raw_df["longitude"] = lons
     
     cols = ["post_id", "text", "event_type", "disaster_type", "humanitarian_category",
-            "is_synthetic", "is_hoax", "urgency_level", "latitude", "longitude", "source"]
+            "is_synthetic", "is_hoax", "urgency_level", "latitude", "longitude",
+            "source", "label_origin", "is_generated", "generator_id", "coords_simulated"]
     return raw_df[cols].copy()
 
 def parse_disaster_tweets():
@@ -183,16 +194,20 @@ def parse_disaster_tweets():
             "disaster_type": dt,
             "humanitarian_category": cat,
             "is_synthetic": 0,
-            "is_hoax": 0 if target == 1 else 1, # Non-disaster tweet labeled 1 for rumour/false alarm
+            "is_hoax": 0 if target == 1 else 1,
             "urgency_level": urgency,
             "latitude": round(loc["lat"] + np.random.normal(0, 0.08), 5),
             "longitude": round(loc["lon"] + np.random.normal(0, 0.08), 5),
-            "source": "CrisisLex_DisasterTweets"
+            "source": "CrisisLex_DisasterTweets",
+            "label_origin": "HUMAN_VERIFIED",
+            "is_generated": 0,
+            "generator_id": "",
+            "coords_simulated": True
         })
     return pd.DataFrame(records)
 
 def parse_hc3():
-    """Parses Hello-SimpleAI HC3 human vs ChatGPT text comparisons (open_qa)."""
+    """Parses Hello-SimpleAI HC3 human vs ChatGPT text comparisons."""
     jsonl_path = os.path.join(RAW_DIR, "hc3_open_qa.jsonl")
     if not os.path.exists(jsonl_path):
         return pd.DataFrame()
@@ -219,7 +234,11 @@ def parse_hc3():
                             "urgency_level": 2.0,
                             "latitude": 37.7749,
                             "longitude": -122.4194,
-                            "source": "HC3_Human"
+                            "source": "HC3_Benchmark",
+                            "label_origin": "AUTHOR_ASSIGNED",
+                            "is_generated": 0,
+                            "generator_id": "",
+                            "coords_simulated": True
                         })
                 # ChatGPT answer
                 gpt_ans = item.get("chatgpt_answers", [])
@@ -237,75 +256,14 @@ def parse_hc3():
                             "urgency_level": 2.0,
                             "latitude": 37.7749,
                             "longitude": -122.4194,
-                            "source": "HC3_ChatGPT"
+                            "source": "HC3_Benchmark",
+                            "label_origin": "AUTHOR_ASSIGNED",
+                            "is_generated": 1,
+                            "generator_id": "chatgpt_hc3",
+                            "coords_simulated": True
                         })
             except Exception:
                 continue
-    return pd.DataFrame(records)
-
-def generate_hoaxes_generator_a(count=1500):
-    """
-    Generator A: In-Domain Training Hoaxes.
-    Uses vocabulary A: dam breach, levee collapse, chemical plume, power grid failure.
-    """
-    np.random.seed(412)
-    templates = [
-        "URGENT ALERT: Dam failure reported upstream near sector {sec}. Massive wall of floodwater descending immediately.",
-        "CRITICAL DISPATCH: Major levee breach at point {sec}! Emergency evacuation requested for all residential sectors.",
-        "TOXIC HAZARD WARNING: Industrial chemical plume dispersing rapidly across quadrant {sec}. Shelter in place immediately.",
-        "EMERGENCY CALL: Critical power grid failure has disabled oxygen concentrators at care center {sec}. Send rescue units now!",
-        "HIGH PRIORITY RESCUE: Over 25 citizens stranded on rooftops near mile marker {sec} as water levels surge violently."
-    ]
-    records = []
-    for i in range(count):
-        tmpl = templates[i % len(templates)]
-        text = tmpl.format(sec=np.random.randint(10, 999))
-        records.append({
-            "post_id": f"hoax_gen_a_{i}",
-            "text": text,
-            "event_type": "train_injected_hoax",
-            "disaster_type": "flood" if i % 2 == 0 else "general",
-            "humanitarian_category": "rescue_and_urgent_needs",
-            "is_synthetic": 1,
-            "is_hoax": 1,
-            "urgency_level": 5.0,
-            "latitude": 29.7604 + np.random.normal(0, 0.05),
-            "longitude": -95.3698 + np.random.normal(0, 0.05),
-            "source": "hoax_generator_a_train"
-        })
-    return pd.DataFrame(records)
-
-def generate_hoaxes_generator_b(count=1500):
-    """
-    Generator B: Held-Out Test Evaluation Hoaxes.
-    Uses completely separate vocabulary B: structural collapse, hospital fire, municipal reservoir contamination, seismic rupture.
-    Zero template or phrase overlap with Generator A.
-    """
-    np.random.seed(999) # Different seed and completely distinct templates
-    templates = [
-        "MAYDAY MAYDAY: Multi-story hospital wing engulfed in sudden flames at facility {num}. Patients trapped on upper floors!",
-        "URGENT EARTHQUAKE WARNING: Severe secondary rupture along fault line {num} caused catastrophic building collapse.",
-        "HAZARDOUS CONTAMINATION: Municipal drinking reservoir {num} compromised by toxic runoff. Do NOT drink tap water!",
-        "CRITICAL EVACUATION ORDER: Wildfire crowning rapidly over ridge {num}. Wind shift threatening entire western subdivision.",
-        "SEARCH AND RESCUE NEEDED: Underground transit tunnel collapsed near station {num}. Multiple casualties reported."
-    ]
-    records = []
-    for i in range(count):
-        tmpl = templates[i % len(templates)]
-        text = tmpl.format(num=np.random.randint(1000, 9999))
-        records.append({
-            "post_id": f"hoax_gen_b_{i}",
-            "text": text,
-            "event_type": "test_heldout_hoax",
-            "disaster_type": "earthquake" if i % 2 == 0 else "wildfire",
-            "humanitarian_category": "rescue_and_urgent_needs",
-            "is_synthetic": 1,
-            "is_hoax": 1,
-            "urgency_level": 5.0,
-            "latitude": 27.7172 + np.random.normal(0, 0.05),
-            "longitude": 85.3240 + np.random.normal(0, 0.05),
-            "source": "hoax_generator_b_test"
-        })
     return pd.DataFrame(records)
 
 def parse_pheme():
@@ -331,7 +289,11 @@ def parse_pheme():
             "urgency_level": 2.5,
             "latitude": round(37.7749 + np.random.normal(0, 0.08), 5),
             "longitude": round(-122.4194 + np.random.normal(0, 0.08), 5),
-            "source": "PHEME_RumourDataset"
+            "source": "PHEME_RumourDataset",
+            "label_origin": "HUMAN_VERIFIED",
+            "is_generated": 0,
+            "generator_id": "",
+            "coords_simulated": True
         })
     return pd.DataFrame(records)
 
@@ -359,7 +321,11 @@ def parse_liar():
             "urgency_level": 2.0,
             "latitude": round(38.8951 + np.random.normal(0, 0.08), 5),
             "longitude": round(-77.0364 + np.random.normal(0, 0.08), 5),
-            "source": "LIAR_FactChecking"
+            "source": "LIAR_FactChecking",
+            "label_origin": "FACT_CHECKED",
+            "is_generated": 0,
+            "generator_id": "",
+            "coords_simulated": True
         })
     return pd.DataFrame(records)
 
@@ -386,7 +352,132 @@ def parse_mage():
             "urgency_level": 2.0,
             "latitude": round(37.7749 + np.random.normal(0, 0.08), 5),
             "longitude": round(-122.4194 + np.random.normal(0, 0.08), 5),
-            "source": "MAGE_Benchmark"
+            "source": "MAGE_Benchmark",
+            "label_origin": "MODEL_OUTPUT",
+            "is_generated": lbl,
+            "generator_id": "mage_llm" if lbl == 1 else "",
+            "coords_simulated": True
+        })
+    return pd.DataFrame(records)
+
+def generate_hoaxes_generator_a(count=1500):
+    """
+    Generator A: In-Domain Training Hoaxes.
+    Uses authority dispatch & hazard perturbation templates (dam breach, chemical plume, power grid failure).
+    Length matches real disaster tweets (~85-130 chars).
+    """
+    np.random.seed(412)
+    templates = [
+        "URGENT ALERT: Dam failure reported upstream near sector {sec}. Massive wall of floodwater descending immediately.",
+        "CRITICAL DISPATCH: Major levee breach at point {sec}! Emergency evacuation requested for all residential sectors.",
+        "TOXIC HAZARD WARNING: Industrial chemical plume dispersing rapidly across quadrant {sec}. Shelter in place immediately.",
+        "EMERGENCY CALL: Critical power grid failure has disabled oxygen concentrators at care center {sec}. Send rescue units now!",
+        "HIGH PRIORITY RESCUE: Over 25 citizens stranded on rooftops near mile marker {sec} as water levels surge violently.",
+        "FLASH FLOOD WARNING: Creek overflowing banks near crossing {sec}. Multiple vehicles submerged with passengers inside.",
+        "HAZMAT EVACUATION: Chlorine gas leak detected at industrial storage site {sec}. Winds pushing cloud toward populated area.",
+        "DISPATCH WARNING: Severe flash runoff washed away access road at bridge {sec}. Communities completely isolated upstream."
+    ]
+    records = []
+    for i in range(count):
+        tmpl = templates[i % len(templates)]
+        text = tmpl.format(sec=np.random.randint(10, 999))
+        records.append({
+            "post_id": f"hoax_gen_a_{i}",
+            "text": text,
+            "event_type": "train_injected_hoax",
+            "disaster_type": "flood" if i % 2 == 0 else "general",
+            "humanitarian_category": "rescue_and_urgent_needs",
+            "is_synthetic": 1,
+            "is_hoax": 1,
+            "urgency_level": 5.0,
+            "latitude": round(29.7604 + np.random.normal(0, 0.05), 5),
+            "longitude": round(-95.3698 + np.random.normal(0, 0.05), 5),
+            "source": "hoax_generator_a",
+            "label_origin": "INJECTED_HOAX",
+            "is_generated": 1,
+            "generator_id": "generator_a",
+            "coords_simulated": True
+        })
+    return pd.DataFrame(records)
+
+def generate_hoaxes_generator_b(count=1500):
+    """
+    Generator B: In-Domain Training Hoaxes.
+    Uses facility & structural failure perturbation templates (hospital fire, reservoir contamination, transit collapse).
+    Length matches real disaster tweets (~85-130 chars).
+    """
+    np.random.seed(999)
+    templates = [
+        "MAYDAY MAYDAY: Multi-story hospital wing engulfed in sudden flames at facility {num}. Patients trapped on upper floors!",
+        "URGENT EARTHQUAKE WARNING: Severe secondary rupture along fault line {num} caused catastrophic building collapse.",
+        "HAZARDOUS CONTAMINATION: Municipal drinking reservoir {num} compromised by toxic runoff. Do NOT drink tap water!",
+        "CRITICAL EVACUATION ORDER: Wildfire crowning rapidly over ridge {num}. Wind shift threatening entire western subdivision.",
+        "SEARCH AND RESCUE NEEDED: Underground transit tunnel collapsed near station {num}. Multiple casualties reported.",
+        "INFRASTRUCTURE EMERGENCY: Gas transmission main ruptured near pipeline junction {num}. Mandatory evacuation underway.",
+        "EMERGENCY SECTOR CALL: Highway overpass cracked and collapsed across interstate {num}. Multiple vehicles crushed beneath.",
+        "MEDICAL DISPATCH NEEDED: Field clinic near perimeter {num} inundated by surge tide. 40 acute patients require evacuation."
+    ]
+    records = []
+    for i in range(count):
+        tmpl = templates[i % len(templates)]
+        text = tmpl.format(num=np.random.randint(1000, 9999))
+        records.append({
+            "post_id": f"hoax_gen_b_{i}",
+            "text": text,
+            "event_type": "train_injected_hoax",
+            "disaster_type": "earthquake" if i % 2 == 0 else "wildfire",
+            "humanitarian_category": "rescue_and_urgent_needs",
+            "is_synthetic": 1,
+            "is_hoax": 1,
+            "urgency_level": 5.0,
+            "latitude": round(27.7172 + np.random.normal(0, 0.05), 5),
+            "longitude": round(85.3240 + np.random.normal(0, 0.05), 5),
+            "source": "hoax_generator_b",
+            "label_origin": "INJECTED_HOAX",
+            "is_generated": 1,
+            "generator_id": "generator_b",
+            "coords_simulated": True
+        })
+    return pd.DataFrame(records)
+
+def generate_hoaxes_generator_c(count=1500):
+    """
+    Generator C: Held-Out Test Evaluation Hoaxes.
+    Uses first-person civilian eyewitness distress calls (trapped families, sinkhole engulfment, medical power loss).
+    Distinct persona, phrasing, and syntax. Evaluated strictly in the held-out test split.
+    Length matches real disaster tweets (~85-130 chars).
+    """
+    np.random.seed(8888)
+    templates = [
+        "Please help! 4 people trapped in attic on 2nd floor near block {code}, water level rising to ceiling fast!",
+        "Emergency responders urgently needed near exit {code}: massive sinkhole swallowed two vehicles, people shouting for help!",
+        "URGENT: Elderly care facility at avenue {code} lost backup power. Critical ventilator patients need urgent transfer!",
+        "Wildfire suddenly jumped the highway at intersection {code}, 15 families cut off from exit route and need boat rescue!",
+        "Bridge collapsed on county road {code} right after tremor. At least three cars fallen into river, send dive team!",
+        "Severe ammonia cloud leaking from processing plant near district {code}. Residents coughing blood, evacuate immediately!",
+        "Roof collapsed at shelter hall {code} under heavy rain accumulation. Dozens trapped under beams, send search and rescue!",
+        "Flash flood breached the retention wall on 5th street near sector {code}. Rapid current sweeping away parked cars and people!"
+    ]
+    records = []
+    for i in range(count):
+        tmpl = templates[i % len(templates)]
+        text = tmpl.format(code=np.random.randint(100, 999))
+        records.append({
+            "post_id": f"hoax_gen_c_{i}",
+            "text": text,
+            "event_type": "test_heldout_hoax",
+            "disaster_type": "flood" if i % 2 == 0 else "rescue",
+            "humanitarian_category": "rescue_and_urgent_needs",
+            "is_synthetic": 1,
+            "is_hoax": 1,
+            "urgency_level": 5.0,
+            "latitude": round(29.7604 + np.random.normal(0, 0.05), 5),
+            "longitude": round(-95.3698 + np.random.normal(0, 0.05), 5),
+            "source": "hoax_generator_c",
+            "label_origin": "INJECTED_HOAX",
+            "is_generated": 1,
+            "generator_id": "generator_c",
+            "coords_simulated": True
         })
     return pd.DataFrame(records)
 
@@ -404,8 +495,9 @@ def build_corpus():
         "PHEME_RumourDataset": 6425,
         "LIAR_FactChecking": 11507,
         "MAGE_Benchmark": 11562,
-        "hoax_generator_a_train": 1500,
-        "hoax_generator_b_test": 1500
+        "hoax_generator_a": 1500,
+        "hoax_generator_b": 1500,
+        "hoax_generator_c": 1500
     }
     
     source_dfs = [
@@ -415,8 +507,9 @@ def build_corpus():
         ("PHEME_RumourDataset", parse_pheme()),
         ("LIAR_FactChecking", parse_liar()),
         ("MAGE_Benchmark", parse_mage()),
-        ("hoax_generator_a_train", generate_hoaxes_generator_a(1500)),
-        ("hoax_generator_b_test", generate_hoaxes_generator_b(1500))
+        ("hoax_generator_a", generate_hoaxes_generator_a(1500)),
+        ("hoax_generator_b", generate_hoaxes_generator_b(1500)),
+        ("hoax_generator_c", generate_hoaxes_generator_c(1500))
     ]
     
     funnel = []
@@ -450,9 +543,10 @@ def build_corpus():
     print(f"Total Unified Deduplicated Records: {len(df_all):,}")
     
     # -------------------------------------------------------------------------
-    # 75/25 Random Stratified Train / Test Partition
-    # Generator A -> 100% Train; Generator B -> 100% Test
-    # All other sources -> Stratified 75% Train / 25% Test (seed 42)
+    # 75/25 Train / Test Partition:
+    # - Generator A & B -> 100% Train (training generators)
+    # - Generator C -> 100% Test (held-out evaluation generator)
+    # - All other empirical sources -> Stratified 75% Train / 25% Test (seed 42)
     # -------------------------------------------------------------------------
     from sklearn.model_selection import train_test_split
     
@@ -462,14 +556,13 @@ def build_corpus():
     for (src_name, df_retained), item in zip(clean_dfs, funnel):
         sub_df = df_retained.copy()
         
-        if src_name == "hoax_generator_a_train":
+        if src_name in ["hoax_generator_a", "hoax_generator_b"]:
             tr_part = sub_df
             te_part = sub_df.iloc[0:0]
-        elif src_name == "hoax_generator_b_test":
+        elif src_name == "hoax_generator_c":
             tr_part = sub_df.iloc[0:0]
             te_part = sub_df
         else:
-            # Create stratification label combining is_synthetic and is_hoax
             strat_label = sub_df["is_synthetic"].astype(str) + "_" + sub_df["is_hoax"].astype(str)
             if strat_label.nunique() > 1 and len(sub_df) >= 4:
                 tr_part, te_part = train_test_split(
@@ -559,4 +652,3 @@ def build_corpus():
 
 if __name__ == "__main__":
     build_corpus()
-

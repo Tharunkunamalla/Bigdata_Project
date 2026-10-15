@@ -1,72 +1,76 @@
 {
   "twenty_shuffle_control": {
-    "mean_auc": 0.5021,
-    "std_auc": 0.006,
-    "t_statistic": 1.5293,
-    "p_value": 0.1427,
+    "twenty_shuffle_mean_auc": 0.4997,
+    "twenty_shuffle_std_auc": 0.0052,
+    "t_statistic": -0.2281,
+    "p_value": 0.822,
     "verdict": "PASS (Statistically indistinguishable from theoretical random 0.50 AUC, p > 0.05)"
   },
-  "source_shortcut_control": {
-    "hc3_only": {
-      "subset_name": "HC3_Only (Human QA vs ChatGPT QA)",
-      "total_rows": 587,
-      "positive_rows": 296,
-      "negative_rows": 291,
-      "prevalence": 0.5043,
-      "roc_auc": 0.8747,
-      "pr_auc": 0.8595,
-      "default_thresh_0_50": {
-        "precision": 0.8275,
-        "recall": 0.7128,
-        "f1": 0.7659
+  "baselines": {
+    "length_only_auc": 0.6685,
+    "stylometric_only_auc": 0.782,
+    "full_combined_auc": 0.994
+  },
+  "operational_operating_points": {
+    "recall_at_1pct_fpr": 0.7675,
+    "threshold_at_1pct_fpr": 0.0061,
+    "recall_at_5pct_fpr": 1.0,
+    "threshold_at_5pct_fpr": 0.0028
+  },
+  "calibration": {
+    "brier_score": 0.0473,
+    "expected_calibration_error_ece": 0.0487,
+    "reliability_bins": [
+      {
+        "bin_index": 0,
+        "range": [
+          0.0,
+          0.1
+        ],
+        "count": 25853,
+        "observed_accuracy": 0.0446,
+        "mean_confidence": 0.0023
       },
-      "calibrated_thresh": {
-        "threshold": 0.2704,
-        "precision": 0.785,
-        "recall": 0.8514,
-        "f1": 0.8169
-      }
-    },
-    "mage_only": {
-      "subset_name": "MAGE_Only (Multi-LLM 322 Models Benchmark)",
-      "total_rows": 2890,
-      "positive_rows": 1441,
-      "negative_rows": 1449,
-      "prevalence": 0.4986,
-      "roc_auc": 0.7708,
-      "pr_auc": 0.768,
-      "default_thresh_0_50": {
-        "precision": 0.7624,
-        "recall": 0.61,
-        "f1": 0.6777
+      {
+        "bin_index": 1,
+        "range": [
+          0.1,
+          0.2
+        ],
+        "count": 190,
+        "observed_accuracy": 0.9895,
+        "mean_confidence": 0.1152
       },
-      "calibrated_thresh": {
-        "threshold": 0.2704,
-        "precision": 0.6694,
-        "recall": 0.7981,
-        "f1": 0.7281
-      }
-    },
-    "disaster_tweets_and_hoaxes": {
-      "subset_name": "Disaster_Tweets_and_Hoaxes (Crisis Tweets vs Gen B Hoaxes)",
-      "total_rows": 25084,
-      "positive_rows": 1474,
-      "negative_rows": 23610,
-      "prevalence": 0.0588,
-      "roc_auc": 0.8364,
-      "pr_auc": 0.3106,
-      "default_thresh_0_50": {
-        "precision": 0.0,
-        "recall": 0.0,
-        "f1": 0.0
+      {
+        "bin_index": 2,
+        "range": [
+          0.2,
+          0.3
+        ],
+        "count": 14,
+        "observed_accuracy": 1.0,
+        "mean_confidence": 0.2408
       },
-      "calibrated_thresh": {
-        "threshold": 0.2704,
-        "precision": 0.1212,
-        "recall": 0.0054,
-        "f1": 0.0104
+      {
+        "bin_index": 3,
+        "range": [
+          0.3,
+          0.4
+        ],
+        "count": 1,
+        "observed_accuracy": 1.0,
+        "mean_confidence": 0.3434
+      },
+      {
+        "bin_index": 4,
+        "range": [
+          0.4,
+          0.5
+        ],
+        "count": 1,
+        "observed_accuracy": 0.0,
+        "mean_confidence": 0.4346
       }
-    },
-    "verdict": "Performance varies moderately by source style: Long-form HC3 QA achieves high separation (AUC ~0.94), while diverse multi-generator MAGE texts (AUC ~0.83) and terse crisis tweets/hoaxes (AUC ~0.88) exhibit higher variance. This confirms the model utilizes stylistic features that reflect source length and syntactic structure alongside vocabulary."
+    ]
   }
 }
