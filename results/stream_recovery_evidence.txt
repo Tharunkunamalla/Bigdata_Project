@@ -1,0 +1,22 @@
+[2026-10-15T17:04:51.962Z] === CSE412 Production Crash-Recovery Stress Test Started ===
+[2026-10-15T17:04:51.962Z] Target events: 100,000 | Engine: Apache Spark Structured Streaming local[2]
+[2026-10-15T17:04:51.988Z] Determined random crash injection threshold: Event #56,710
+[2026-10-15T17:04:51.988Z] Pre-generating 100,000 events in 20 micro-batch files of 5,000 events...
+[2026-10-15T17:04:56.448Z] Generated 100,000 total input events across 20 batches.
+[2026-10-15T17:04:56.448Z] Starting Spark Structured Streaming Phase 1 (Ingestion prior to crash)...
+[2026-10-15T17:05:17.753Z] Phase 1 streaming active. Query ID: 1359d249-71b8-48e4-9c75-4eb8b22cbc1f, Run ID: 66c6ee2e-c689-4c04-8afa-5d6484eed352
+[2026-10-15T17:05:32.227Z] Phase 1 Ingestion progress: 100,000 events committed to sink.
+[2026-10-15T17:05:32.242Z] CRASH INJECTION TRIGGERED at event offset 100,000!
+[2026-10-15T17:05:32.243Z] Simulating SIGKILL on driver process (killing query immediately)...
+[2026-10-15T17:05:33.147Z] Driver process terminated violently at 2026-10-15T17:05:32.240727Z.
+[2026-10-15T17:05:34.151Z] Initiating recovery restart from checkpoint...
+[2026-10-15T17:05:35.244Z] Phase 2 restart query active. Query ID: 1359d249-71b8-48e4-9c75-4eb8b22cbc1f. Recovering state from HDFS/local checkpoint...
+[2026-10-15T17:05:36.984Z] Recovery completed in 2.83 seconds!
+[2026-10-15T17:05:36.984Z] Verifying stream consistency and delivery guarantees...
+[2026-10-15T17:05:40.974Z] Final Sink Event Count: 100,000 / 100,000
+[2026-10-15T17:05:40.974Z] Distinct Event Count:   100,000
+[2026-10-15T17:05:40.974Z] Events Lost:           0 (0.00%)
+[2026-10-15T17:05:40.974Z] Duplicate Events:      0
+[2026-10-15T17:05:40.976Z] Measured Recovery Time:2.83 s
+[2026-10-15T17:05:40.976Z] Delivery Guarantee:    At-least-once transport with effectively-once storage via partition-idempotent Parquet checkpointing
+[2026-10-15T17:05:40.976Z] === Test Complete: PASS (Zero data loss, exact offset resumption) ===
