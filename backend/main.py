@@ -92,7 +92,10 @@ def get_summary():
 
 @app.get("/api/metrics")
 def get_metrics():
-    return load_json_safe("metrics.json")
+    data = load_json_safe("metrics.json")
+    if "synthetic_detector" not in data and "tweet_domain_detector" in data:
+        data["synthetic_detector"] = data["tweet_domain_detector"]
+    return data
 
 @app.get("/api/sanity")
 def get_sanity():
