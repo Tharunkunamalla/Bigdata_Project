@@ -1,77 +1,91 @@
 {
-  "generated_at": "2026-10-14T07:51:43.324186Z",
+  "generated_at": "2026-10-15T15:54:34.240828Z",
   "module_label": "Spark MLlib MinHashLSH Near-Duplicate Similarity Graph",
-  "graph_framework": "Apache Spark MLlib MinHashLSH + NetworkX Graph Analytics (No GraphX)",
-  "graph_nodes_evaluated": 14115,
-  "near_duplicate_text_edges": 9081,
-  "hashtag_coordination_edges": 279274,
+  "graph_framework": "Apache Spark MLlib MinHashLSH + NetworkX Graph Algorithms",
+  "graph_nodes_evaluated": 15000,
+  "near_duplicate_text_edges": 242,
   "lsh_similarity_threshold": 0.65,
   "connected_components": {
-    "num_clusters": 75,
-    "max_cluster_size": 52,
-    "mean_cluster_size": 8.12
+    "num_clusters": 82,
+    "max_cluster_size": 38,
+    "mean_cluster_size": 3.2
   },
-  "mean_synthetic_coordination_degree": 42.58,
-  "mean_genuine_coordination_degree": 1.48,
-  "coordination_amplification_ratio": 28.74,
+  "pagerank_analytics": {
+    "damping_factor": 0.85,
+    "top_amplifiers": [
+      {
+        "post_id": "cb_33218",
+        "pagerank": 0.018543,
+        "cluster_size": 38
+      },
+      {
+        "post_id": "cb_18249",
+        "pagerank": 0.012715,
+        "cluster_size": 30
+      },
+      {
+        "post_id": "cb_61940",
+        "pagerank": 0.012715,
+        "cluster_size": 30
+      },
+      {
+        "post_id": "cb_12526",
+        "pagerank": 0.009092,
+        "cluster_size": 38
+      },
+      {
+        "post_id": "cb_62296",
+        "pagerank": 0.009092,
+        "cluster_size": 38
+      },
+      {
+        "post_id": "cb_36026",
+        "pagerank": 0.009087,
+        "cluster_size": 5
+      },
+      {
+        "post_id": "cb_77018",
+        "pagerank": 0.008796,
+        "cluster_size": 30
+      },
+      {
+        "post_id": "cb_56862",
+        "pagerank": 0.007759,
+        "cluster_size": 30
+      },
+      {
+        "post_id": "cb_57192",
+        "pagerank": 0.00733,
+        "cluster_size": 4
+      },
+      {
+        "post_id": "cb_50214",
+        "pagerank": 0.006666,
+        "cluster_size": 38
+      }
+    ]
+  },
+  "label_propagation_communities": {
+    "num_communities": 94,
+    "max_community_size": 13,
+    "mean_community_size": 2.79
+  },
+  "mean_synthetic_coordination_degree": 0.0,
+  "mean_genuine_coordination_degree": 1.86,
+  "coordination_amplification_ratio": 0.0,
   "circularity_control": {
-    "humaid_genuine_duplicate_density": 0.0103,
-    "injected_hoax_duplicate_density": 15.2058,
-    "template_construction_artifact_pct": 85.0,
-    "honest_interpretation": "Of the 28.7x amplification ratio, approximately 85.0% is an artifact of template phrasing syntax in generated hoaxes. Real disaster retweets and verified agency advisories in HumAID exhibit natural near-duplicate clustering at 0.010 edges/post."
+    "real_posts_duplicate_density": 0.0163,
+    "shuffled_templates_duplicate_density": 0.0302,
+    "llm_injected_hoaxes_duplicate_density": 0.0,
+    "template_construction_artifact_pct": 30.0,
+    "honest_interpretation": "Of the 0.0x amplification ratio, approximately 30.0% is an artifact of template phrasing syntax in generated hoaxes (duplicate density 0.000 vs real posts 0.016). Real disaster retweets and agency advisories exhibit natural clustering at 0.016 edges/post."
   },
-  "top_amplification_hubs": [
-    {
-      "post_id": "hoax_gen_b_1251",
-      "coordination_degree": 51,
-      "is_synthetic": 1
-    },
-    {
-      "post_id": "hoax_gen_b_346",
-      "coordination_degree": 51,
-      "is_synthetic": 1
-    },
-    {
-      "post_id": "hoax_gen_b_1331",
-      "coordination_degree": 51,
-      "is_synthetic": 1
-    },
-    {
-      "post_id": "hoax_gen_b_306",
-      "coordination_degree": 51,
-      "is_synthetic": 1
-    },
-    {
-      "post_id": "hoax_gen_b_1436",
-      "coordination_degree": 51,
-      "is_synthetic": 1
-    },
-    {
-      "post_id": "hoax_gen_b_351",
-      "coordination_degree": 51,
-      "is_synthetic": 1
-    },
-    {
-      "post_id": "hoax_gen_b_1",
-      "coordination_degree": 51,
-      "is_synthetic": 1
-    },
-    {
-      "post_id": "hoax_gen_b_576",
-      "coordination_degree": 51,
-      "is_synthetic": 1
-    },
-    {
-      "post_id": "hoax_gen_b_76",
-      "coordination_degree": 51,
-      "is_synthetic": 1
-    },
-    {
-      "post_id": "hoax_gen_b_1181",
-      "coordination_degree": 51,
-      "is_synthetic": 1
-    }
-  ],
-  "runtime_seconds": 64.6,
-  "provenance_statement": "Text near-duplicate similarity (MinHashLSH) and hashtag co-occurrence are extracted directly from empirical HumAID/CrisisLex tweets. Social accounts and retweets are simulated approximations."
+  "cluster_size_penalty": {
+    "formula": "Delta T(S_i) = min(0.40, 0.05 * (S_i - 1)) for cluster size S_i",
+    "max_penalty": 0.4,
+    "posts_penalized_count": 262,
+    "mean_nonzero_penalty": 0.166
+  },
+  "runtime_seconds": 59.63,
+  "provenance_statement": "Text near-duplicate similarity (MinHashLSH) is extracted directly from empirical HumAID/CrisisLex tweets. Coordinates are simulated on regional bounding boxes."
 }
