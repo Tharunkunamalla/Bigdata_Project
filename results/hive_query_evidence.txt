@@ -1,11 +1,12 @@
 ================================================================================
           CRISISGUARD AI — APACHE HIVE PRODUCTION QUERY EVIDENCE LOG           
 ================================================================================
-Execution Timestamp:     2026-10-15T16:07:10.677302Z
-Hive Metastore URI:      thrift://127.0.0.1:9083
-Spark Engine Version:    3.5.1
-Catalog Implementation:  hive
-Warehouse Location:      hdfs://127.0.0.1:9000/user/hive/warehouse
+Architecture Status:       Hive Metastore catalog queried through Spark SQL
+HiveServer2 Port 10000:    CLOSED (HiveServer2 does not run; Spark SQL is the query engine)
+Hive Metastore Thrift URI: thrift://127.0.0.1:9083 (Catalog service)
+Catalog Implementation:    hive
+Warehouse Location:        hdfs://127.0.0.1:9000/user/hive/warehouse
+Spark Engine Version:      3.5.1
 --------------------------------------------------------------------------------
 
 [STEP 1] Database Verification & Creation: cse412_disaster
