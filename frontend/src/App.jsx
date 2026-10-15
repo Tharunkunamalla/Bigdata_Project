@@ -307,27 +307,27 @@ export default function App() {
             {/* KPI Cards */}
             <div className="kpi-row">
               <div className="kpi-card">
-                <span className="kpi-title">Ingested Real Disaster Posts</span>
+                <span className="kpi-title">Ingested Disaster Posts</span>
                 <span className="kpi-value" style={{ color: 'var(--accent-cyan)' }}>
-                  {summary?.dataset_provenance?.clean_silver_rows?.toLocaleString() || "98,944"}
+                  {summary?.data_provenance?.total_processed_records?.toLocaleString() || "130,301"}
                 </span>
               </div>
               <div className="kpi-card">
-                <span className="kpi-title">Houston Victims Saved (Trust-LP)</span>
+                <span className="kpi-title">Houston Victims (Trust-Aware)</span>
                 <span className="kpi-value" style={{ color: 'var(--accent-emerald)' }}>
-                  {summary?.allocation_engine?.regional_trials?.houston?.TrustAware_LP?.genuine_served_mean || "51.8"} / 52
+                  {summary?.allocation_engine?.regional_trials?.houston?.TrustAware_Continuous?.genuine_served_mean || summary?.allocation_engine?.houston_summary?.trust_aware_continuous_genuine || "41.4"} / 52
                 </span>
               </div>
               <div className="kpi-card">
-                <span className="kpi-title">Wasted Dispatches Avoided</span>
+                <span className="kpi-title">Houston Continuous Gain</span>
                 <span className="kpi-value" style={{ color: 'var(--accent-emerald)' }}>
-                  {summary?.allocation_engine?.hoax_dispatch_reduction_pct || 98.3}%
+                  +{summary?.allocation_engine?.houston_summary?.continuous_gain || "0.57"} victims
                 </span>
               </div>
               <div className="kpi-card">
                 <span className="kpi-title">Statistical Significance</span>
                 <span className="kpi-value" style={{ color: '#f59e0b', fontSize: 16, marginTop: 4 }}>
-                  p = {summary?.allocation_engine?.regional_trials?.houston?.statistical_test?.p_value ? '1.45e-20' : '< 0.001'} (p &lt; 0.001)
+                  p = {summary?.allocation_engine?.regional_trials?.houston?.statistical_evaluations?.TrustAware_Continuous?.paired_t_pvalue || "0.0057"}
                 </span>
               </div>
             </div>
@@ -337,13 +337,13 @@ export default function App() {
               <div id="map-view" ref={mapRef}></div>
               <div style={{ position: 'absolute', bottom: 12, left: 12, zIndex: 1000, background: 'rgba(10,14,23,0.85)', padding: '8px 12px', borderRadius: 8, fontSize: 11, border: '1px solid var(--border-color)', display: 'flex', gap: 12 }}>
                 <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                  <span style={{ width: 10, height: 10, background: '#10b981', borderRadius: '50%' }}></span> Verified Demands
+                  <span style={{ width: 10, height: 10, background: '#10b981', borderRadius: '50%' }}></span> Verified Demands (Simulated GPS)
                 </span>
                 <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                  <span style={{ width: 10, height: 10, background: '#f43f5e', borderRadius: '50%' }}></span> Synthetic Hoaxes
+                  <span style={{ width: 10, height: 10, background: '#f43f5e', borderRadius: '50%' }}></span> Synthetic Hoaxes (Simulated GPS)
                 </span>
                 <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                  <span style={{ width: 10, height: 10, background: '#3b82f6', borderRadius: '50%' }}></span> Fleet Depots
+                  <span style={{ width: 10, height: 10, background: '#3b82f6', borderRadius: '50%' }}></span> Real OSM Depots
                 </span>
               </div>
             </div>

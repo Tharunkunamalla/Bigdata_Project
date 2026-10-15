@@ -46,11 +46,14 @@
 
 ### 2.7 Methodological Limitations & Empirical Disclaimers
 1. **Random Split vs. Event Holdout (Optimistic Humanitarian & Urgency Results)**:
-   - The current 75/25 train/test partitioning is a **random stratified split within each dataset source**, not an event-held-out split.
-   - Because tweets from the same disaster events (e.g., Hurricane Harvey, Nepal Earthquake, California Wildfires) appear in both the training set and the test set, the humanitarian categorization (F1 = 0.7564) and urgency regression metrics ($R^2 = 0.3896$, MAE = 0.6649) are **optimistic** and are **not comparable to earlier event-held-out numbers** where entire disaster events were held out during evaluation.
+   - The primary 75/25 train/test partitioning is a **random stratified split within each dataset source**, not an event-held-out split.
+   - Because tweets from the same disaster events appear in both the training set and the test set, the humanitarian categorization (in-distribution Macro-F1 = 0.7639) and urgency regression metrics ($R^2 = 0.4434$, MAE = 0.6624) are **optimistic** and are **not comparable to event-held-out numbers**.
+   - Rigorous event-held-out evaluation across 60 HumAID events via 5-fold cross-validation (`results/event_held_out_evaluation.json`) demonstrates that humanitarian category performance drops to **Macro-F1 = 0.5587 ± 0.0631** (a 0.1977 generalization penalty), and urgency $R^2$ drops to **0.3838 ± 0.1672** when facing entirely unseen disaster events.
 2. **Unconfirmed Cause for Rumour-Classifier Performance Drop**:
    - The rumour classifier experienced a performance drop when evaluated on multi-source data (CrisisLex + PHEME + LIAR).
-   - This performance drop has **no confirmed cause**. While cross-source domain divergence (e.g., Twitter rumour conversation threads in PHEME versus political statement fact-checking in LIAR) is suspected, no single root cause has been conclusively isolated.
+   - This performance drop has **no confirmed cause**. While cross-source domain divergence (conversational crisis tweets in PHEME vs formal political claims in LIAR) is suspected (as PHEME alone achieves AUC 0.8620 vs composite 0.8920), no single root cause has been conclusively isolated.
 3. **Disaster-Domain Hoax Detector Weakness at Fixed Threshold**:
-   - On short crisis tweets (~110 characters), the synthetic text detector is **weak at a fixed operating threshold**.
-   - Raw sigmoid probabilities for unseen Generator B crisis hoaxes rarely exceed 0.15 (mean $P_{\text{synth}} = 0.052$ for hoaxes vs $0.007$ for genuine tweets). Consequently, applying a fixed decision threshold—whether corpus-wide ($\theta^* = 0.2704$, F1 = 0.0104) or tuned on training disaster hoaxes ($\theta^* = 0.7591$)—fails to capture most short tweet hoaxes. The emergency allocation engine benefits more reliably from continuous detector probability discounting ($T_i = 1 - P_{\text{synth}}$) than from rigid thresholding, and the resulting simulation gains remain modest (+0.43 to +0.57 victims in Houston).
+   - On short crisis tweets (~110 characters), the synthetic text detector produces low raw sigmoid probabilities.
+   - At a default fixed threshold ($\theta = 0.50$), the detector misses most short tweet hoaxes (Recall = 0.00%). Validation threshold tuning ($\theta^* = 0.1786$) or continuous probability weighting ($T_i = 1 - P_{\text{synth}}$) prevents threshold starvation and yields statistically significant, modest gains (+0.57 victims in Houston, 5.1% of Oracle). When supplemented by the MinHash coordination cluster size penalty $\Delta T(S_i)$, gain increases to +1.93 victims (17.3% of Oracle).
+4. **Simulated Social Media Coordinates**:
+   - Social media coordinates are simulated on regional bounding boxes (`coords_simulated: true`), because Twitter/X terms strip precise GPS for privacy. Depot locations are authentic facilities from OpenStreetMap Overpass.
