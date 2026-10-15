@@ -1,0 +1,247 @@
+{
+  "generated_at": "2026-10-15T13:40:59.710742",
+  "humaid_event_held_out": {
+    "evaluation_type": "5-Fold Event-Held-Out Cross Validation (HumAID/CrisisBench)",
+    "num_folds": 5,
+    "total_unique_events": 59,
+    "total_disaster_tweets": 87536,
+    "humanitarian_category": {
+      "accuracy_mean": 0.7212,
+      "accuracy_std": 0.072,
+      "macro_f1_mean": 0.5587,
+      "macro_f1_std": 0.0631
+    },
+    "urgency_regressor": {
+      "rmse_mean": 0.8583,
+      "rmse_std": 0.1279,
+      "mae_mean": 0.6092,
+      "mae_std": 0.1088,
+      "r2_mean": 0.3838,
+      "r2_std": 0.1672
+    },
+    "fold_details": [
+      {
+        "fold": 1,
+        "held_out_events_count": 12,
+        "sample_events": [
+          "2015_nepal_earthquake",
+          "2013_queensland_floods-ontopic",
+          "hurricane_harvey"
+        ],
+        "train_rows": 54139,
+        "test_rows": 20846,
+        "humanitarian_category": {
+          "accuracy": 0.6933,
+          "macro_f1": 0.5799,
+          "weighted_f1": 0.6919
+        },
+        "urgency_regressor": {
+          "rmse": 1.0778,
+          "mae": 0.7903,
+          "r2": 0.1643
+        }
+      },
+      {
+        "fold": 2,
+        "held_out_events_count": 12,
+        "sample_events": [
+          "2014_philippines_typhoon-hagupit",
+          "2013_boston_bombings-ontopic",
+          "hurricane_irma"
+        ],
+        "train_rows": 58930,
+        "test_rows": 16055,
+        "humanitarian_category": {
+          "accuracy": 0.5963,
+          "macro_f1": 0.4393,
+          "weighted_f1": 0.6078
+        },
+        "urgency_regressor": {
+          "rmse": 0.9099,
+          "mae": 0.6737,
+          "r2": 0.2139
+        }
+      },
+      {
+        "fold": 3,
+        "held_out_events_count": 12,
+        "sample_events": [
+          "2013_oklahoma_tornado-ontopic",
+          "2012_sandy_hurricane-ontopic",
+          "2015_vanuatu_cyclone"
+        ],
+        "train_rows": 61108,
+        "test_rows": 13877,
+        "humanitarian_category": {
+          "accuracy": 0.7983,
+          "macro_f1": 0.5701,
+          "weighted_f1": 0.7719
+        },
+        "urgency_regressor": {
+          "rmse": 0.7269,
+          "mae": 0.4902,
+          "r2": 0.4748
+        }
+      },
+      {
+        "fold": 4,
+        "held_out_events_count": 12,
+        "sample_events": [
+          "2013_west_texas",
+          "2014-2015_worldwide_landslides",
+          "2014_chile_earthquake"
+        ],
+        "train_rows": 62499,
+        "test_rows": 12486,
+        "humanitarian_category": {
+          "accuracy": 0.7786,
+          "macro_f1": 0.6279,
+          "weighted_f1": 0.7782
+        },
+        "urgency_regressor": {
+          "rmse": 0.7443,
+          "mae": 0.5458,
+          "r2": 0.6035
+        }
+      },
+      {
+        "fold": 5,
+        "held_out_events_count": 11,
+        "sample_events": [
+          "2013_alberta_floods-ontopic",
+          "hurricane_maria",
+          "2014_pakistan_floods"
+        ],
+        "train_rows": 63264,
+        "test_rows": 11721,
+        "humanitarian_category": {
+          "accuracy": 0.7394,
+          "macro_f1": 0.5762,
+          "weighted_f1": 0.7167
+        },
+        "urgency_regressor": {
+          "rmse": 0.8325,
+          "mae": 0.5458,
+          "r2": 0.4623
+        }
+      }
+    ]
+  },
+  "pheme_leave_one_event_out": {
+    "evaluation_type": "Leave-One-Event-Out (LOEO) on PHEME 9 Crisis Events",
+    "events_evaluated": 8,
+    "roc_auc_mean": 0.6451,
+    "roc_auc_std": 0.0743,
+    "macro_f1_mean": 0.3322,
+    "macro_f1_std": 0.1302,
+    "accuracy_mean": 0.5163,
+    "accuracy_std": 0.2199,
+    "per_event_details": [
+      {
+        "held_out_event": "charliehebdo-all-rnr-threads",
+        "test_rows": 2079,
+        "rumour_prevalence": 0.2203,
+        "roc_auc": 0.7349,
+        "macro_f1": 0.4853,
+        "accuracy": 0.7879
+      },
+      {
+        "held_out_event": "sydneysiege-all-rnr-threads",
+        "test_rows": 1221,
+        "rumour_prevalence": 0.4275,
+        "roc_auc": 0.7303,
+        "macro_f1": 0.3822,
+        "accuracy": 0.5749
+      },
+      {
+        "held_out_event": "ferguson-all-rnr-threads",
+        "test_rows": 1143,
+        "rumour_prevalence": 0.2485,
+        "roc_auc": 0.6564,
+        "macro_f1": 0.4285,
+        "accuracy": 0.7498
+      },
+      {
+        "held_out_event": "ottawashooting-all-rnr-threads",
+        "test_rows": 890,
+        "rumour_prevalence": 0.5281,
+        "roc_auc": 0.7171,
+        "macro_f1": 0.3277,
+        "accuracy": 0.4753
+      },
+      {
+        "held_out_event": "germanwings-crash-all-rnr-threads",
+        "test_rows": 469,
+        "rumour_prevalence": 0.5075,
+        "roc_auc": 0.6427,
+        "macro_f1": 0.3393,
+        "accuracy": 0.4968
+      },
+      {
+        "held_out_event": "putinmissing-all-rnr-threads",
+        "test_rows": 238,
+        "rumour_prevalence": 0.5294,
+        "roc_auc": 0.5301,
+        "macro_f1": 0.32,
+        "accuracy": 0.4706
+      },
+      {
+        "held_out_event": "pheme_event",
+        "test_rows": 233,
+        "rumour_prevalence": 0.9828,
+        "roc_auc": 0.5873,
+        "macro_f1": 0.0169,
+        "accuracy": 0.0172
+      },
+      {
+        "held_out_event": "gurlitt-all-rnr-threads",
+        "test_rows": 138,
+        "rumour_prevalence": 0.442,
+        "roc_auc": 0.5617,
+        "macro_f1": 0.3581,
+        "accuracy": 0.558
+      }
+    ]
+  },
+  "side_by_side_comparison": {
+    "humanitarian_category": {
+      "in_distribution_random_split": {
+        "accuracy": 0.7664,
+        "macro_f1": 0.7564,
+        "status": "Optimistic (same disaster events in train and test)"
+      },
+      "event_held_out_cross_validation": {
+        "accuracy": "0.7212 +/- 0.072",
+        "macro_f1": "0.5587 +/- 0.0631",
+        "status": "Defensible & Realistic on Unseen Disasters"
+      }
+    },
+    "urgency_regressor": {
+      "in_distribution_random_split": {
+        "rmse": 0.9286,
+        "mae": 0.6649,
+        "r2": 0.3896,
+        "status": "Optimistic (same disaster events in train and test)"
+      },
+      "event_held_out_cross_validation": {
+        "rmse": "0.8583 +/- 0.1279",
+        "mae": "0.6092 +/- 0.1088",
+        "r2": "0.3838 +/- 0.1672",
+        "status": "Defensible & Realistic on Unseen Disasters"
+      }
+    },
+    "pheme_rumour_detection": {
+      "in_distribution_random_split": {
+        "roc_auc": 0.7978,
+        "accuracy": 0.8161,
+        "status": "Optimistic (in-event posts in train and test)"
+      },
+      "leave_one_event_out": {
+        "roc_auc": "0.6451 +/- 0.0743",
+        "macro_f1": "0.3322 +/- 0.1302",
+        "accuracy": "0.5163 +/- 0.2199",
+        "status": "Leave-One-Event-Out across 9 Breaking Events"
+      }
+    }
+  }
+}

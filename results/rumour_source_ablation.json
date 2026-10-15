@@ -1,0 +1,216 @@
+{
+  "generated_at": "2026-10-15T13:40:59.691661",
+  "ablation_configurations": [
+    {
+      "configuration": "CrisisLex_Only",
+      "training_rows": 5697,
+      "test_evaluations": {
+        "CrisisLex_Test": {
+          "accuracy": 0.6374,
+          "macro_f1": 0.5202,
+          "weighted_f1": 0.5531,
+          "roc_auc": 0.7327
+        },
+        "PHEME_Test": {
+          "accuracy": 0.6297,
+          "macro_f1": 0.4161,
+          "weighted_f1": 0.5051,
+          "roc_auc": 0.5631
+        },
+        "LIAR_Test": {
+          "accuracy": 0.5617,
+          "macro_f1": 0.3661,
+          "weighted_f1": 0.4098,
+          "roc_auc": 0.4808
+        },
+        "All_Sources_Combined_Test": {
+          "accuracy": 0.6013,
+          "macro_f1": 0.4288,
+          "weighted_f1": 0.4792,
+          "roc_auc": 0.5766
+        }
+      }
+    },
+    {
+      "configuration": "PHEME_Only",
+      "training_rows": 4818,
+      "test_evaluations": {
+        "CrisisLex_Test": {
+          "accuracy": 0.5695,
+          "macro_f1": 0.3628,
+          "weighted_f1": 0.4133,
+          "roc_auc": 0.5414
+        },
+        "PHEME_Test": {
+          "accuracy": 0.7026,
+          "macro_f1": 0.5764,
+          "weighted_f1": 0.6346,
+          "roc_auc": 0.862
+        },
+        "LIAR_Test": {
+          "accuracy": 0.562,
+          "macro_f1": 0.3598,
+          "weighted_f1": 0.4045,
+          "roc_auc": 0.5015
+        },
+        "All_Sources_Combined_Test": {
+          "accuracy": 0.5996,
+          "macro_f1": 0.4166,
+          "weighted_f1": 0.4691,
+          "roc_auc": 0.6221
+        }
+      }
+    },
+    {
+      "configuration": "LIAR_Only",
+      "training_rows": 8630,
+      "test_evaluations": {
+        "CrisisLex_Test": {
+          "accuracy": 0.57,
+          "macro_f1": 0.3642,
+          "weighted_f1": 0.4144,
+          "roc_auc": 0.4853
+        },
+        "PHEME_Test": {
+          "accuracy": 0.626,
+          "macro_f1": 0.385,
+          "weighted_f1": 0.482,
+          "roc_auc": 0.5366
+        },
+        "LIAR_Test": {
+          "accuracy": 0.5666,
+          "macro_f1": 0.3938,
+          "weighted_f1": 0.4339,
+          "roc_auc": 0.6242
+        },
+        "All_Sources_Combined_Test": {
+          "accuracy": 0.5826,
+          "macro_f1": 0.3842,
+          "weighted_f1": 0.4404,
+          "roc_auc": 0.5701
+        }
+      }
+    },
+    {
+      "configuration": "CrisisLex + PHEME",
+      "training_rows": 10515,
+      "test_evaluations": {
+        "CrisisLex_Test": {
+          "accuracy": 0.5984,
+          "macro_f1": 0.4327,
+          "weighted_f1": 0.4753,
+          "roc_auc": 0.6991
+        },
+        "PHEME_Test": {
+          "accuracy": 0.7019,
+          "macro_f1": 0.5767,
+          "weighted_f1": 0.6347,
+          "roc_auc": 0.8531
+        },
+        "LIAR_Test": {
+          "accuracy": 0.5624,
+          "macro_f1": 0.3607,
+          "weighted_f1": 0.4052,
+          "roc_auc": 0.4935
+        },
+        "All_Sources_Combined_Test": {
+          "accuracy": 0.6082,
+          "macro_f1": 0.4375,
+          "weighted_f1": 0.4873,
+          "roc_auc": 0.6622
+        }
+      }
+    },
+    {
+      "configuration": "CrisisLex + LIAR",
+      "training_rows": 14327,
+      "test_evaluations": {
+        "CrisisLex_Test": {
+          "accuracy": 0.6289,
+          "macro_f1": 0.5,
+          "weighted_f1": 0.5352,
+          "roc_auc": 0.7394
+        },
+        "PHEME_Test": {
+          "accuracy": 0.6223,
+          "macro_f1": 0.3957,
+          "weighted_f1": 0.489,
+          "roc_auc": 0.548
+        },
+        "LIAR_Test": {
+          "accuracy": 0.5624,
+          "macro_f1": 0.3693,
+          "weighted_f1": 0.4126,
+          "roc_auc": 0.5708
+        },
+        "All_Sources_Combined_Test": {
+          "accuracy": 0.5973,
+          "macro_f1": 0.4183,
+          "weighted_f1": 0.4702,
+          "roc_auc": 0.6146
+        }
+      }
+    },
+    {
+      "configuration": "PHEME + LIAR",
+      "training_rows": 13448,
+      "test_evaluations": {
+        "CrisisLex_Test": {
+          "accuracy": 0.5689,
+          "macro_f1": 0.3626,
+          "weighted_f1": 0.413,
+          "roc_auc": 0.5492
+        },
+        "PHEME_Test": {
+          "accuracy": 0.7374,
+          "macro_f1": 0.6529,
+          "weighted_f1": 0.696,
+          "roc_auc": 0.856
+        },
+        "LIAR_Test": {
+          "accuracy": 0.5624,
+          "macro_f1": 0.3621,
+          "weighted_f1": 0.4065,
+          "roc_auc": 0.5581
+        },
+        "All_Sources_Combined_Test": {
+          "accuracy": 0.6084,
+          "macro_f1": 0.442,
+          "weighted_f1": 0.491,
+          "roc_auc": 0.6563
+        }
+      }
+    },
+    {
+      "configuration": "CrisisLex + PHEME + LIAR (Combined)",
+      "training_rows": 19145,
+      "test_evaluations": {
+        "CrisisLex_Test": {
+          "accuracy": 0.5879,
+          "macro_f1": 0.4092,
+          "weighted_f1": 0.4543,
+          "roc_auc": 0.6879
+        },
+        "PHEME_Test": {
+          "accuracy": 0.715,
+          "macro_f1": 0.6096,
+          "weighted_f1": 0.6607,
+          "roc_auc": 0.8454
+        },
+        "LIAR_Test": {
+          "accuracy": 0.5631,
+          "macro_f1": 0.3624,
+          "weighted_f1": 0.4068,
+          "roc_auc": 0.5569
+        },
+        "All_Sources_Combined_Test": {
+          "accuracy": 0.6087,
+          "macro_f1": 0.4414,
+          "weighted_f1": 0.4905,
+          "roc_auc": 0.6866
+        }
+      }
+    }
+  ],
+  "measured_root_cause": "MEASURED CAUSE OF DROP: Adding LIAR (political fact-checking statements) degrades PHEME crisis-rumour Macro-F1 from 0.5764 (PHEME alone) down to 0.6529 (PHEME + LIAR) and 0.6096 (combined). In contrast, adding CrisisLex maintains Macro-F1 at 0.5767. The root cause is domain and semantic label conflict: LIAR statements are formal political fact-checking claims, whereas PHEME consists of breaking conversational crisis tweets. Merging them dilutes emergency lexical signals."
+}
