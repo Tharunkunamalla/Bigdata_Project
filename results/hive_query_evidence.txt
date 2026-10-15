@@ -1,0 +1,73 @@
+================================================================================
+          CRISISGUARD AI — APACHE HIVE PRODUCTION QUERY EVIDENCE LOG           
+================================================================================
+Execution Timestamp:     2026-10-15T16:07:10.677302Z
+Hive Metastore URI:      thrift://127.0.0.1:9083
+Spark Engine Version:    3.5.1
+Catalog Implementation:  hive
+Warehouse Location:      hdfs://127.0.0.1:9000/user/hive/warehouse
+--------------------------------------------------------------------------------
+
+[STEP 1] Database Verification & Creation: cse412_disaster
+Current Databases in Hive Metastore: ['cse412_disaster', 'default', 'disaster_db']
+
+[STEP 2] Silver Table Registration: disaster_posts_silver
+Verified disaster_posts_silver row count: 130,301
+
+[STEP 3] Materializing Gold Table: gold_emergency_demand_summary
+Materialized Gold Aggregation Table: 3,413 disaster event partitions.
+
+[STEP 4] Executing Analytical Query on Gold Table (Top Disaster Theatres):
+-----------------------------------------------------------------------------------------------------------------------------------
+Event Type                       Disaster        Total Posts   High Urgency   Synthetic Hoaxes     Hoax %  Avg Urgency    Avg Trust
+-----------------------------------------------------------------------------------------------------------------------------------
+liar_factcheck                   general              11,359              0                  0      0.00%        2.000       1.0000
+disaster_events                  general              10,926          6,781                  0      0.00%        3.361       1.0000
+mage_llm_benchmark               general              10,174              0              5,059     49.72%        2.000       0.6022
+2015_nepal_earthquake            earthquake            9,661            491                  0      0.00%        1.702       1.0000
+crisislex_general                general               5,842          2,089                  0      0.00%        2.201       1.0000
+2014_philippines_typhoon-hagup   cyclone               5,771             58                  0      0.00%        1.153       1.0000
+2013_oklahoma_tornado-ontopic    tornado               4,991              0                  0      0.00%        1.000       1.0000
+2013_west_texas                  general               4,631              0                  0      0.00%        1.000       1.0000
+2013_alberta_floods-ontopic      flood                 4,565              0                  0      0.00%        1.000       1.0000
+2013_queensland_floods-ontopic   flood                 4,393              0                  0      0.00%        1.000       1.0000
+2013_boston_bombings-ontopic     general               4,184              0                  0      0.00%        1.000       1.0000
+2012_sandy_hurricane-ontopic     hurricane             3,687              0                  0      0.00%        1.000       1.0000
+2014-2015_worldwide_landslides   general               2,798              0                  0      0.00%        1.000       1.0000
+hurricane_maria                  hurricane             2,731             33                  0      0.00%        1.716       1.0000
+hurricane_harvey                 hurricane             2,544             64                  0      0.00%        1.983       1.0000
+-----------------------------------------------------------------------------------------------------------------------------------
+
+[STEP 5] Catalyst Optimizer Execution Plan for Gold Query:
+== Parsed Logical Plan ==
+'GlobalLimit 15
++- 'LocalLimit 15
+   +- 'Sort ['total_reports DESC NULLS LAST], true
+      +- 'Project ['event_type, 'disaster_type, 'total_reports, 'high_urgency_reports, 'synthetic_misinformation_count, 'misinformation_ratio_pct, 'avg_urgency_level, 'avg_trust_score]
+         +- 'UnresolvedRelation [gold_emergency_demand_summary], [], false
+
+== Analyzed Logical Plan ==
+event_type: string, disaster_type: string, total_reports: bigint, high_urgency_reports: bigint, synthetic_misinformation_count: bigint, misinformation_ratio_pct: decimal(27,2), avg_urgency_level: double, avg_trust_score: double
+GlobalLimit 15
++- LocalLimit 15
+   +- Sort [total_reports#119L DESC NULLS LAST], true
+      +- Project [event_type#117, disaster_type#118, total_reports#119L, high_urgency_reports#120L, synthetic_misinformation_count#121L, misinformation_ratio_pct#122, avg_urgency_level#123, avg_trust_score#124]
+         +- SubqueryAlias spark_catalog.cse412_disaster.gold_emergency_demand_summary
+            +- Relation spark_catalog.cse412_disaster.gold_emergency_demand_summary[event_type#117,disaster_type#118,total_reports#119L,high_urgency_reports#120L,synthetic_misinformation_count#121L,misinformation_ratio_pct#122,avg_urgency_level#123,avg_trust_score#124,computed_at#125] parquet
+
+== Optimized Logical Plan ==
+GlobalLimit 15
++- LocalLimit 15
+   +- Sort [total_reports#119L DESC NULLS LAST], true
+      +- Project [event_type#117, disaster_type#118, total_reports#119L, high_urgency_reports#120L, synthetic_misinformation_count#121L, misinformation_ratio_pct#122, avg_urgency_level#123, avg_trust_score#124]
+         +- Relation spark_catalog.cse412_disaster.gold_emergency_demand_summary[event_type#117,disaster_type#118,total_reports#119L,high_urgency_reports#120L,synthetic_misinformation_count#121L,misinformation_ratio_pct#122,avg_urgency_level#123,avg_trust_score#124,computed_at#125] parquet
+
+== Physical Plan ==
+TakeOrderedAndProject(limit=15, orderBy=[total_reports#119L DESC NULLS LAST], output=[event_type#117,disaster_type#118,total_reports#119L,high_urgency_reports#120L,synthetic_misinformation_count#121L,misinformation_ratio_pct#122,avg_urgency_level#123,avg_trust_score#124])
++- *(1) ColumnarToRow
+   +- FileScan parquet spark_catalog.cse412_disaster.gold_emergency_demand_summary[event_type#117,disaster_type#118,total_reports#119L,high_urgency_reports#120L,synthetic_misinformation_count#121L,misinformation_ratio_pct#122,avg_urgency_level#123,avg_trust_score#124] Batched: true, DataFilters: [], Format: Parquet, Location: InMemoryFileIndex(1 paths)[hdfs://127.0.0.1:9000/user/hive/warehouse/cse412_disaster.db/gold_emer..., PartitionFilters: [], PushedFilters: [], ReadSchema: struct<event_type:string,disaster_type:string,total_reports:bigint,high_urgency_reports:bigint,sy...
+
+--------------------------------------------------------------------------------
+Hive verification successfully completed in 21.63 seconds.
+Status: PASS — Hive Metastore & Gold Tables operational.
+================================================================================

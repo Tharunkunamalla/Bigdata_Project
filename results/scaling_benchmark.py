@@ -170,8 +170,8 @@ def run_scaling_benchmark():
 
         scale_results.append({
             "rows": n,
-            "unique_records_basis": min(n, 99568),
-            "replicated_partitions": max(1, n // 99568),
+            "unique_records_basis": min(n, 130301),
+            "replicated_partitions": max(1, n // 130301),
             "pandas": res_pd,
             "spark": res_sp,
             "comparison": ratio_desc
@@ -219,7 +219,7 @@ def run_scaling_benchmark():
     summary_payload = {
         "benchmark_timestamp": pd_now(),
         "hardware_environment": "WSL2 Ubuntu 24.04 (AMD/Intel x86_64, 4 vCPUs, 8 GB RAM allocation)",
-        "corpus_unique_records": 99568,
+        "corpus_unique_records": 130301,
         "multi_scale_benchmark": scale_results,
         "mllib_scalability": mllib_results,
         "streaming_pipeline_performance": streaming_metrics,
