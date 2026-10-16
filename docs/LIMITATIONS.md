@@ -3,7 +3,7 @@
 **Course:** CSE412 — Big Data & Large-Scale Computing  
 **Project:** CrisisGuard AI  
 **Scope:** Honest Scoping, Known System Limitations, and Architectural Trade-Offs  
-**Release Tag:** `v1.0-final-5`  
+**Release Tag:** `v1.0-final-6`  
 
 ---
 

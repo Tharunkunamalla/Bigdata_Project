@@ -3,7 +3,7 @@
 **Course:** CSE412 — Big Data & Large-Scale Computing  
 **Audience:** Course Professors, TAs, and Technical Evaluators  
 **Scope:** 25 Rigorous Technical Questions with Defensible, Empirically Grounded Answers  
-**Release Tag:** `v1.0-final-5`  
+**Release Tag:** `v1.0-final-6`  
 
 ---
 
@@ -174,5 +174,5 @@ If a genuine victim posts in all-caps with unverified phrasing, the trust score 
 **Answer:**  
 Each member should directly present the modules they implemented:
 - **Student 1 (Infrastructure Lead):** Kafka KRaft streaming buffer, HDFS storage hierarchy, Hive Metastore Spark SQL catalog, 100k-event crash recovery test (2.83s recovery, 0 loss).
-- **Student 2 (Machine Learning & Graph Lead):** QCRI HumAID / CrisisLex 130k corpus curation, event-stratified train/test partition, Spark MLlib models, 20-shuffle permutation control, and MinHashLSH similarity graph.
+- **Student 2 (Machine Learning & Graph Lead):** QCRI HumAID / CrisisLex 130k corpus curation, 75/25 random stratified partition, held-out event evaluation, Spark MLlib models, 20-shuffle permutation control, and MinHashLSH similarity graph.
 - **Student 3 (Optimization & Dashboard Lead):** PuLP CBC MILP mathematical formulation, 30-seed multi-region ablation study, sensitivity sweeps, FastAPI endpoints, and React 18 / Vite dashboard.

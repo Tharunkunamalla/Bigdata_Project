@@ -97,80 +97,80 @@ def markdown_to_html(md_text):
 <style>
     @page {{
         size: letter;
-        margin: 15mm 15mm 15mm 15mm;
+        margin: 12mm 12mm 12mm 12mm;
     }}
     body {{
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-        font-size: 9.5pt;
-        line-height: 1.38;
+        font-size: 8.5pt;
+        line-height: 1.28;
         color: #1e293b;
         background: #ffffff;
         margin: 0;
         padding: 0;
     }}
     h1 {{
-        font-size: 20pt;
+        font-size: 16pt;
         font-weight: 800;
         color: #0f172a;
         margin-top: 0;
-        margin-bottom: 8pt;
+        margin-bottom: 4pt;
         border-bottom: 2px solid #0284c7;
-        padding-bottom: 4pt;
-    }}
-    h2 {{
-        font-size: 14pt;
-        font-weight: 700;
-        color: #0f172a;
-        margin-top: 14pt;
-        margin-bottom: 6pt;
-        border-bottom: 1px solid #cbd5e1;
         padding-bottom: 2pt;
     }}
-    h3 {{
+    h2 {{
         font-size: 11.5pt;
+        font-weight: 700;
+        color: #0f172a;
+        margin-top: 8pt;
+        margin-bottom: 3pt;
+        border-bottom: 1px solid #cbd5e1;
+        padding-bottom: 1pt;
+    }}
+    h3 {{
+        font-size: 9.5pt;
         font-weight: 600;
         color: #1e293b;
-        margin-top: 10pt;
-        margin-bottom: 4pt;
+        margin-top: 6pt;
+        margin-bottom: 2pt;
     }}
     h4 {{
-        font-size: 10.5pt;
+        font-size: 8.8pt;
         font-weight: 600;
         color: #334155;
-        margin-top: 8pt;
+        margin-top: 4pt;
         margin-bottom: 2pt;
     }}
     p {{
         margin-top: 0;
-        margin-bottom: 6pt;
+        margin-bottom: 3pt;
         text-align: justify;
     }}
     hr {{
         border: none;
         border-top: 1px solid #e2e8f0;
-        margin: 10pt 0;
+        margin: 6pt 0;
     }}
     .table-container {{
         width: 100%;
-        margin: 8pt 0;
+        margin: 4pt 0;
         page-break-inside: avoid;
     }}
     table {{
         width: 100%;
         border-collapse: collapse;
-        font-size: 8.5pt;
-        margin-bottom: 4pt;
+        font-size: 7.5pt;
+        margin-bottom: 3pt;
     }}
     th {{
         background: #f1f5f9;
         color: #0f172a;
         font-weight: 700;
         text-align: left;
-        padding: 5pt 6pt;
+        padding: 3pt 4pt;
         border: 1px solid #cbd5e1;
     }}
     td {{
-        padding: 4pt 6pt;
+        padding: 2.5pt 4pt;
         border: 1px solid #cbd5e1;
         vertical-align: top;
     }}
@@ -179,38 +179,39 @@ def markdown_to_html(md_text):
     }}
     code {{
         font-family: Consolas, "Courier New", monospace;
-        font-size: 8.5pt;
+        font-size: 7.8pt;
         background: #f1f5f9;
-        padding: 1pt 3pt;
-        border-radius: 3pt;
+        padding: 1pt 2pt;
+        border-radius: 2pt;
         color: #0369a1;
     }}
     blockquote {{
-        margin: 6pt 0;
-        padding: 6pt 10pt;
+        margin: 4pt 0;
+        padding: 4pt 6pt;
         background: #f8fafc;
         border-left: 3px solid #0284c7;
-        font-size: 9pt;
+        font-size: 8pt;
         color: #334155;
     }}
     li {{
-        margin-bottom: 2pt;
+        margin-bottom: 1.5pt;
     }}
     .img-container {{
         text-align: center;
-        margin: 10pt 0;
+        margin: 5pt 0;
         page-break-inside: avoid;
     }}
     img {{
-        max-width: 95%;
-        height: auto;
+        max-width: 78%;
+        max-height: 180px;
+        object-fit: contain;
         border: 1px solid #cbd5e1;
-        border-radius: 4pt;
+        border-radius: 3pt;
     }}
     .caption {{
-        font-size: 8pt;
+        font-size: 7.5pt;
         color: #64748b;
-        margin-top: 3pt;
+        margin-top: 2pt;
         font-style: italic;
     }}
     .spacer {{

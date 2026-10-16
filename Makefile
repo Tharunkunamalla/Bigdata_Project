@@ -11,19 +11,18 @@ endif
 
 COMPOSE_FILE := docker/docker-compose.yml
 
-.PHONY: help up down reset verify-infra data train stream simulate api ui test test-integration build-frontend verify report demo
+.PHONY: help up down reset verify-infra data train stream simulate api ui ui-build test test-integration build-frontend verify report demo demo-terminal
 
 help:
-	@echo "Available commands:"
-	@echo "  make test              - Run fast unit tests (no cluster needed)"
+	@echo "CrisisGuard AI Commands (v1.0-final-6):"
+	@echo "  make api               - Start FastAPI backend operations gateway (:8000)"
+	@echo "  make ui                - Start React/Vite development server (:5173)"
+	@echo "  make ui-build          - Compile production frontend SPA into frontend/dist"
+	@echo "  make demo              - Launch full end-to-end master demonstration"
+	@echo "  make demo-terminal     - Launch terminal-only pipeline demo (no browser needed)"
+	@echo "  make test              - Run fast unit tests"
 	@echo "  make test-integration  - Run end-to-end integration tests (needs Kafka/HDFS/Hive)"
-	@echo "  make build-frontend    - Build and type-check React/Vite dashboard bundle"
-	@echo "  make data              - Build real 99k-record disaster corpus"
-	@echo "  make train             - Train Spark MLlib models on real corpus"
-	@echo "  make stream            - Launch Spark Structured Streaming scoring job"
-	@echo "  make api               - Start FastAPI backend server"
-	@echo "  make ui                - Start React/Vite frontend development server"
-	@echo "  make demo              - Launch full end-to-end demonstration"
+	@echo "  make verify            - Run unit tests and documentation consistency checks"
 
 test:
 	$(PYTHON) -m pytest tests/test_real_pipeline.py -v
@@ -31,8 +30,13 @@ test:
 test-integration:
 	$(PYTHON) -m pytest tests/test_integration.py -v
 
-build-frontend:
+verify: test
+	$(PYTHON) scripts/check_doc_consistency.py
+
+ui-build:
 	cd frontend && npm run build
+
+build-frontend: ui-build
 
 data:
 	$(PYTHON) data/build_real_corpus.py
@@ -47,7 +51,7 @@ simulate:
 	$(PYTHON) ingestion/replay_simulator.py
 
 api:
-	$(PYTHON) -m uvicorn backend.main:app --host 0.0.0.0 --port 8000 --reload
+	$(PYTHON) -m uvicorn backend.main:app --host 0.0.0.0 --port 8000
 
 ui:
 	cd frontend && npm run dev
@@ -57,3 +61,6 @@ report:
 
 demo:
 	$(PYTHON) scripts/run_demo.py
+
+demo-terminal:
+	$(PYTHON) scripts/demo_terminal.py

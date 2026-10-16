@@ -4,7 +4,7 @@ scripts/run_demo.py
 CSE412 Big Data Project: Master Demo Orchestrator
 Executes an end-to-end live verification of CrisisGuard AI:
 1. Cluster Health Verification (Kafka 9092, HDFS 9000, Hive 9083 via Spark SQL, Spark 3.5.1)
-2. Real Curated Disaster Corpus Provenance (99,568 rows, 75/25 Event-Stratified Split, 0% leakage)
+2. Real Curated Disaster Corpus Provenance (130,301 rows, 75/25 Random Stratified Split, 0% leakage)
 3. Spark MLlib Model Suite & Sanity Controls Telemetry (Prevalence, PR-AUC, 20-shuffle control)
 4. MinHashLSH Near-Duplicate Similarity Graph & Circularity Controls
 5. 100,000-Event Stream Fault-Tolerance Verification & 10M Row Scaling Benchmark
@@ -59,26 +59,28 @@ def main():
     if health and health.get("status") == "HEALTHY":
         s = health.get("services", {})
         print(f"  [ONLINE] Apache Kafka 3.7.0 (KRaft)    : {s.get('kafka', {}).get('host')} (Topic: {s.get('kafka', {}).get('topic')})")
-        print(f"  [ONLINE] Apache Hadoop HDFS 3.3.6      : {s.get('hdfs', {}).get('namenode')} (Path: {s.get('hdfs', {}).get('path')})")
-        print(f"  [ONLINE] Apache Hive Metastore 3.1.3   : {s.get('hive', {}).get('metastore')} (Table: {s.get('hive', {}).get('table')})")
-        print(f"  [ONLINE] Apache Spark 3.5.1 MLlib      : {s.get('spark', {}).get('engine')} ({s.get('spark', {}).get('status')})")
+        print(f"  [ONLINE] Apache Hadoop HDFS 3.3.6      : {s.get('hdfs', {}).get('path')}")
+        print(f"  [ONLINE] Apache Hive Metastore 3.1.3   : {s.get('hive', {}).get('catalog')}")
+        print(f"  [ONLINE] Apache Spark 3.5.1 MLlib      : {s.get('spark', {}).get('name')}")
     else:
         print("  [LOCAL] Verifying local daemons (Kafka 9092, HDFS 9000, Hive Metastore 9083 via Spark SQL)")
 
     # Step 2: Real Dataset Provenance
     print("\n--- [STEP 2/6] Real Curated Disaster Corpus Provenance ---")
     dp = summary.get("data_provenance", {})
-    print(f"  • Total Deduplicated Silver Records  : {dp.get('total_processed_records', 99568):,} rows")
-    print(f"  • 75/25 Event-Stratified Partition    : Train={dp.get('train_records', 74174):,} | Held-Out Test={dp.get('test_records', 25394):,}")
+    print(f"  • Total Deduplicated Silver Records  : {dp.get('total_processed_records', 130301):,} rows")
+    print(f"  • 75/25 Random Stratified Partition   : Train={dp.get('train_records', 97422):,} | Test={dp.get('test_records', 32879):,}")
     print(f"  • Text Overlap Across Train and Test  : {dp.get('text_leakage_overlap', 0)} overlapping strings (0.00% leakage)")
     print(f"  • Ground-Truth Benchmark Sources     : {', '.join(dp.get('sources', []))}")
 
     # Step 3: Spark MLlib Models & Sanity Controls
     print("\n--- [STEP 3/6] Spark MLlib Models & Rigorous Sanity Controls ---")
     ml = summary.get("machine_learning", {})
-    synth = ml.get("synthetic_detector", {})
+    synth = ml.get("tweet_domain_detector", ml.get("synthetic_detector", {}))
     rumour = ml.get("rumour_classifier", {})
-    cat = ml.get("humanitarian_category", {})
+    metrics_path = os.path.join(BASE_DIR, "results", "metrics.json")
+    metrics_data = json.load(open(metrics_path, "r", encoding="utf-8")) if os.path.exists(metrics_path) else {}
+    cat = ml.get("humanitarian_category") or metrics_data.get("humanitarian_category", {})
     urg = ml.get("urgency_regressor", {})
     sanity = ml.get("sanity_controls", {})
     shuf = sanity.get("twenty_shuffle_control", {})

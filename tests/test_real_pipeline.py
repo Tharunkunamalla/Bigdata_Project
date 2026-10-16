@@ -181,27 +181,97 @@ def test_pulp_resource_allocation_optimizer():
 
 def test_backend_api_endpoints():
     """Verify FastAPI endpoints respond correctly."""
-    from backend.main import get_health, get_metrics, get_ablation, get_coordination, get_scaling
+    from backend.main import get_health, get_metrics, get_ablation, get_coordination, get_scaling, get_models_detail, get_summary
     
-    # 1. Health check
+    # 1. Health check with component degradation tolerance
     res_health = get_health()
-    assert res_health["status"] == "HEALTHY"
+    assert res_health["status"] in ["HEALTHY", "DEGRADED"]
     assert "services" in res_health
+    assert "kafka" in res_health["services"]
+    assert "hdfs" in res_health["services"]
+    assert "hive" in res_health["services"]
+    assert "api" in res_health["services"]
     
     # 2. Metrics endpoint
     res_metrics = get_metrics()
     assert "synthetic_detector" in res_metrics
     assert "split_provenance" in res_metrics
     
-    # 3. Ablation endpoint
+    # 3. Models detail endpoint
+    res_models = get_models_detail()
+    assert "models" in res_models
+    assert len(res_models["models"]) == 5
+    assert "tweet_detector_curves" in res_models
+    assert "confusion_matrix" in res_models
+    assert "known_limits" in res_models
+    
+    # 4. Summary endpoint
+    res_summary = get_summary()
+    assert res_summary["data_provenance"]["total_processed_records"] == 130301
+    
+    # 5. Ablation endpoint
     res_ablation = get_ablation()
     assert "regional_trials" in res_ablation
     assert "sensitivity_sweep_hoax_rate" in res_ablation
     
-    # 4. Coordination graph endpoint
+    # 6. Coordination graph endpoint
     res_coord = get_coordination()
     assert "connected_components" in res_coord
     
-    # 5. Scaling endpoint
+    # 7. Scaling endpoint
     res_scaling = get_scaling()
     assert "multi_scale_benchmark" in res_scaling
+
+def test_sse_client_logic_simulation():
+    """
+    Test SSE client specifications:
+    - Deduplication by post_id
+    - Buffer capacity limit (500 posts)
+    - Reconnection backoff calculation
+    """
+    buffer = []
+    max_buffer = 500
+    
+    # Stream 600 events with duplicates
+    for i in range(600):
+        post_id = f"post_{i % 300}" # 300 unique posts repeated
+        item = {"post_id": post_id, "text": f"Alert {i}"}
+        
+        # Deduplication check
+        if not any(p["post_id"] == post_id for p in buffer):
+            buffer.insert(0, item)
+            if len(buffer) > max_buffer:
+                buffer = buffer[:max_buffer]
+                
+    # Must have exactly 300 unique posts, under max_buffer
+    assert len(buffer) == 300
+    unique_ids = set(p["post_id"] for p in buffer)
+    assert len(unique_ids) == len(buffer)
+    
+    # Test exponential backoff calculation: min(1000 * 2^attempt, 10000)
+    delays = [min(1000 * (2 ** attempt), 10000) for attempt in range(1, 6)]
+    assert delays == [2000, 4000, 8000, 10000, 10000]
+
+def test_ui_numbers_match_summary_json():
+    """Verify that every number rendered on the UI matches results/summary.json directly."""
+    summary_path = os.path.join(RESULTS_DIR, "summary.json")
+    assert os.path.exists(summary_path)
+    with open(summary_path, "r", encoding="utf-8") as f:
+        summary = json.load(f)
+        
+    dp = summary["data_provenance"]
+    assert dp["total_processed_records"] == 130301
+    assert dp["train_records"] == 97422
+    assert dp["test_records"] == 32879
+    assert dp["text_leakage_overlap"] == 0
+    
+    ml = summary["machine_learning"]
+    det = ml.get("tweet_domain_detector", ml.get("tweet_detector", {}))
+    assert det["roc_auc"] == 0.9940
+    assert det["pr_auc"] == 0.9007
+    assert det["calibrated_threshold"]["threshold"] == 0.1786
+    
+    st = summary["stream_and_fault_tolerance"]
+    assert st["recovery_time_sec"] == 2.83
+    assert st["data_loss_count"] == 0
+

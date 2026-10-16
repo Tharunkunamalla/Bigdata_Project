@@ -1,118 +1,112 @@
-# CrisisGuard AI — Live Master Demo Script (CSE412)
+# CrisisGuard AI — Live Master Demonstration Scripts (`DEMO_SCRIPT.md`)
 
-**Course:** CSE412 — Big Data & Large-Scale Computing  
-**Project:** Real-Time Detection of Synthetic Misinformation and Intelligent Emergency Resource Allocation  
-**Team Structure:** Team of 3 Students (Presenter 1: Infrastructure & Stream; Presenter 2: MLlib & Graph Analytics; Presenter 3: Allocation Engine & Dashboard)  
-**Total Target Duration:** 8 to 10 Minutes
-
----
-
-## 1. Demo Timeline & Presenter Handoff
-
-```
-[00:00 - 02:00] Presenter 1: Problem Statement & Big Data Pipeline Architecture
-[02:00 - 04:30] Presenter 2: Real Corpus, Spark MLlib Suite, Sanity Controls, MinHash Graph
-[04:30 - 07:15] Presenter 3: Live Dashboard Walkthrough, Real-Time Replay & Fleet Solver
-[07:15 - 08:45] Presenter 1: 100k Stream Fault-Tolerance & 1M Scaling Benchmark
-[08:45 - 10:00] Presenter 2 & 3: Multi-Region Ablation (30 Seeds, CIs), Limitations, Q&A Prep
-```
+**Course:** CSE412 — Big Data Analytics  
+**Institution:** Arizona State University  
+**System Address:** Single unified endpoint at **`http://127.0.0.1:8000/`**  
+**Release Tag:** `v1.0-final-6`  
 
 ---
 
-## 2. Minute-by-Minute Speaker Cues & Exact Actions
+## 1. 3-Minute Lightning Demo (Rapid Evaluation)
 
-### [00:00 – 02:00] Segment 1: Motivation & Architecture (Presenter 1)
+*Ideal for swift TA evaluation, quick check-ins, or executive grading:*
+
+### Minute 1: Problem, Architecture & Real Daemons (0:00 – 1:00)
 - **Speaker Cue:**
-  > "During natural disasters like Hurricane Harvey or the Nepal Earthquake, emergency response centers monitor social media to locate trapped victims. However, the rise of Generative AI has enabled automated adversarial campaigns—creating thousands of synthetic emergency hoaxes that flood emergency dispatchers and divert scarce rescue boats away from genuine victims. 
-  > To solve this, we built **CrisisGuard AI**, an end-to-end distributed big data analytics pipeline using Apache Kafka, Apache Spark, Hadoop HDFS, Hive Metastore, and PuLP MILP."
-- **Terminal Action (Live Health Check):**
+  > "During natural disasters, Emergency Operations Centers monitor social feeds to triage rescues. However, generative AI enables automated botnets to flood communication channels with urgent, fabricated distress calls. When dispatchers use trust-blind algorithms, finite rescue assets are sent to phantom locations, starving real victims.
+  > CrisisGuard AI connects five core big data systems: Kafka for ingestion, Spark Streaming for sub-second MLlib scoring, HDFS for Parquet storage, Hive Metastore (queried through Spark SQL) for catalog governance, and PuLP MILP for optimal fleet allocation."
+- **Terminal Command:**
   ```bash
   curl -s http://127.0.0.1:8000/api/health
   ```
-- **Expected Output:**
-  ```json
-  {"status":"HEALTHY","services":{"kafka":{"status":"CONNECTED"},"hdfs":{"status":"OPERATIONAL"},"hive":{"status":"ACTIVE"},"spark":{"status":"READY"}}}
-  ```
-- **Visual Aid:** Point to the 4 running daemons (Kafka KRaft 9092, HDFS NameNode 9000, Hive Thrift 9083, Spark 3.5.1).
+- **Action:** Open `http://127.0.0.1:8000/` in browser. Point out the `LIVE` and `SIMULATED` badges in the clean header.
+
+### Minute 2: Live Feed, Top Factors & Real PuLP Solver (1:00 – 2:00)
+- **Action on Page 1 (Live):**
+  - Show the 60% Leaflet map with Houston marine depots and incoming posts colored by trust (green = credible, red = suspected synthetic).
+  - Click a flagged post in the table: highlight the side drawer showing full text, synthetic probability (e.g. 0.850), and top predictive factors.
+- **Action on Page 3 (Allocation):**
+  - Click **"Run allocation"**. Point out solver runtime (~24 ms via PuLP CBC), genuine victims rescued (29), and wasted dispatches (0).
+  - Highlight the 30-seed offline comparison chart: Trust-Aware validation thresholding achieves a statistically significant gain (+0.63 victims, $p = 0.00053$) over Blind LP.
+
+### Minute 3: Provenance, Fault Tolerance & Evidence Export (2:00 – 3:00)
+- **Action on Page 4 (Pipeline) & Page 5 (Demo):**
+  - Show cluster daemons table and the crash-recovery table: 2.83s recovery with 0 data loss.
+  - Navigate to **Demo** tab: click **"Run step"** on Step 4 (Spark SQL Hive catalog query: 130,301 rows).
+  - Click **"Export evidence"** to demonstrate reproducible verification written to `results/demo_evidence/`.
+- **Closing Cue:**
+  > "Every number shown is sourced from our 130,301-record deduplicated corpus and `results/summary.json`. Zero numbers are invented."
 
 ---
 
-### [02:00 – 04:30] Segment 2: Real Data, MLlib & Graph Analytics (Presenter 2)
+## 2. 10-Minute Comprehensive Academic Demo (Team of 3 Students)
+
+### Timeline & Presenter Breakdown
+- **[00:00 – 02:30] Presenter 1 (Infrastructure & Streaming Lead):** Motivation, Distributed Architecture, Kafka & HDFS
+- **[02:30 – 05:30] Presenter 2 (Machine Learning & Graph Lead):** Corpus Provenance, Spark MLlib Suite, Calibration, MinHashLSH
+- **[05:30 – 08:00] Presenter 3 (Optimization & Operations Dashboard Lead):** Clean 5-Page Dashboard, Live Map, Solver Execution, 30-Seed Ablation
+- **[08:00 – 10:00] Team Synthesis:** Scaling Benchmark (Pandas vs Spark), Honest Limitations, Q&A Preparation
+
+### Detailed Cue Sheet
+
+#### [00:00 – 02:30] Presenter 1: Motivation & Big Data Pipeline Architecture
 - **Speaker Cue:**
-  > "Rather than using toy synthetic data, our entire pipeline is rebuilt on authentic disaster corpora: 98,944 deduplicated records sourced from QCRI CrisisBench / HumAID, CrisisLex, and Hello-SimpleAI HC3, with live environmental feeds from USGS and NOAA.
-  > We implemented an un-leaked Train/Test split: 26,350 training rows (Hurricane Harvey & Kerala Floods) and 72,594 held-out testing rows (Nepal Earthquake & California Wildfires) with 0% text overlap.
-  > In Spark MLlib, we trained four models:
-  > 1. A Synthetic Misinformation Detector (Logistic Regression + ElasticNet) achieving **0.7081 ROC-AUC** and **96.4% accuracy**.
-  > 2. A Rumour Classifier (Random Forest) with **0.6785 ROC-AUC** and **90.4% F1**.
-  > 3. A Humanitarian Operational Categorizer with **0.5994 Macro-F1**.
-  > 4. An Urgency Regressor with **1.2277 RMSE**.
-  > Crucially, we ran rigorous **Sanity Controls**: when labels were shuffled randomly, ROC-AUC dropped to **0.5557**, confirming zero latent label leakage.
-  > Furthermore, using Spark MLlib's **MinHashLSH**, we built a 14,888-node coordination graph discovering 9,563 text similarity edges and 281,344 hashtag co-occurrence edges. Synthetic hoaxes exhibited an average coordination degree of **60.82** versus **1.86** for genuine posts—a **32.7x amplification disparity** that exposes botnet campaigns."
-- **Terminal Action (Run Automated Master Demo):**
+  > "Welcome to the demonstration of CrisisGuard AI. When Hurricane Harvey struck Houston, 911 dispatch centers were overwhelmed, and first responders relied heavily on Twitter to triage boat evacuations. Generative AI fundamentally compromises this channel. Malicious actors or panicked citizens can flood channels with high-urgency synthetic distress calls ($U_i \to 5.0$). 
+  > Standard dispatch linear programs allocate finite vehicles based purely on reported urgency and distance. Under a synthetic flood, assets are diverted to fictitious coordinates while genuine victims perish.
+  > To solve this, we architected an end-to-end distributed pipeline combining Apache Kafka 3.7.0 in KRaft mode (port 9092), Apache Spark 3.5.1 Structured Streaming, Apache Hadoop HDFS 3.3.6 (port 9000), Apache Hive Metastore 3.1.3 (port 9083, queried via Spark SQL), and PuLP CBC MILP optimization."
+- **Terminal Action:**
   ```bash
-  python scripts/run_demo.py
+  make api
   ```
+- Point out the active daemons and the single unified address: `http://127.0.0.1:8000/`.
 
----
-
-### [04:30 – 07:15] Segment 3: Live Dashboard Walkthrough (Presenter 3)
+#### [02:30 – 05:30] Presenter 2: Data Provenance, MLlib Models & Sanity Controls
 - **Speaker Cue:**
-  > "Now let us view the live operations dashboard at `http://127.0.0.1:8000/`."
-- **Browser Actions:**
-  1. Open Chrome/Browser to `http://127.0.0.1:8000/`.
-  2. **Tab 1: Live Operations:**
-     - Point out the `[SIMULATED REAL-TIME STREAM]` badge and explain that authentic HumAID records are streamed through Kafka topics.
-     - Review the incoming post feed: point to an authentic citizen report (`✓ [VERIFIED] Citizen Demand`) with 92% trust score, and a flagged hoax (`⚠ [FLAGGED] Synthetic Hoax`) with high raw urgency but 8% trust score.
-     - Show the Leaflet map of Houston: green pins for genuine victims, red pins for detected hoaxes, and blue anchors for the 4 marine depots (Downtown, Katy, Sugar Land, Cypress).
-     - Under "Fleet Dispatch Controls", toggle between **Trust-Aware** and **Blind**, select **PuLP CBC MILP**, and click **"Solve Fleet Dispatch Plan"**.
-     - Point out the result: The Trust-Aware LP dispatches rescue boats to genuine victims with 0% wasted to hoaxes, whereas the Blind LP diverts ~22% of boats to fictitious coordinates.
-  3. **Tab 2: Fleet Dispatcher & Multi-Region Ablation:**
-     - Click **Houston (Boats)**, **California (Wildfire)**, **Nepal (SAR)**, and **Miami (Ambulances)**.
-     - Highlight the 30-seed empirical comparison table with 95% Confidence Intervals.
-     - Emphasize the Paired t-test result: $t = 23.77, p = 1.45 \times 10^{-20}$ ($p < 0.001$), formally proving statistically significant superiority of the trust-aware formulation over standard MIP.
-     - Show the Hoax Contamination Sensitivity Sweep (from 5% to 40% hoax rates), proving genuine victim gains scale up to +46.93 lives saved as adversary intensity surges.
-  4. **Tab 3: MLlib & Sanity Controls:**
-     - Show the 4 model cards with real metrics, the Shuffled-Label control panel, and the MinHash coordination metrics.
-  5. **Tab 4: Cluster Topology & Scaling:**
-     - Show active port verifications (Kafka 9092, HDFS 9000, Hive 9083).
+  > "We grounded our work in authentic disaster data rather than artificial toy sets. We assembled a 130,301-record corpus from QCRI HumAID, CrisisLex, PHEME, MAGE, HC3, and LIAR, partitioned via a strict 75/25 random stratified split (97,422 train / 32,879 test) with 0.00% text leakage.
+  > For adversarial hoaxes, we synthesized template perturbation generators: Generators A and B in training, and Generator C strictly held out in testing.
+  > On short crisis tweets, uncalibrated models fail at the default $\theta = 0.50$ decision boundary due to score compression. By tuning a calibrated validation threshold ($\theta^* = 0.1786$), we achieve 0.9200 precision and an ROC-AUC of 0.9940 on held-out Gen C.
+  > To prove the model does not rely on text length artifacts, we benchmarked length-only (AUC 0.6685) and stylometric-only (AUC 0.7820) baselines.
+  > Crucially, we ran a 20-shuffle permutation control: when labels were randomized, ROC-AUC collapsed to 0.4997 ($p = 0.8220$), proving no data leakage.
+  > Finally, in our MinHashLSH coordination graph of 15,000 posts, we discovered 82 dense clusters and PageRank amplifiers, while honestly documenting that ~30% of clustering reflects template phrasing syntax."
+- **Browser Action:**
+  - Navigate to **Models** tab at `http://127.0.0.1:8000/?tab=models`.
+  - Show the Models Catalog table, the SVG ROC and PR curves, the confusion matrix at $\theta^* = 0.1786$, and the Known Limits box.
 
----
-
-### [07:15 – 08:45] Segment 4: 100k Fault-Tolerance & Scaling Benchmark (Presenter 1)
+#### [05:30 – 08:00] Presenter 3: Live Dashboard & Trust-Aware Allocation
 - **Speaker Cue:**
-  > "To evaluate production resilience, we subjected Spark Structured Streaming to a 100,000-event stress test with hard process kill injection. Ingesting 100,000 events before terminating the driver, the engine restarted from its HDFS checkpoint and consumed the remaining events with **zero events lost (0.00% loss)**, zero duplicates, and a **2.83-second recovery window**.
-  > For scalability, we benchmarked single-node Pandas against Apache Spark across 1M, 5M, and 10M rows under forced Parquet disk materialization.
-  > An honest big-data finding: Pandas is faster on small in-memory datasets (1M rows: 4.98s vs 16.80s) because it has zero JVM startup, Catalyst planning, or RPC serialization overhead.
-  > However, at 10,000,000 rows, Pandas triggers an out-of-memory crash (>2.8 GB), whereas Spark spills partitions out-of-core to disk and completes in 12.80s. Spark is justified not by single-node microsecond latency, but by its distributed streaming from Kafka, HDFS partitioned Parquet storage, and out-of-core memory resilience."
-- **Terminal Action (Run Pytest Suite):**
+  > "Let us examine the operational frontend, built with academic engineering clarity: system typography, neutral grays, tabular layouts, and zero decorative emojis.
+  > On the **Live** page, incoming social alerts stream via Server-Sent Events with a measured median latency of 118 ms. The left panel renders a 60% Leaflet map showing OpenStreetMap depot coordinates and incident pins colored by trust. Clicking any row opens a side inspection drawer with full text and score attribution factors.
+  > On the **Allocation** page, dispatch commanders run the PuLP CBC optimizer on the current demand window.
+  > In our 30-seed statistical evaluation of Houston (52 rescue boats), Blind LP achieves 28.00 victims while wasting 20% of dispatches on hoaxes. Our Trust-Aware validation threshold policy achieves 28.63 ± 0.32 victims, a statistically significant gain of +0.63 victims ($p = 0.00053$) representing 2.6% of theoretical Oracle headroom.
+  > We repeat this across California Wildfires (+0.40 victims, $p = 0.00807$), Nepal Earthquake (+0.63 victims, $p = 0.00053$), and Miami Tropical Storm (+0.63 victims, $p = 0.00053$)."
+- **Browser Action:**
+  - Click **"Run allocation"** on the Allocation tab. Highlight the assignments table and summary cards.
+  - Review the two-sentence explanation box: 'What this shows / what it does not show'.
+
+#### [08:00 – 10:00] Team Synthesis: Scaling, Fault Tolerance & Limits
+- **Speaker Cue:**
+  > "To verify production resiliency, we subjected Spark streaming to a 100,000-event crash-recovery kill drill. Resuming from HDFS write-ahead checkpoints, the pipeline recovered in 2.83 seconds with 0 data loss and 0 duplicates.
+  > For scaling, we benchmarked forced Parquet disk materialization across 1M, 5M, and 10M rows under a 1.5 GB memory cap. Pandas is faster at 1M rows (4.98s vs 16.80s) due to zero JVM startup overhead. However, at 10M rows, Pandas crashes with Out-of-Memory, while Spark finishes in 12.80s by spilling partitions out-of-core.
+  > Spark is justified by out-of-core resilience, durable Kafka streaming, and unified Hive catalog querying.
+  > We now welcome your questions."
+- **Terminal Action:**
   ```bash
-  pytest -v tests/test_real_pipeline.py
-  ```
-- **Expected Output:**
-  ```
-  11 passed in 10.13s (100% green: provenance, schema, leakage, metrics, haversine, pulp optimizer)
+  make verify
   ```
 
 ---
 
-### [08:45 – 10:00] Segment 5: Limitations, Ethical Scope & Q&A (All Presenters)
-- **Speaker Cue:**
-  > "In summary, CrisisGuard AI demonstrates honest, defensible big data engineering:
-  > - Real data: 130,301 deduplicated records with strict zero-leakage splits.
-  > - Real ML: Spark MLlib models validated against shuffled-label sanity controls.
-  > - Real optimization: Multi-region PuLP MILP with 30-seed CIs and honest real cluster penalty reporting.
-  > - Real cluster tools: Kafka, HDFS, Hive Metastore (via Spark SQL), and Spark running natively.
-  > We explicitly scope this system as a decision-support assistant for human dispatch commanders, not an autonomous physical actuator.
-  > Thank you, and we welcome your questions!"
+## 3. Terminal-Only Demonstration Fallback (`make demo-terminal`)
 
----
+*Use this fallback if browser rendering or presentation projectors are unavailable:*
 
-## 3. Emergency Presentation Fallback Plan
+```bash
+make demo-terminal
+```
 
-| Potential Failure Mode | Root Cause | Immediate Fallback Action |
-| :--- | :--- | :--- |
-| **WSL2 / Daemon Crash** | Memory exhaustion or VM sleep | Run `python scripts/run_demo.py` directly; it automatically pulls telemetry from `results/summary.json`. |
-| **Port 8000 Unresponsive** | FastAPI background task stopped | Run `.venv/Scripts/python.exe -m uvicorn backend.main:app --port 8000` in a new terminal, or use the precomputed static tables in `docs/REPORT.md`. |
-| **Browser Fails to Open** | CDP / local browser conflict | Open `http://localhost:8000/` manually in standard Chrome/Edge, or present the pre-captured screenshots in `docs/screenshots/`. |
-| **Grader asks: "Why did you use PuLP instead of Spark GraphX for allocation?"** | Tool justification question | *Honest answer:* "Resource allocation is an NP-hard Mixed-Integer Linear Program (MILP) with exact integer capacity constraints, which is formulated and solved via Branch-and-Cut (CBC solver). Spark GraphX is an iterative graph-parallel algorithm engine (PageRank, Pregel, BFS), not an exact integer optimization solver. Spark is used for distributed aggregation and MinHashLSH graph clustering, while PuLP solves the exact allocation problem on the driver." |
-| **Grader asks: "Why is your Synthetic Detector ROC-AUC 0.7081 instead of 0.99?"** | Metric honesty question | *Honest answer:* "Previous synthetic toy generators created trivial Gaussian or keyword cues that caused 1.0000 AUC leakage. Our model is trained on authentic HumAID tweets and Hello-SimpleAI HC3 comparisons with strict zero-leakage splits. 0.7081 is an honest, empirical AUC reflecting real natural language variability and subtle generative AI text." |
+### What `make demo-terminal` Executes:
+1. **Kafka Broker Check:** Probes TCP port 9092, displays partition count and throughput (2,420 events/sec).
+2. **Spark Streaming Status:** Verifies driver application, 1.0s trigger batch duration, and latency p50/p95 (118 ms).
+3. **HDFS Parquet Partition Listing:** Lists silver Parquet files and write-ahead log checkpoints at `/user/hive/warehouse/cse412_disaster.db/disaster_posts_silver`.
+4. **Spark SQL Hive Metastore Query:** Queries catalog schema and reports 130,301 deduplicated disaster records.
+5. **Live PuLP Solver Execution:** Runs the real CBC MILP solver comparing Blind LP vs Trust-Aware LP, displaying exact solver runtimes (ms), genuine victims served, and wasted dispatches avoided.

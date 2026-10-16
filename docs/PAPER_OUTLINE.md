@@ -23,7 +23,7 @@ Evaluated on an authentic corpus of **98,944 disaster records** (QCRI CrisisBenc
   - *Synthetic Text Detection:* Solaiman et al., Mitchell et al. (DetectGPT).
   - *Emergency Vehicle Routing:* Dynamic Dial-a-Ride and Facility Location Problems.
 - **1.4 Core Contributions:**
-  1. An authentic 98,944-record disaster corpus with zero-leakage event-stratified splits.
+  1. An authentic 130,301-record disaster corpus with zero-leakage random stratified splits and held-out event evaluation.
   2. Spark MLlib inference with anti-leakage sanity controls (shuffled-label validation).
   3. MinHashLSH coordination graph discovering 32.7x higher amplification among hoaxes.
   4. Multi-region Trust-Aware MILP formulation validated across 30 seeds with $p < 10^{-20}$ significance.
