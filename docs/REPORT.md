@@ -3,7 +3,7 @@
 **Course:** CSE412 Big Data Analytics  
 **Institution:** Arizona State University  
 **System Architecture:** Apache Kafka 3.7.0 (KRaft) → Apache Spark 3.5.1 Structured Streaming & MLlib → Apache Hadoop HDFS 3.3.6 → Apache Hive Metastore 3.1.3 (queried via Spark SQL) → PuLP CBC MILP Optimizer  
-**Release Tag:** `v1.0-final-7`  
+**Release Tag:** `v1.0-final-8`  
 **Execution Environment:** Distributed Big Data Daemon Cluster on WSL2 / Ubuntu 22.04 LTS  
 
 ---
@@ -28,7 +28,7 @@ To overcome these challenges, we design, implement, and empirically evaluate **C
 - **Calibrated Multi-Task Machine Learning Suite:** Using a 130,301-record curated corpus drawn from QCRI HumAID, CrisisLex, PHEME, LIAR, HC3, and MAGE, we develop a multi-task suite spanning synthetic text detection, crisis rumour classification, humanitarian categorization, and urgency regression. We prove that while standard thresholds ($\theta = 0.50$) fail on short crisis tweets, validation threshold tuning ($\theta^* = 0.1786$) yields 0.9200 precision and an ROC-AUC of 0.9940 on held-out generator hoaxes, while establishing an honest -0.198 Macro-F1 generalization penalty across unseen disaster events.
 - **MinHashLSH Coordination Graph with Circularity Controls:** We implement distributed Locality-Sensitive Hashing to construct near-duplicate communication graphs across 15,000 posts, identifying coordinated amplification structures while establishing that approximately 30.0% of dense clustering reflects template phrasing syntax rather than malicious coordination.
 - **Trust-Aware Mixed-Integer Linear Optimization:** We formulate and solve a Trust-Aware MILP optimizer in PuLP CBC, integrating continuous Bayesian trust discounting and calibrated threshold gating with authentic OpenStreetMap depot facilities. In a 30-seed empirical study across four multi-hazard regions, our calibrated policy demonstrates a statistically significant rescue gain (+0.63 genuine victims rescued in Houston, $p = 0.00053$) by withholding assets from synthetic hoaxes while fully servicing verified civilian demands.
-- **Academic Operations Dashboard:** We deploy a clean, engineering-grade 5-page dashboard served directly by the FastAPI backend at `http://127.0.0.1:8000/`, featuring real-time Server-Sent Events (p50 latency 118 ms), interactive MILP dispatch execution, transparent model diagnostics, and verified end-to-end demo execution.
+- **Academic Operations Dashboard:** We deploy a clean, engineering-grade 5-page dashboard served directly by the FastAPI backend at `http://127.0.0.1:8000/`, featuring real-time Server-Sent Events (measured p50 latency 96.85 ms, p95 = 130.01 ms over 250 raw events), interactive MILP dispatch execution, transparent model diagnostics, and verified end-to-end demo execution.
 
 ---
 

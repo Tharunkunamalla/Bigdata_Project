@@ -3,7 +3,7 @@
 **Course:** CSE412 — Big Data & Large-Scale Computing  
 **Project:** CrisisGuard AI  
 **Scope:** Distributed Infrastructure Topology, Port Mappings, Dataflow Lifecycles, and Component Specifications  
-**Release Tag:** `v1.0-final-7`  
+**Release Tag:** `v1.0-final-8`  
 
 ---
 
@@ -87,7 +87,7 @@ flowchart TD
 1. Disaster posts are produced into Kafka topic `disaster_raw_posts` (2,420 events/sec sustained).
 2. Spark Structured Streaming ingests micro-batches (1.0s trigger), evaluates MLlib pipelines, and calculates calibrated trust weights $T_i$.
 3. Micro-batch offsets are checkpointed atomically to HDFS.
-4. Enriched records are published to `disaster_scored_posts` and delivered via Server-Sent Events to the browser dashboard (median latency: 118 ms).
+4. Enriched records are published to `disaster_scored_posts` and delivered via Server-Sent Events to the browser dashboard (measured latency: p50 = 96.85 ms, p95 = 130.01 ms).
 5. Tested under hard crash kill at 100,000 events: **0% data loss, 0 duplicate records, 2.83s recovery window**.
 
 ### 3.4 Allocation & Dispatch Lifecycle

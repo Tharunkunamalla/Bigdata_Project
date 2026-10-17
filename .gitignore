@@ -42,3 +42,10 @@ docker/volumes/
 .idea/
 .DS_Store
 Thumbs.db
+
+# Secrets & Environment
+.env
+.env.local
+*.pem
+*.key
+

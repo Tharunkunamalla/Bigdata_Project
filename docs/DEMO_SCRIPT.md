@@ -3,7 +3,7 @@
 **Course:** CSE412 — Big Data Analytics  
 **Institution:** Arizona State University  
 **System Address:** Single unified endpoint at **`http://127.0.0.1:8000/`**  
-**Release Tag:** `v1.0-final-7`  
+**Release Tag:** `v1.0-final-8`  
 
 ---
 
@@ -75,7 +75,7 @@
 #### [05:30 – 08:00] Presenter 3: Live Dashboard & Trust-Aware Allocation
 - **Speaker Cue:**
   > "Let us examine the operational frontend, built with academic engineering clarity: system typography, neutral grays, tabular layouts, and zero decorative emojis.
-  > On the **Live** page, incoming social alerts stream via Server-Sent Events with a measured median latency of 118 ms. The left panel renders a 60% Leaflet map showing OpenStreetMap depot coordinates and incident pins colored by trust. Clicking any row opens a side inspection drawer with full text and score attribution factors.
+  > On the **Live** page, incoming social alerts stream via Server-Sent Events with a measured median latency of 96.85 ms (p95: 130.01 ms). The left panel renders a 60% Leaflet map showing OpenStreetMap depot coordinates and incident pins colored by trust. Clicking any row opens a side inspection drawer with full text and score attribution factors.
   > On the **Allocation** page, dispatch commanders run the PuLP CBC optimizer on the current demand window.
   > In our 30-seed statistical evaluation of Houston (52 rescue boats), Blind LP achieves 28.00 victims while wasting 20% of dispatches on hoaxes. Our Trust-Aware validation threshold policy achieves 28.63 ± 0.32 victims, a statistically significant gain of +0.63 victims ($p = 0.00053$) representing 2.6% of theoretical Oracle headroom.
   > We repeat this across California Wildfires (+0.40 victims, $p = 0.00807$), Nepal Earthquake (+0.63 victims, $p = 0.00053$), and Miami Tropical Storm (+0.63 victims, $p = 0.00053$)."
@@ -106,7 +106,7 @@ make demo-terminal
 
 ### What `make demo-terminal` Executes:
 1. **Kafka Broker Check:** Probes TCP port 9092, displays partition count and throughput (2,420 events/sec).
-2. **Spark Streaming Status:** Verifies driver application, 1.0s trigger batch duration, and latency p50/p95 (118 ms).
+2. **Spark Streaming Status:** Verifies driver application, 1.0s trigger batch duration, and latency p50/p95 (96.85 ms / 130.01 ms).
 3. **HDFS Parquet Partition Listing:** Lists silver Parquet files and write-ahead log checkpoints at `/user/hive/warehouse/cse412_disaster.db/disaster_posts_silver`.
 4. **Spark SQL Hive Metastore Query:** Queries catalog schema and reports 130,301 deduplicated disaster records.
 5. **Live PuLP Solver Execution:** Runs the real CBC MILP solver comparing Blind LP vs Trust-Aware LP, displaying exact solver runtimes (ms), genuine victims served, and wasted dispatches avoided.

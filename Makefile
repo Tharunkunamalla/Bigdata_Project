@@ -14,7 +14,7 @@ COMPOSE_FILE := docker/docker-compose.yml
 .PHONY: help up down reset verify-infra data train stream simulate api ui ui-build test test-integration build-frontend verify report demo demo-terminal
 
 help:
-	@echo "CrisisGuard AI Commands (v1.0-final-7):"
+	@echo "CrisisGuard AI Commands (v1.0-final-8):"
 	@echo "  make api               - Start FastAPI backend operations gateway (:8000)"
 	@echo "  make ui                - Start React/Vite development server (:5173)"
 	@echo "  make ui-build          - Compile production frontend SPA into frontend/dist"

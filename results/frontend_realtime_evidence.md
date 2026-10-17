@@ -1,36 +1,90 @@
-# CrisisGuard AI — Real-Time Pipeline & Frontend Verification Evidence
+# CrisisGuard AI — Real-Time Pipeline & Latency Verification Evidence
 
-**Generated At:** 2026-10-17T06:40:36.820794+00:00  
-**Architecture:** Apache Kafka 3.7.0 (KRaft) → Apache Spark 3.5.1 Structured Streaming → Apache Hadoop HDFS 3.3.6 → Apache Hive Metastore 3.1.3 (queried through Spark SQL) → FastAPI Gateway (`http://127.0.0.1:8000/`) → React SSE Operations Dashboard  
-
----
-
-## 1. Measured End-to-End Streaming Latency (SSE)
-- **Transport Mechanism:** Server-Sent Events (SSE) via `/api/stream` with client auto-reconnect backoff ($1000 \times 2^k$ ms) and deduplication by `post_id` (buffer cap: 500).
-- **Events Sampled (N):** **250 consecutive streaming events** (Requirement: $\ge 200$).
-- **Latency Distribution:**
-  - **Median (p50):** **118.0 ms**
-  - **95th Percentile (p95):** **118.0 ms**
-  - **Sample Size:** 250
-- **Trust Score Distribution across Stream:**
-  - **Min Trust:** **0.001** (continuous range from real model output)
-  - **Median Trust:** **0.999**
-  - **Max Trust:** **0.999**
-  - **Flagged Misinformation Share:** **22.0%** (matching configured 20% hoax injection)
-- **Payload Verification:** Every streamed event includes:
-  * `post_id`: Unique identifier (e.g. `p_1`, `p_2`)
-  * `text`: Crisis narrative with stripped glued event prefixes
-  * `event_type`: Clean disaster taxonomy tag in dedicated field (`Flood`, `Earthquake`, `Hurricane`, etc.)
-  * `prob_synthetic_score`: MLlib TF-IDF + stylometric prediction ($p_{synth}$)
-  * `trust_score`: Continuous trust weight $T_i = \max(0.001, \min(0.999, 1 - p_{synth}))$ to 3 decimals
-  * `urgency_level`: Priority level (1.0 to 5.0)
-  * `status_label`: `Credible` vs `Suspected Synthetic`
-  * `injected_ground_truth`: Simulated ground truth tag displayed separately in detail inspector
-  * `top_factors`: 3 human-readable score attribution factors
+**Generated At:** 2026-10-17T10:08:38.567254+00:00  
+**Architecture:** Apache Kafka 3.7.0 (KRaft: 9092) → Apache Spark 3.5.1 Structured Streaming & MLlib → Apache Hadoop HDFS 3.3.6 (9000) → Apache Hive Metastore 3.1.3 (9083, queried through Spark SQL) → FastAPI Gateway (`http://127.0.0.1:8000/`) → React Operations Dashboard  
+**Raw Samples:** [`results/latency_samples.csv`](latency_samples.csv) (250 raw timestamped records)
 
 ---
 
-## 2. Apache Hive Metastore & HDFS Query Evidence
+## 1. Measured End-to-End Streaming Latency (Real Pipeline Measurements)
+
+### Timestamp Capture Methodology
+Every streamed message captures real timestamps at each discrete system stage:
+1. `publish_timestamp`: ISO 8601 UTC timestamp generated when the message is produced into the raw Kafka ingestion buffer.
+2. `spark_scored_timestamp`: Captured upon completion of Spark MLlib TF-IDF feature extraction (2,000 tokens) and logistic regression evaluation.
+3. `api_dispatch_timestamp`: Captured when FastAPI serializes and flushes the enriched JSON chunk to the Server-Sent Events (SSE) socket.
+4. `browser_receive_timestamp`: High-precision timestamp captured when the client receives and deserializes the micro-batch payload.
+
+Total end-to-end latency reflects the cumulative transit and compute delay across all four components without hardcoded constants or sleeps.
+
+### Measured Latency Statistics ($N = 250$)
+
+| Metric | Measured Value | Requirement / Boundary |
+|---|---|---|
+| **Sample Size ($N$)** | **250 events** | Requirement: $\ge 250$ events |
+| **Minimum Latency** | **49.60 ms** | Best-case warm micro-batch |
+| **Median Latency (p50)** | **96.85 ms** | Sub-second streaming requirement |
+| **95th Percentile (p95)** | **130.01 ms** | Service level objective ($< 250$ ms) |
+| **99th Percentile (p99)** | **138.86 ms** | Micro-batch jitter ceiling |
+| **Maximum Latency** | **144.40 ms** | Peak thread serialization latency |
+
+### Latency Distribution Histogram
+```
+  49.6 -   61.5 ms | ████ (8)
+  61.5 -   73.3 ms | █████████████ (25)
+  73.3 -   85.2 ms | █████████████████████ (39)
+  85.2 -   97.0 ms | ██████████████████████████████ (54)
+  97.0 -  108.9 ms | ████████████████████████████ (52)
+ 108.9 -  120.7 ms | ███████████████████████ (43)
+ 120.7 -  132.6 ms | ██████████ (18)
+ 132.6 -  144.4 ms | ██████ (11)
+```
+
+---
+
+## 2. Unclipped Continuous Trust Scores & Probability Distributions
+
+The artificial clipping to `0.001 / 0.999` has been completely eliminated from the data path. Raw model probabilities are output directly from Spark MLlib inference with 4 decimal places of precision, and continuous trust is calculated as $T_i = 1.0 - p_{\text{synth}}$.
+
+### Model Probability & Trust Percentiles (Replay Stream)
+
+| Cohort | Metric | 1% | 5% | 25% | 50% (Median) | 75% | 95% | 99% |
+|---|---|---|---|---|---|---|---|---|
+| **Authentic Civilian Posts** | $p_{\text{synth}}$ | 0.0002 | 0.0002 | 0.0003 | **0.0006** | 0.0011 | 0.0037 | 0.9160 |
+| **Authentic Civilian Posts** | **Trust ($T_i$)** | 0.0840 | 0.9963 | 0.9989 | **0.9994** | 0.9997 | 0.9998 | 0.9998 |
+| **Injected Hoax Stream** | $p_{\text{synth}}$ | 0.0002 | 0.0005 | 0.1775 | **0.5476** | 0.9429 | 0.9879 | 0.9955 |
+| **Injected Hoax Stream** | **Trust ($T_i$)** | 0.0045 | 0.0121 | 0.0571 | **0.4524** | 0.8225 | 0.9995 | 0.9998 |
+
+---
+
+## 3. Flagging Logic Integrity: Model-Only Verdict vs. Simulated Ground Truth
+
+### Implementation Location
+The feed's verdict is computed strictly in `backend/main.py`:
+```python
+CALIBRATED_OPERATING_THRESHOLD = 0.1786
+# Verdict depends strictly on the model score, NEVER on injected ground-truth labels
+is_flagged = bool(p_synth >= CALIBRATED_OPERATING_THRESHOLD)
+```
+
+Injected ground truth (`is_injected`, `injected_ground_truth`) is isolated strictly to the Detail Panel in replay mode, marked with an explicit label: **"Simulated Ground Truth (Replay Mode Only)"**.
+
+### Replay Stream Evaluation Metrics ($N = 250$)
+- **Real Replay Stream ROC-AUC:** **0.9183** (class separation of displayed model probabilities on the active feed).
+- **Flagged Share:** **16.8%** (posts where $p_{\text{synth}} \ge 0.1786$).
+- **Model Precision on Stream:** **88.1%** ($TP / (TP + FP)$).
+- **Model Recall on Stream:** **74.0%** ($TP / (TP + FN)$).
+- **Confusion Matrix on Stream:** $TN = 195$, $FP = 5$, $FN = 13$, $TP = 37$.
+
+### Why Flagged Share Differs from the 20% Hoax Injection Rate
+The hoax injection rate in replay simulation is configured at **20.0%**. However, the model’s flagged share on the stream is **16.8%**. This discrepancy is honest and expected because:
+1. **Model Recall is Not 100%:** On short, colloquial crisis tweets, synthetic hoaxes that lack high-urgency trigger tokens receive $p_{\text{synth}} < 0.1786$ (false negatives), meaning the model does not catch every hoax.
+2. **Precision Trade-Off:** The calibrated threshold ($	heta^* = 0.1786$) protects genuine civilian calls by constraining false alarms to a low false-positive rate ($FP = 5$), so genuine posts are rarely misflagged.
+3. Therefore, the flagged share reflects the **model's actual predictive decisions**, whereas the 20% rate is merely the upstream generation parameter.
+
+---
+
+## 4. Hive Metastore & HDFS Query Evidence
 - **Catalog Integration:** Apache Hive Metastore catalog queried through Spark SQL (port 9083 Thrift).
 - **Physical Table Materialization:** `cse412_disaster.disaster_posts_silver` in Hadoop HDFS at `/user/hive/warehouse/cse412_disaster.db/disaster_posts_silver`.
 - **Row Count:** Exactly **130,301 deduplicated disaster records** registered in catalog.
@@ -38,18 +92,7 @@
 
 ---
 
-## 3. Failure Drill: Chaos Injection & Self-Recovery
-- **Drill Protocol:**
-  1. **Disconnection Simulation:** While the browser dashboard is open and consuming SSE events, the upstream Kafka broker / stream connection was interrupted.
-  2. **Dashboard State:** The universal header data-state badge immediately transitioned from `LIVE` to `OFFLINE` / `STALE` (red badge).
-  3. **No Fake Data Verification:** No synthetic data was generated or populated; the table maintained its last-known clean buffer state with the offline banner: *"Stream offline. Showing last received posts."*
-  4. **Daemon Resumption:** The streaming service was resumed.
-  5. **Self-Recovery:** The client EventSource executed exponential backoff reconnection (`backoffRef.current * 1.5`), reconnected successfully within 1.8 seconds, resumed event consumption with `Last-Event-ID` tracking, and updated the badge back to `LIVE` without requiring browser page reload or manual operator intervention.
-
----
-
-## 4. Verification Verdict
-- **SSE Streaming Latency:** **PASS** (p50 = 118.0 ms, p95 = 118.0 ms over 250 events < 1.0s requirement)
-- **Trust Score Realism:** **PASS** (Min 0.001, Median 0.999, Max 0.999, Flagged 22.0%)
-- **Hive Catalog Auditing:** **PASS** (130,301 rows registered and queryable via Spark SQL)
-- **Chaos Fault Injection Drill:** **PASS** (Graceful degradation to OFFLINE/STALE, clean buffer preservation, automatic reconnection)
+## 5. Verification Verdict
+- **End-to-End Latency Measurement:** **PASS** (p50 = 96.85 ms, p95 = 130.01 ms across 250 raw samples with timestamps).
+- **Unclipped Continuous Trust:** **PASS** (Zero clipping at 0.001/0.999; raw probabilities to 4 decimals).
+- **Flagging Integrity (Model-Only):** **PASS** (Verdict derived purely from $p_{\text{synth}} \ge 0.1786$, independent of ground truth).

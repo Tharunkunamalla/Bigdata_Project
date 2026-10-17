@@ -107,10 +107,10 @@ def test_sample_posts_cleanliness_and_continuous_trust():
         # Check humanitarian category is never not_humanitarian
         assert p["humanitarian_category"] != "not_humanitarian"
 
-        # Check trust score
+        # Check trust score is unclipped in [0.0, 1.0] with 4 decimals
         trust = p["trust_score"]
         trusts.append(trust)
-        assert 0.001 <= trust <= 0.999
+        assert 0.0 <= trust <= 1.0
         assert isinstance(trust, (float, int))
 
         if p["is_flagged_misinformation"] == 1:
@@ -189,3 +189,40 @@ def test_demo_steps_execution():
         assert d["status"] == "PASS"
         assert len(d["output"]) > 20
         assert len(d["command"]) > 5
+
+def test_verdict_strictly_independent_of_ground_truth():
+    """
+    CRITICAL VERIFICATION (Item 3):
+    Proves that post flagging and verdict decisions are strictly computed from the
+    model score at the calibrated operating threshold (0.1786) and NEVER from ground truth labels.
+    """
+    from backend.main import format_post_payload, CALIBRATED_OPERATING_THRESHOLD
+
+    # Case 1: Injected hoax ground truth (is_synthetic=1), BUT model predicted low p_synth (< 0.1786)
+    # Verdict MUST be Credible (not flagged)
+    hoax_post_low_score = {
+        "post_id": "test_hoax_low",
+        "text": "Flood water in streets",
+        "is_synthetic": 1,
+        "is_hoax": 1,
+        "prob_synthetic_score": 0.0512
+    }
+    payload1 = format_post_payload(hoax_post_low_score, 1, "houston", 29.76, -95.36, "12:00:00")
+    assert payload1["is_flagged_misinformation"] == 0, "Verdict must not flag when model score < threshold even if is_synthetic=1"
+    assert payload1["status_label"] == "Credible", "Status must be Credible when model score < threshold"
+    assert payload1["is_injected"] is True, "Detail inspector must report simulated ground truth separately"
+
+    # Case 2: Authentic post ground truth (is_synthetic=0), BUT model predicted high p_synth (>= 0.1786)
+    # Verdict MUST be Suspected Synthetic (flagged)
+    auth_post_high_score = {
+        "post_id": "test_auth_high",
+        "text": "Evacuation required immediately water in house",
+        "is_synthetic": 0,
+        "is_hoax": 0,
+        "prob_synthetic_score": 0.8842
+    }
+    payload2 = format_post_payload(auth_post_high_score, 2, "houston", 29.76, -95.36, "12:00:01")
+    assert payload2["is_flagged_misinformation"] == 1, "Verdict must flag when model score >= threshold even if is_synthetic=0"
+    assert payload2["status_label"] == "Suspected Synthetic", "Status must be Suspected Synthetic when model score >= threshold"
+    assert payload2["is_injected"] is False, "Detail inspector must report authentic civilian ground truth"
+

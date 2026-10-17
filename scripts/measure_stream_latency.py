@@ -124,4 +124,5 @@ def main():
     print(f"Evidence recorded in {EVIDENCE_FILE}")
 
 if __name__ == "__main__":
-    main()
+    from scripts.measure_real_pipeline import run
+    run()

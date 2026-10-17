@@ -3,7 +3,7 @@
 **Course:** CSE412 — Big Data & Large-Scale Computing  
 **Audience:** Course Professors, TAs, and Technical Evaluators  
 **Scope:** 25 Rigorous Technical Questions with Defensible, Empirically Grounded Answers  
-**Release Tag:** `v1.0-final-7`  
+**Release Tag:** `v1.0-final-8`  
 
 ---
 

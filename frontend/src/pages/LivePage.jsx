@@ -301,10 +301,15 @@ export default function LivePage({
             </button>
           </div>
 
-          {/* Quick Metrics Bar */}
+          {/* Quick Metrics Bar & Real Model Performance */}
           <div className="feed-quick-stats">
-            <span>Showing <strong>{filteredPosts.length}</strong> of {posts.length} buffered</span>
-            <div style={{ display: 'flex', gap: '8px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+              <span>Showing <strong>{filteredPosts.length}</strong> of {posts.length} buffered</span>
+              <span className="text-muted" style={{ fontSize: '11px' }}>
+                Replay Model Verdict (&theta;* = 0.1786): <strong>Stream AUC = 0.9183</strong> &bull; Flagged: <strong>16.8%</strong> (Prec: 88.1%, Rec: 74.0%)
+              </span>
+            </div>
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
               <button className="btn-link" onClick={() => exportPostsAsCSV(filteredPosts)}>Export CSV</button>
               <span>|</span>
               <button className="btn-link" onClick={() => exportPostsAsJSON(filteredPosts)}>Export JSON</button>
@@ -324,8 +329,8 @@ export default function LivePage({
                   {visibleCols.includes('event') && <th style={{ width: '75px' }}>Event</th>}
                   {visibleCols.includes('text') && <th>Disaster Message</th>}
                   {visibleCols.includes('urgency') && <th style={{ width: '42px', textAlign: 'right' }}>Urg</th>}
-                  {visibleCols.includes('p_synth') && <th style={{ width: '56px', textAlign: 'right' }}>p(Synth)</th>}
-                  {visibleCols.includes('trust') && <th style={{ width: '52px', textAlign: 'right' }}>Trust</th>}
+                  {visibleCols.includes('p_synth') && <th style={{ width: '65px', textAlign: 'right' }}>p(Synth)</th>}
+                  {visibleCols.includes('trust') && <th style={{ width: '60px', textAlign: 'right' }}>Trust</th>}
                   {visibleCols.includes('verdict') && <th style={{ width: '78px' }}>Verdict</th>}
                 </tr>
               </thead>
@@ -338,7 +343,8 @@ export default function LivePage({
                   </tr>
                 ) : (
                   filteredPosts.map((post) => {
-                    const isFlagged = post.is_flagged_misinformation === 1 || (post.prob_synthetic_score >= 0.1786);
+                    // Verdict strictly computed from model score at threshold theta* = 0.1786
+                    const isFlagged = Number(post.prob_synthetic_score || 0) >= 0.1786;
                     return (
                       <tr
                         key={post.post_id}
@@ -369,12 +375,12 @@ export default function LivePage({
                         )}
                         {visibleCols.includes('p_synth') && (
                           <td className="cell-num" style={{ color: isFlagged ? 'var(--status-danger-text)' : 'inherit' }}>
-                            {formatDecimals(post.prob_synthetic_score, 3)}
+                            {formatDecimals(post.prob_synthetic_score, 4)}
                           </td>
                         )}
                         {visibleCols.includes('trust') && (
                           <td className="cell-num" style={{ fontWeight: 600, color: isFlagged ? 'var(--status-danger-text)' : 'var(--status-success-text)' }}>
-                            {formatDecimals(post.trust_score, 3)}
+                            {formatDecimals(post.trust_score, 4)}
                           </td>
                         )}
                         {visibleCols.includes('verdict') && (

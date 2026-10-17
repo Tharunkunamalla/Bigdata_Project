@@ -135,7 +135,7 @@
 <p><strong>Course:</strong> CSE412 Big Data Analytics</p>
 <p><strong>Institution:</strong> Arizona State University</p>
 <p><strong>System Architecture:</strong> Apache Kafka 3.7.0 (KRaft) → Apache Spark 3.5.1 Structured Streaming & MLlib → Apache Hadoop HDFS 3.3.6 → Apache Hive Metastore 3.1.3 (queried via Spark SQL) → PuLP CBC MILP Optimizer</p>
-<p><strong>Release Tag:</strong> <code>v1.0-final-7</code></p>
+<p><strong>Release Tag:</strong> <code>v1.0-final-8</code></p>
 <p><strong>Execution Environment:</strong> Distributed Big Data Daemon Cluster on WSL2 / Ubuntu 22.04 LTS</p>
 <p class='spacer'></p>
 <hr/>
@@ -160,7 +160,7 @@
 <li><strong>Calibrated Multi-Task Machine Learning Suite:</strong> Using a 130,301-record curated corpus drawn from QCRI HumAID, CrisisLex, PHEME, LIAR, HC3, and MAGE, we develop a multi-task suite spanning synthetic text detection, crisis rumour classification, humanitarian categorization, and urgency regression. We prove that while standard thresholds (<em>\theta = 0.50</em>) fail on short crisis tweets, validation threshold tuning (<em>\theta^* = 0.1786</em>) yields 0.9200 precision and an ROC-AUC of 0.9940 on held-out generator hoaxes, while establishing an honest -0.198 Macro-F1 generalization penalty across unseen disaster events.</li>
 <li><strong>MinHashLSH Coordination Graph with Circularity Controls:</strong> We implement distributed Locality-Sensitive Hashing to construct near-duplicate communication graphs across 15,000 posts, identifying coordinated amplification structures while establishing that approximately 30.0% of dense clustering reflects template phrasing syntax rather than malicious coordination.</li>
 <li><strong>Trust-Aware Mixed-Integer Linear Optimization:</strong> We formulate and solve a Trust-Aware MILP optimizer in PuLP CBC, integrating continuous Bayesian trust discounting and calibrated threshold gating with authentic OpenStreetMap depot facilities. In a 30-seed empirical study across four multi-hazard regions, our calibrated policy demonstrates a statistically significant rescue gain (+0.63 genuine victims rescued in Houston, <em>p = 0.00053</em>) by withholding assets from synthetic hoaxes while fully servicing verified civilian demands.</li>
-<li><strong>Academic Operations Dashboard:</strong> We deploy a clean, engineering-grade 5-page dashboard served directly by the FastAPI backend at <code>http://127.0.0.1:8000/</code>, featuring real-time Server-Sent Events (p50 latency 118 ms), interactive MILP dispatch execution, transparent model diagnostics, and verified end-to-end demo execution.</li>
+<li><strong>Academic Operations Dashboard:</strong> We deploy a clean, engineering-grade 5-page dashboard served directly by the FastAPI backend at <code>http://127.0.0.1:8000/</code>, featuring real-time Server-Sent Events (measured p50 latency 96.85 ms, p95 = 130.01 ms over 250 raw events), interactive MILP dispatch execution, transparent model diagnostics, and verified end-to-end demo execution.</li>
 <p class='spacer'></p>
 <hr/>
 <p class='spacer'></p>

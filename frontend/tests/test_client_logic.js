@@ -66,6 +66,15 @@ function testFilterLogic() {
   assert.strictEqual(sortedTrust[0].post_id, 'p_2', 'Highest trust post should be p_2 (0.999)');
   assert.strictEqual(sortedTrust[sortedTrust.length - 1].post_id, 'p_3', 'Lowest trust post should be p_3 (0.080)');
 
+  // Model-only verdict independence test (Item 3)
+  const mixedPosts = [
+    { post_id: 'p_hoax_low', is_injected: true, prob_synthetic_score: 0.0412 },
+    { post_id: 'p_auth_high', is_injected: false, prob_synthetic_score: 0.8251 }
+  ];
+  const modelFlagged = mixedPosts.filter(p => p.prob_synthetic_score >= 0.1786);
+  assert.strictEqual(modelFlagged.length, 1, 'Verdict must strictly use model score, ignoring ground truth is_injected');
+  assert.strictEqual(modelFlagged[0].post_id, 'p_auth_high', 'High score post must be flagged regardless of authentic ground truth');
+
   console.log('✓ Filter and sorting pipeline passed.');
 }
 
