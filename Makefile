@@ -64,3 +64,6 @@ demo:
 
 demo-terminal:
 	$(PYTHON) scripts/demo_terminal.py
+
+demo-pipeline:
+	bash scripts/demo_pipeline.sh
