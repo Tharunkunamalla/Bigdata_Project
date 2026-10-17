@@ -3,7 +3,7 @@
 **Course:** CSE412 — Big Data Analytics  
 **Institution:** Arizona State University  
 **System Address:** Single unified endpoint at **`http://127.0.0.1:8000/`**  
-**Release Tag:** `v1.0-final-6`  
+**Release Tag:** `v1.0-final-7`  
 
 ---
 

@@ -7,7 +7,7 @@
 [![Hadoop HDFS](https://img.shields.io/badge/Hadoop%20HDFS-3.3.6-yellow.svg)](https://hadoop.apache.org/)
 [![Hive Metastore](https://img.shields.io/badge/Hive%20Metastore-3.1.3-green.svg)](https://hive.apache.org/)
 [![Pytest](https://img.shields.io/badge/Tests-13%20Passing-brightgreen.svg)](tests/test_real_pipeline.py)
-[![Release](https://img.shields.io/badge/Version-v1.0--final--6-blue.svg)](docs/REPORT.md)
+[![Release](https://img.shields.io/badge/Version-v1.0--final--7-blue.svg)](docs/REPORT.md)
 
 **CrisisGuard AI** is an end-to-end, distributed big data analytics and optimization pipeline designed to protect emergency dispatch operations from generative AI-driven misinformation during natural disasters. Built across **Apache Kafka 3.7.0**, **Apache Spark 3.5.1 Structured Streaming & MLlib**, **Apache Hadoop HDFS 3.3.6**, **Apache Hive Metastore 3.1.3** (queried through Spark SQL), and **PuLP CBC Mixed-Integer Linear Programming (MILP)**, CrisisGuard ingests high-velocity disaster streams, scores synthetic hoaxes, identifies botnet coordination via MinHashLSH, and executes optimal fleet dispatch plans to prioritize genuine disaster victims.
 
