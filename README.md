@@ -1,12 +1,5 @@
 # CrisisGuard AI
-
-[![Course](https://img.shields.io/badge/Course-CSE412%20Big%20Data-blue.svg)](docs/REPORT.md)
-[![Apache Spark](https://img.shields.io/badge/Apache%20Spark-3.5.1%20MLlib-orange.svg)](https://spark.apache.org/)
-[![Apache Kafka](https://img.shields.io/badge/Apache%20Kafka-3.7.0%20KRaft-black.svg)](https://kafka.apache.org/)
-[![Hadoop HDFS](https://img.shields.io/badge/Hadoop%20HDFS-3.3.6-yellow.svg)](https://hadoop.apache.org/)
-[![Hive Metastore](https://img.shields.io/badge/Hive%20Metastore-3.1.3-green.svg)](https://hive.apache.org/)
-[![Pytest](https://img.shields.io/badge/Tests-13%20Passing-brightgreen.svg)](tests/test_real_pipeline.py)
-[![Release](https://img.shields.io/badge/Version-v1.0--final--7-blue.svg)](docs/REPORT.md)
+Real-Time Detection of Synthetic Misinformation and Trust-Aware Emergency Resource Allocation in Multi-Hazard Disasters
 
 ---
 
