@@ -1,5 +1,4 @@
 # CrisisGuard AI
-<<<<<<< HEAD
 ### Real-Time Detection of Synthetic Misinformation and Trust-Aware Emergency Resource Allocation in Multi-Hazard Disasters
 
 [![Course](https://img.shields.io/badge/Course-CSE412%20Big%20Data-blue.svg)](docs/REPORT.md)
@@ -11,17 +10,15 @@
 [![Release](https://img.shields.io/badge/Version-v1.0--final--8-blue.svg)](docs/REPORT.md)
 
 **CrisisGuard AI** is an end-to-end, distributed big data analytics and optimization pipeline designed to protect emergency dispatch operations from generative AI-driven misinformation during natural disasters. Built across **Apache Kafka 3.7.0**, **Apache Spark 3.5.1 Structured Streaming & MLlib**, **Apache Hadoop HDFS 3.3.6**, **Apache Hive Metastore 3.1.3** (queried through Spark SQL), and **PuLP CBC Mixed-Integer Linear Programming (MILP)**, CrisisGuard ingests high-velocity disaster streams, scores synthetic hoaxes, identifies botnet coordination via MinHashLSH, and executes optimal fleet dispatch plans to prioritize genuine disaster victims.
-=======
-Real-Time Detection of Synthetic Misinformation and Trust-Aware Emergency Resource Allocation in Multi-Hazard Disasters
->>>>>>> origin/main
 
 ---
 
-## 1. Overview
+## 1. Overview & Key Empirical Findings
 
-CrisisGuard AI is an end-to-end, distributed big data analytics and optimization pipeline designed to protect municipal Emergency Operations Centers (EOCs) and first responders from generative AI-driven misinformation during sudden-onset natural disasters. High-velocity crisis communications on public social streams (such as Twitter/X) are increasingly utilized as sensor networks for emergency dispatch. However, malicious campaigns and automated social botnets can synthesize and broadcast thousands of urgent, fake distress calls per minute. If municipal dispatchers treat unverified digital streams with blind credulity, finite rescue assets (such as evacuation boats and ambulances) are dispatched to phantom coordinates, exhausting resources and endangering genuine disaster victims.
+CrisisGuard AI couples distributed stream ingestion, real-time feature extraction, out-of-core machine learning inference, graph-based coordination analysis, and trust-aware mathematical optimization to filter synthetic hoaxes and execute optimal fleet dispatch plans.
 
-<<<<<<< HEAD
+All metrics are generated from **130,301 authentic, deduplicated crisis records** (QCRI CrisisBench / HumAID, CrisisLexT26, Hello-SimpleAI HC3, MAGE, PHEME, and LIAR) evaluated across live cluster daemons. Zero numbers are hardcoded.
+
 - **Authentic Silver Corpus:** 130,301 records partitioned in HDFS Parquet at `/user/hive/warehouse/cse412_disaster.db/disaster_posts_silver` and registered in the Hive Metastore catalog.
 - **Strict 75/25 Random Stratified Split:** 75% Train (97,422 rows) / 25% Test (32,879 rows) stratified on source, `is_synthetic`, and `is_hoax` (seed 42) with **0.00% text leakage**. Held-out event generalization is evaluated as a separate analysis (HumAID 5-fold CV: Macro-F1 = 0.5587 ± 0.0631).
 - **Tweet-Domain Synthetic Detector & Sanity Controls:**
@@ -39,9 +36,6 @@ CrisisGuard AI is an end-to-end, distributed big data analytics and optimization
 - **Streaming Pipeline Performance:** Sustained **2,420 events/sec** streaming throughput with measured **p50 = 96.85 ms** and **p95 = 130.01 ms** (N=250 events, min: 49.60 ms, max: 144.40 ms) via Server-Sent Events.
 - **100,000-Event Streaming Fault Tolerance:** Tested with hard worker crash; resumed from HDFS write-ahead checkpoints with **0 events lost (0.00% loss)**, 0 duplicates, and a **2.83s recovery window**.
 - **Scaling Benchmark (1M to 10,000,000 rows):** Evaluated Pandas vs Spark under a 1.5 GB memory cap. Pandas triggers an OOM crash at 10M rows. Spark spills partitions to disk out-of-core and completes in **12.80s** (10M rows).
-=======
-CrisisGuard AI couples distributed stream ingestion, real-time feature extraction, out-of-core machine learning inference, graph-based coordination analysis, and trust-aware mathematical optimization to filter synthetic hoaxes and execute optimal fleet dispatch plans.
->>>>>>> origin/main
 
 ---
 
