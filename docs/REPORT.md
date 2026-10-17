@@ -3,7 +3,7 @@
 **Course:** CSE412 Big Data Analytics  
 **Institution:** Arizona State University  
 **System Architecture:** Apache Kafka 3.7.0 (KRaft) → Apache Spark 3.5.1 Structured Streaming & MLlib → Apache Hadoop HDFS 3.3.6 → Apache Hive Metastore 3.1.3 (queried via Spark SQL) → PuLP CBC MILP Optimizer  
-**Release Tag:** `v1.0-final-6`  
+**Release Tag:** `v1.0-final-7`  
 **Execution Environment:** Distributed Big Data Daemon Cluster on WSL2 / Ubuntu 22.04 LTS  
 
 ---

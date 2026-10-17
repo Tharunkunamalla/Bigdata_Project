@@ -3,7 +3,7 @@
 **Course:** CSE412 — Big Data & Large-Scale Computing  
 **Project:** CrisisGuard AI  
 **Scope:** Distributed Infrastructure Topology, Port Mappings, Dataflow Lifecycles, and Component Specifications  
-**Release Tag:** `v1.0-final-6`  
+**Release Tag:** `v1.0-final-7`  
 
 ---
 
