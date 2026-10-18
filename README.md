@@ -82,7 +82,7 @@ Bigdata_Project/
 └── tests/           # Unit tests, integration tests, and infrastructure verifiers
 ```
 
----
+
 
 ## 4. Key Empirical Results 
 
@@ -103,11 +103,7 @@ All metrics are measured from the **130,301-record curated disaster corpus** (Hu
 - **Simulated GPS Coordinates:** While regional depots are authentic facilities sourced from OpenStreetMap, social media post coordinates are simulated within regional bounding boxes due to Twitter API privacy anonymization.
 - **Template Regularity in Synthetic Generators:** Rule-based generators produce template phrases ("mayday", "evacuation") that facilitate high detection accuracy; real-world LLM-generated campaigns exhibit higher stylistic variance.
 
----
 
-
-
----
 
 
 
