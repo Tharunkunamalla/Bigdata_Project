@@ -71,6 +71,7 @@ def test_health_endpoint_kafka_down_handling(monkeypatch):
     assert data["services"]["kafka"]["service_reachable"] is False
     assert data["services"]["kafka"]["last_seen"] is None
 
+@pytest.mark.skipif(not os.path.exists(TEST_PREDS_CSV), reason="Curated test predictions are gitignored; run ml pipeline to generate")
 def test_hand_computed_threshold_confusion_matrix():
     """Verify the interactive threshold slider against hand-computed ground truth on test_predictions.csv."""
     assert os.path.exists(TEST_PREDS_CSV), "test_predictions.csv must exist"
