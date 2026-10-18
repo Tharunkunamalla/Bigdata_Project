@@ -20,13 +20,13 @@ function testBufferDeduplication() {
   assert.strictEqual(posts.length, 2, 'Buffer length should remain 2 after duplicate update');
   assert.strictEqual(posts[0].text, 'First post updated', 'Updated post should be at the head of buffer');
 
-  // Add up to 550 posts to test buffer cap of 500
-  for (let i = 3; i <= 550; i++) {
+  // Add up to 350 posts to test buffer cap of 300
+  for (let i = 3; i <= 350; i++) {
     const p = { post_id: `p_${i}`, text: `Post ${i}`, trust_score: 0.9 };
-    posts = [p, ...posts.filter(item => item.post_id !== p.post_id)].slice(0, 500);
+    posts = [p, ...posts.filter(item => item.post_id !== p.post_id)].slice(0, 300);
   }
 
-  assert.strictEqual(posts.length, 500, 'Buffer cap must strictly enforce max 500 records');
+  assert.strictEqual(posts.length, 300, 'Buffer cap must strictly enforce max 300 records');
   console.log('✓ Buffer deduplication and cap enforcement passed.');
 }
 

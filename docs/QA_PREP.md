@@ -156,9 +156,9 @@ FastAPI (`backend/main.py`) acts as the operational API gateway:
 2. It executes on-demand fleet allocations via the PuLP solver module based on client parameters.
 3. It serves the production build of the React 18 / Vite frontend directly as static assets.
 
-#### Q22: "Why do your map and dashboard show `[SIMULATED]` badges?"
+#### Q22: "Why do your map and dashboard show a simulation note?"
 **Answer:**  
-To avoid misleading evaluators: while the text and classification scores originate from authentic HumAID and CrisisLex records, the real-time websocket playback and social media coordinates (bounded regionally) are **simulated stream replays**. Emergency depot locations are authentic OpenStreetMap Overpass facilities. Clearly labeling simulated components is an absolute integrity requirement.
+To avoid misleading emergency coordinators: while the disaster text and model classification scores originate from authentic disaster benchmarks (HumAID, CrisisLex, PHEME), the real-time stream arrival and tweet coordinates are simulated within regional bounding boxes, displaying the note: *"Locations are simulated inside the region"*. In contrast, emergency depots are authentic facilities sourced directly from OpenStreetMap. Disclosing simulated components is an absolute integrity requirement.
 
 #### Q23: "What are the primary real-world failure modes of CrisisGuard AI?"
 **Answer:**  
@@ -168,11 +168,11 @@ To avoid misleading evaluators: while the text and classification scores origina
 
 #### Q24: "What happens if a genuine victim sends an unverified rumor or panic tweet?"
 **Answer:**  
-If a genuine victim posts in all-caps with unverified phrasing, the trust score may temporarily decrease. However, our objective function balances trust with reported urgency: a high urgency score ensures the demand remains in the candidate pool. Furthermore, CrisisGuard is designed as a **decision-support triaging tool** for human dispatch commanders, not an autonomous physical actuator.
+If a genuine victim posts with panic phrasing, the trust score may temporarily decrease. However, our objective function balances trust with reported urgency: a high urgency score ensures the demand remains in the candidate pool. Furthermore, CrisisGuard is designed as a **decision-support triaging tool** for human dispatch commanders, not an autonomous physical actuator.
 
 #### Q25: "How should our team explain the contribution breakdown during oral defense?"
 **Answer:**  
 Each member should directly present the modules they implemented:
-- **Student 1 (Infrastructure Lead):** Kafka KRaft streaming buffer, HDFS storage hierarchy, Hive Metastore Spark SQL catalog, 100k-event crash recovery test (2.83s recovery, 0 loss).
+- **Student 1 (Infrastructure Lead):** Kafka KRaft streaming buffer, HDFS storage hierarchy, Hive Metastore Spark SQL catalog, 100k-event crash recovery test (2.83s recovery, 0 loss via at-least-once delivery with effectively-once storage).
 - **Student 2 (Machine Learning & Graph Lead):** QCRI HumAID / CrisisLex 130k corpus curation, 75/25 random stratified partition, held-out event evaluation, Spark MLlib models, 20-shuffle permutation control, and MinHashLSH similarity graph.
-- **Student 3 (Optimization & Dashboard Lead):** PuLP CBC MILP mathematical formulation, 30-seed multi-region ablation study, sensitivity sweeps, FastAPI endpoints, and React 18 / Vite dashboard.
+- **Student 3 (Optimization & Dashboard Lead):** PuLP CBC MILP mathematical formulation, 30-seed multi-region ablation study, sensitivity sweeps, FastAPI endpoints, and the 3-view React 18 / Vite coordinator dashboard (Live, Dispatch, About + Status Drawer).

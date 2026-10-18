@@ -1,45 +1,49 @@
 import React from 'react';
-import { Sun, Moon } from 'lucide-react';
+import { Sun, Moon, Radio } from 'lucide-react';
 
 export default function Header({
   activeTab,
   setActiveTab,
-  streamState, // 'LIVE', 'REPLAY', 'STALE', 'OFFLINE'
-  isSimulated = true,
+  dataState = 'REPLAY', // 'LIVE', 'REPLAY', 'OFFLINE'
+  onOpenStatus,
   theme,
   onToggleTheme
 }) {
   const tabs = [
     { id: 'live', label: 'Live' },
-    { id: 'allocation', label: 'Allocation' },
-    { id: 'pipeline', label: 'Pipeline' },
-    { id: 'results', label: 'Results' }
+    { id: 'dispatch', label: 'Dispatch' },
+    { id: 'about', label: 'About' }
   ];
 
-  const getBadgeClass = (state) => {
-    switch (state) {
-      case 'LIVE': return 'badge-live';
-      case 'REPLAY': return 'badge-replay';
-      case 'STALE': return 'badge-stale';
-      case 'OFFLINE': default: return 'badge-offline';
-    }
+  const getStatusLabel = () => {
+    if (dataState === 'LIVE') return 'Live';
+    if (dataState === 'REPLAY') return 'Replay';
+    return 'Offline';
+  };
+
+  const getStatusDotClass = () => {
+    if (dataState === 'LIVE') return 'dot-live';
+    if (dataState === 'REPLAY') return 'dot-replay';
+    return 'dot-offline';
   };
 
   return (
     <header className="app-header">
-      <div className="brand-section">
-        <span className="brand-title">CrisisGuard AI</span>
-        <div className="badge-group">
-          <span className={`badge ${getBadgeClass(streamState)}`} title={`Ingestion feed state: ${streamState}`}>
-            <span className="status-dot"></span>
-            {streamState}
-          </span>
-          {isSimulated && (
-            <span className="badge badge-simulated" title="Simulated data: Social coordinates & replay feed active">
-              Simulated data
-            </span>
-          )}
+      <div className="header-left">
+        <div className="brand" onClick={() => setActiveTab('live')} role="button" tabIndex={0}>
+          <span className="brand-name">CrisisGuard</span>
         </div>
+
+        <button
+          id="status-drawer-toggle"
+          className="status-button"
+          onClick={onOpenStatus}
+          title="Open service status details"
+          aria-label="Service status drawer"
+        >
+          <span className={`status-dot ${getStatusDotClass()}`} />
+          <span className="status-text">{getStatusLabel()}</span>
+        </button>
       </div>
 
       <nav className="tab-nav" aria-label="Main navigation">
@@ -55,13 +59,13 @@ export default function Header({
         ))}
       </nav>
 
-      <div className="header-actions">
+      <div className="header-right">
         <button
           id="theme-toggle-btn"
-          className="btn-icon"
+          className="btn-theme"
           onClick={onToggleTheme}
           title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
-          aria-label="Toggle visual theme"
+          aria-label="Toggle theme"
         >
           {theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
         </button>

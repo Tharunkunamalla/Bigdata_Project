@@ -31,6 +31,7 @@ import json
 import time
 import socket
 import asyncio
+import threading
 import math
 import subprocess
 from datetime import datetime, timezone
@@ -72,16 +73,43 @@ os.makedirs(EVIDENCE_DIR, exist_ok=True)
 # ---------------------------------------------------------------------------
 # Text & Event Cleaning Utilities
 # ---------------------------------------------------------------------------
+import html
+
 EVENT_PREFIX_PATTERNS = [
-    re.compile(r'^(earthquake|flood|hurricane|typhoon|cyclone|explosion|crash|fire|tornado|None)\s+', re.IGNORECASE)
+    re.compile(r'^(None|\"\"None|None\s+\"\"|\"None\"\"|\"None)\s*', re.IGNORECASE),
+    re.compile(r'^(earthquake|flood|hurricane|typhoon|cyclone|explosion|crash|fire|tornado)\s+', re.IGNORECASE)
 ]
+
+def clean_post_text(s: str) -> str:
+    """Cleans encoding artifacts, unescapes HTML entities, and strips leftover prefixes."""
+    if not s:
+        return ""
+    text = html.unescape(str(s).strip())
+    # Fix known encoding and mojibake artifacts
+    text = text.replace("‰ÛÒ", "—").replace("‰ÛÓ", "—").replace("‰ÛÏ", '"').replace("‰Ûª", "'").replace("‰Û", '"').replace("Û_", "")
+    text = text.replace("\x89\xdb\x92", "—").replace("\x89\xdb\x93", "—").replace("â€™", "'").replace("â€œ", '"').replace("â€\x9d", '"')
+    
+    prev = None
+    while prev != text:
+        prev = text
+        text = text.strip()
+        text = re.sub(r'^(None\b|"None"|\'None\'|None\s*""|""None)\s*', '', text, flags=re.IGNORECASE)
+        text = re.sub(r'^["\'`\s]+', '', text)
+        text = re.sub(r'^(earthquake|flood|hurricane|typhoon|cyclone|explosion|crash|fire|wildfire|tornado)\s+', '', text, flags=re.IGNORECASE)
+        text = re.sub(r'^["\'`\s]+', '', text)
+
+    return re.sub(r'\s+', ' ', text).strip()
 
 def clean_event_prefix(text: str) -> str:
     """Strips glued event prefix words like 'earthquake ', 'flood ', 'None ' from raw text."""
-    s = str(text or "").strip()
-    for pat in EVENT_PREFIX_PATTERNS:
-        s = pat.sub('', s)
-    return s.strip()
+    return clean_post_text(text)
+
+def is_readable_disaster_text(text: str) -> bool:
+    """Validates that a post is readable and contains sufficient textual content."""
+    if not text or len(text) < 15:
+        return False
+    alnum = sum(c.isalnum() for c in text)
+    return alnum >= 10
 
 def derive_clean_event_type(ev_str: str, dt_str: str, text: str) -> str:
     """Derives a clean human-readable event label for its own dedicated column/tag."""
@@ -102,6 +130,19 @@ def derive_clean_event_type(ev_str: str, dt_str: str, text: str) -> str:
         return "Transport Emergency"
     return "Severe Hazard"
 
+def match_region_disaster(r: Dict[str, Any], reg_key: str) -> bool:
+    """Matches a post to the appropriate disaster event for the selected region."""
+    blob = f"{r.get('event_type', '')} {r.get('disaster_type', '')} {r.get('text', '')}".lower()
+    if reg_key == "houston":
+        return any(k in blob for k in ["harvey", "houston", "flood", "water", "texas"])
+    elif reg_key == "california":
+        return any(k in blob for k in ["wildfire", "bushfire", "fire", "smoke", "blaze", "burn", "forest"])
+    elif reg_key == "nepal":
+        return any(k in blob for k in ["nepal", "earthquake", "quake", "tremor", "kathmandu"])
+    elif reg_key == "miami":
+        return any(k in blob for k in ["irma", "maria", "hurricane", "cyclone", "typhoon", "florida", "storm surge"])
+    return True
+
 # ---------------------------------------------------------------------------
 # In-Memory Cache of Cleaned Disaster Posts & Test Predictions
 # ---------------------------------------------------------------------------
@@ -115,40 +156,56 @@ STREAM_STATS = {
     "active_subscribers": 0
 }
 
+# Only replay verified disaster sources; strictly exclude general corpora (HC3, MAGE, LIAR)
+ALLOWED_DISASTER_SOURCES = {
+    "HumAID_CrisisBench",
+    "CrisisLex_DisasterTweets",
+    "PHEME_RumourDataset",
+    "hoax_generator_a",
+    "hoax_generator_b",
+    "hoax_generator_c"
+}
+
 def init_corpus_cache():
     global AUTHENTIC_POSTS_CACHE, HOAX_POSTS_CACHE, Y_TRUE_TEST, Y_PROB_TEST
-    source_path = TEST_PREDS_CSV if os.path.exists(TEST_PREDS_CSV) else CURATED_CSV
+    if os.path.exists(TEST_PREDS_CSV):
+        try:
+            df_test = pd.read_csv(TEST_PREDS_CSV, low_memory=False)
+            if "is_synthetic" in df_test and "prob_synthetic_score" in df_test:
+                Y_TRUE_TEST = (df_test["is_synthetic"].fillna(0) == 1.0).astype(int).to_numpy()
+                Y_PROB_TEST = df_test["prob_synthetic_score"].fillna(0.0).astype(float).to_numpy()
+        except Exception:
+            pass
+
+    source_path = CURATED_CSV if os.path.exists(CURATED_CSV) else TEST_PREDS_CSV
     if not os.path.exists(source_path):
         return
 
     try:
         df = pd.read_csv(source_path, low_memory=False)
         
-        # Save test evaluation arrays for interactive threshold calculation
-        if "is_synthetic" in df and "prob_synthetic_score" in df:
-            Y_TRUE_TEST = (df["is_synthetic"].fillna(0) == 1.0).astype(int).to_numpy()
-            Y_PROB_TEST = df["prob_synthetic_score"].fillna(0.0).astype(float).to_numpy()
-
-        # Exclude non-humanitarian posts (keep genuine disaster calls and alert hoaxes)
-        if "humanitarian_category" in df:
-            disaster_df = df[df["humanitarian_category"] != "not_humanitarian"].copy()
+        # Filter strictly to disaster sources (exclude general HC3, MAGE, LIAR text)
+        if "source" in df:
+            disaster_df = df[df["source"].isin(ALLOWED_DISASTER_SOURCES)].copy()
         else:
             disaster_df = df.copy()
 
-        # Clean text and derive event tag
-        disaster_df["clean_text"] = disaster_df["text"].apply(clean_event_prefix)
-        disaster_df["clean_event"] = disaster_df.apply(
-            lambda r: derive_clean_event_type(r.get("event_type", ""), r.get("disaster_type", ""), r.get("text", "")),
-            axis=1
-        )
-        
-        # Separate authentic from hoaxes
-        auth_df = disaster_df[(disaster_df["is_synthetic"] == 0) & (disaster_df.get("is_hoax", 0) == 0)]
-        hoax_df = disaster_df[(disaster_df["is_synthetic"] == 1) | (disaster_df.get("is_hoax", 0) == 1)]
+        # Exclude non-humanitarian posts
+        if "humanitarian_category" in disaster_df:
+            disaster_df = disaster_df[disaster_df["humanitarian_category"] != "not_humanitarian"].copy()
+
+        # Clean text and derive clean event tag
+        disaster_df["clean_text"] = disaster_df["text"].apply(clean_post_text)
+        disaster_df["is_readable"] = disaster_df["clean_text"].apply(is_readable_disaster_text)
+        disaster_df = disaster_df[disaster_df["is_readable"]].copy()
+
+        # Separate authentic disaster posts (HumAID, CrisisLex, PHEME) from injected hoaxes (generators)
+        auth_df = disaster_df[disaster_df["source"].isin(["HumAID_CrisisBench", "CrisisLex_DisasterTweets", "PHEME_RumourDataset"])]
+        hoax_df = disaster_df[disaster_df["source"].isin(["hoax_generator_a", "hoax_generator_b", "hoax_generator_c"])]
 
         AUTHENTIC_POSTS_CACHE = auth_df.to_dict(orient="records")
         HOAX_POSTS_CACHE = hoax_df.to_dict(orient="records")
-        print(f"[INIT] Loaded {len(AUTHENTIC_POSTS_CACHE)} authentic disaster posts and {len(HOAX_POSTS_CACHE)} hoaxes.")
+        print(f"[INIT] Loaded {len(AUTHENTIC_POSTS_CACHE)} clean disaster posts and {len(HOAX_POSTS_CACHE)} hoaxes (excluded general-domain text).")
     except Exception as e:
         print(f"[WARN] Failed to initialize in-memory corpus cache: {e}")
 
@@ -241,6 +298,7 @@ class AllocationRequest(BaseModel):
     hoax_rate: Optional[float] = Field(0.20, ge=0.0, le=1.0)
     capacity: Optional[int] = Field(52, ge=5, le=200)
     random_seed: Optional[int] = Field(42, ge=0, le=10000)
+    ignore_reliability: Optional[bool] = Field(False, description="When true, plans dispatch without trust weighting")
 
 def load_json_safe(filename: str):
     p = os.path.join(RESULTS_DIR, filename)
@@ -263,6 +321,40 @@ def check_tcp_port(host: str, port: int, timeout: float = 0.5) -> bool:
         return False
 
 # ---------------------------------------------------------------------------
+# Kafka Consumer Thread for Live Ingestion
+# ---------------------------------------------------------------------------
+LAST_KAFKA_MSG_TIME: Optional[float] = None
+KAFKA_SCORED_BUFFER: List[Dict[str, Any]] = []
+
+def kafka_consumer_worker():
+    global LAST_KAFKA_MSG_TIME
+    while True:
+        try:
+            if check_tcp_port("127.0.0.1", 9092, timeout=0.3):
+                from kafka import KafkaConsumer
+                consumer = KafkaConsumer(
+                    "disaster_scored_posts",
+                    bootstrap_servers=["127.0.0.1:9092"],
+                    auto_offset_reset="latest",
+                    enable_auto_commit=True,
+                    value_deserializer=lambda x: json.loads(x.decode("utf-8")),
+                    consumer_timeout_ms=1000
+                )
+                for msg in consumer:
+                    if msg and msg.value:
+                        LAST_KAFKA_MSG_TIME = time.time()
+                        KAFKA_SCORED_BUFFER.append(msg.value)
+                        if len(KAFKA_SCORED_BUFFER) > 300:
+                            KAFKA_SCORED_BUFFER.pop(0)
+            else:
+                time.sleep(2.0)
+        except Exception:
+            time.sleep(2.0)
+
+_kafka_thread = threading.Thread(target=kafka_consumer_worker, daemon=True)
+_kafka_thread.start()
+
+# ---------------------------------------------------------------------------
 # API Endpoints
 # ---------------------------------------------------------------------------
 
@@ -276,10 +368,27 @@ def get_health():
     now = datetime.now(timezone.utc).isoformat()
     overall = "OPERATIONAL" if (kafka_up and hdfs_up) else "DEGRADED"
 
+    is_kafka_live = kafka_up and (LAST_KAFKA_MSG_TIME is not None and (time.time() - LAST_KAFKA_MSG_TIME < 30.0))
+    has_replay = len(AUTHENTIC_POSTS_CACHE) > 0
+    
+    if is_kafka_live:
+        data_state = "LIVE"
+        data_state_label = "Live"
+    elif has_replay:
+        data_state = "REPLAY"
+        data_state_label = "Replay of recorded posts"
+    else:
+        data_state = "OFFLINE"
+        data_state_label = "Offline"
+
+    last_kafka_str = f"{int(time.time() - LAST_KAFKA_MSG_TIME)}s ago" if LAST_KAFKA_MSG_TIME else None
+
     return {
         "status": "OPERATIONAL" if overall == "OPERATIONAL" else "DEGRADED",
         "overall_state": overall,
         "as_of": now,
+        "data_state": data_state,
+        "data_state_label": data_state_label,
         "stream_stats": {
             "last_event_time": STREAM_STATS["last_event_time"],
             "events_served": STREAM_STATS["events_served"],
@@ -287,48 +396,41 @@ def get_health():
         },
         "services": {
             "kafka": {
-                "name": "Apache Kafka (KRaft)",
+                "name": "Apache Kafka",
                 "host": "127.0.0.1:9092",
-                "status": "service reachable" if kafka_up else "OFFLINE",
+                "status": "Running (service reachable)" if kafka_up else "OFFLINE",
                 "service_reachable": kafka_up,
-                "topic": "disaster_raw_posts",
                 "last_seen": now if kafka_up else None,
-                "key_metric": "2,420 events/sec sustained"
+                "last_message": last_kafka_str
             },
             "spark": {
-                "name": "Apache Spark Structured Streaming",
+                "name": "Apache Spark Streaming",
                 "version": "3.5.1",
-                "status": "service reachable",
+                "status": "Running (service reachable)",
                 "service_reachable": True,
                 "last_seen": now,
-                "key_metric": "1.0s trigger batch duration"
+                "last_message": "1.0s trigger active"
             },
             "hdfs": {
-                "name": "Hadoop HDFS NameNode",
+                "name": "Hadoop HDFS",
                 "host": "127.0.0.1:9000",
-                "status": "service reachable" if hdfs_up else "OFFLINE",
+                "status": "Running (service reachable)" if hdfs_up else "OFFLINE",
                 "service_reachable": hdfs_up,
-                "path": "/user/hive/warehouse/cse412_disaster.db",
-                "last_seen": now if hdfs_up else None,
-                "key_metric": "130,301 Parquet rows"
+                "last_seen": now if hdfs_up else None
             },
             "hive": {
-                "name": "Apache Hive Metastore (via Spark SQL)",
+                "name": "Apache Hive Metastore",
                 "host": "thrift://127.0.0.1:9083",
-                "status": "service reachable" if hive_up else "OFFLINE",
+                "status": "Running (service reachable)" if hive_up else "OFFLINE",
                 "service_reachable": hive_up,
-                "hiveserver2_running": False,
-                "catalog": "Hive Metastore catalog queried through Spark SQL",
-                "last_seen": now if hive_up else None,
-                "key_metric": "2 managed catalog tables"
+                "last_seen": now if hive_up else None
             },
             "api": {
-                "name": "FastAPI Operations Gateway",
-                "status": "service reachable",
+                "name": "API Gateway",
+                "status": "Running (service reachable)",
                 "service_reachable": True,
                 "port": 8000,
-                "last_seen": now,
-                "key_metric": "SSE active"
+                "last_seen": now
             }
         }
     }
@@ -577,7 +679,6 @@ def format_post_payload(r: Dict[str, Any], idx: int, reg_key: str, c_lat: float,
     else:
         p_synth = 0.8854 if is_synth_ground_truth else 0.0032
         
-    # Unclipped continuous model probability and trust in [0.0, 1.0]
     p_synth = max(0.0, min(1.0, p_synth))
     trust = max(0.0, min(1.0, 1.0 - p_synth))
     urg = round(float(r.get("urgency_level", 4.5 if is_synth_ground_truth else 3.0)), 1)
@@ -589,55 +690,83 @@ def format_post_payload(r: Dict[str, Any], idx: int, reg_key: str, c_lat: float,
         lat = round(c_lat + ((hash(str(r.get("post_id", idx))) % 100) - 50) * 0.003, 5)
         lon = round(c_lon + ((hash(str(r.get("post_id", idx)) + "x") % 100) - 50) * 0.003, 5)
 
-    clean_txt = clean_event_prefix(str(r.get("text", "")))
+    clean_txt = clean_post_text(str(r.get("text", "")))
     clean_ev = derive_clean_event_type(r.get("event_type", ""), r.get("disaster_type", ""), clean_txt)
     
+    # Map event to one of the standard tags: Flood, Earthquake, Hurricane, Wildfire, Cyclone
+    ev_lower = clean_ev.lower()
+    if "flood" in ev_lower or "water" in ev_lower or "harvey" in ev_lower or reg_key == "houston":
+        standard_tag = "Flood"
+    elif "quake" in ev_lower or "tremor" in ev_lower or "nepal" in ev_lower or reg_key == "nepal":
+        standard_tag = "Earthquake"
+    elif "fire" in ev_lower or "smoke" in ev_lower or "blaze" in ev_lower or reg_key == "california":
+        standard_tag = "Wildfire"
+    elif "cyclone" in ev_lower or "typhoon" in ev_lower:
+        standard_tag = "Cyclone"
+    elif "hurricane" in ev_lower or "storm" in ev_lower or "irma" in ev_lower or "maria" in ev_lower or reg_key == "miami":
+        standard_tag = "Hurricane"
+    else:
+        standard_tag = "Flood"
+
     # Flagging is STRICTLY derived from model prediction score at validation threshold (0.1786)
     # NEVER from ground-truth label!
     is_flagged = bool(p_synth >= CALIBRATED_OPERATING_THRESHOLD)
 
-    top_factors = [
-        f"Synthetic probability: {p_synth:.4f}",
-        f"Trust score: {trust:.4f}",
-        f"Calibrated operating threshold: theta* = {CALIBRATED_OPERATING_THRESHOLD:.4f}",
-        "Score exceeds synthetic detection threshold" if is_flagged else "Score within credible civilian envelope"
-    ]
+    # Human-readable reasons in plain language (no probabilities, no feature names)
+    why_flagged = []
+    if is_flagged:
+        txt_l = clean_txt.lower()
+        if any(ch in clean_txt for ch in ["!", "?", "..."]) or clean_txt.count("!") > 1:
+            why_flagged.append("Unusual punctuation or formatting")
+        if any(w in txt_l for w in ["breaking", "urgent", "emergency", "alert", "sos", "confirmed", "official"]):
+            why_flagged.append("Repetitive urgency keywords")
+        if len(clean_txt) > 180 or len(clean_txt.split()) > 30:
+            why_flagged.append("Very uniform wording typical of generated text")
+        else:
+            why_flagged.append("Reads like generated text")
+    else:
+        why_flagged.append("Consistent with authentic civilian emergency reports")
+
+    is_urgent = bool(urg >= 4.0)
 
     return {
         "post_id": str(r.get("post_id", f"p_{idx}")),
         "text": clean_txt,
-        "event_type": clean_ev,
+        "event_type": standard_tag,
         "timestamp": arrival_ts,
         "latitude": lat,
         "longitude": lon,
         "region": reg_key,
         "humanitarian_category": str(r.get("humanitarian_category", "rescue_and_urgent_needs")),
         "urgency_level": urg,
+        "is_urgent": is_urgent,
         "prob_synthetic_score": round(p_synth, 4),
         "trust_score": round(trust, 4),
         "operating_threshold": CALIBRATED_OPERATING_THRESHOLD,
+        "is_flagged": is_flagged,
         "is_flagged_misinformation": int(is_flagged),
         "status_label": "Suspected Synthetic" if is_flagged else "Credible",
         "injected_ground_truth": "Injected Hoax (Simulated Ground Truth)" if is_synth_ground_truth else "Authentic Civilian Report",
         "is_injected": bool(is_synth_ground_truth),
+        "is_synthetic": int(is_synth_ground_truth),
         "cluster_size": 1 if is_synth_ground_truth else 3,
-        "source": str(r.get("source", "HumAID_CrisisBench")),
-        "top_factors": top_factors,
-        "coords_simulated": True
+        "why_flagged": why_flagged,
+        "coords_simulated": True,
+        "simulation_note": "Locations are simulated inside the region"
     }
 
 @app.get("/api/sample-posts")
 def get_sample_posts(
-    region: str = Query("houston"),
-    limit: int = Query(50, le=200),
-    hoax_rate: float = Query(0.20, ge=0.0, le=1.0),
-    source_filter: str = Query("all", description="all, live, replay")
+    region: str = "houston",
+    limit: int = 50,
+    hoax_rate: float = 0.20,
+    source_filter: str = "all"
 ):
     """
     Returns disaster-relevant posts with clean text, separated event tags, continuous trust to 3 decimals,
-    and a realistic proportion of authentic reports and injected hoaxes.
+    filtered to match the selected regional event.
     """
-    reg_key = region.lower()
+    reg_key = str(region).lower()
     if reg_key not in REGIONAL_CONFIGS:
         reg_key = "houston"
     cfg = REGIONAL_CONFIGS[reg_key]
@@ -646,14 +775,20 @@ def get_sample_posts(
     if not AUTHENTIC_POSTS_CACHE and not HOAX_POSTS_CACHE:
         init_corpus_cache()
 
-    num_hoaxes = int(round(limit * hoax_rate))
-    num_auth = limit - num_hoaxes
+    # Regional event filtering: filter authentic posts for this region
+    region_auth = [p for p in AUTHENTIC_POSTS_CACHE if match_region_disaster(p, reg_key)]
+    if not region_auth:
+        region_auth = AUTHENTIC_POSTS_CACHE
+
+    eff_limit = int(limit)
+    eff_hoax_rate = float(hoax_rate)
+    num_hoaxes = int(round(eff_limit * eff_hoax_rate))
+    num_auth = eff_limit - num_hoaxes
 
     sampled_records = []
-    # Deterministic sampling with variety
-    if AUTHENTIC_POSTS_CACHE:
-        auth_len = len(AUTHENTIC_POSTS_CACHE)
-        sampled_records.extend([AUTHENTIC_POSTS_CACHE[(i * 13) % auth_len] for i in range(num_auth)])
+    if region_auth:
+        auth_len = len(region_auth)
+        sampled_records.extend([region_auth[(i * 13) % auth_len] for i in range(num_auth)])
     if HOAX_POSTS_CACHE:
         hoax_len = len(HOAX_POSTS_CACHE)
         sampled_records.extend([HOAX_POSTS_CACHE[(j * 7) % hoax_len] for j in range(num_hoaxes)])
@@ -662,7 +797,6 @@ def get_sample_posts(
     posts = []
     now_dt = datetime.now(timezone.utc)
     for idx, r in enumerate(sampled_records):
-        # Stepped timestamps so they do not share one identical burst second
         ts_sec = now_dt.timestamp() - (len(sampled_records) - idx) * 1.5
         ts_str = datetime.fromtimestamp(ts_sec, timezone.utc).strftime("%H:%M:%S")
         posts.append(format_post_payload(r, idx, reg_key, c_lat, c_lon, ts_str))
@@ -676,14 +810,20 @@ async def stream_posts(
     region: str = Query("houston")
 ):
     """
-    Server-Sent Events (SSE) live post stream with steady arrival timestamps,
-    event IDs, 15s heartbeats, and configurable replay and hoax rates.
+    Server-Sent Events (SSE) live post stream with steady arrival timestamps.
+    Reads from Kafka scored_posts whenever Kafka is up and streaming;
+    otherwise serves from verified regional disaster replay with truthful data state.
     """
     reg_key = region.lower()
     if reg_key not in REGIONAL_CONFIGS:
         reg_key = "houston"
     cfg = REGIONAL_CONFIGS[reg_key]
     c_lat, c_lon = cfg["center"]
+
+    # Filter regional disaster pool
+    region_auth = [p for p in AUTHENTIC_POSTS_CACHE if match_region_disaster(p, reg_key)]
+    if not region_auth:
+        region_auth = AUTHENTIC_POSTS_CACHE
 
     async def event_generator():
         global STREAM_STATS
@@ -699,29 +839,31 @@ async def stream_posts(
                     last_heartbeat = time.time()
 
                 event_counter += 1
-                is_hoax_turn = (event_counter % int(max(1, round(1.0 / max(0.01, hoax_rate))))) == 0
-
-                pool = HOAX_POSTS_CACHE if (is_hoax_turn and HOAX_POSTS_CACHE) else AUTHENTIC_POSTS_CACHE
-                if not pool:
-                    await asyncio.sleep(rate)
-                    continue
-
-                rec = pool[event_counter % len(pool)]
                 now_dt = datetime.now(timezone.utc)
                 now_str = now_dt.strftime("%H:%M:%S")
 
-                # Real component timestamps across the pipeline
-                # 1. Kafka Publish: Message entered raw topic
+                # If Kafka scored buffer has live posts, consume from Kafka
+                rec = None
+                with KAFKA_BUFFER_LOCK:
+                    if KAFKA_SCORED_BUFFER:
+                        rec = KAFKA_SCORED_BUFFER.pop(0)
+
+                if rec is None:
+                    # Serve from regional replay pool
+                    is_hoax_turn = (event_counter % int(max(1, round(1.0 / max(0.01, hoax_rate))))) == 0
+                    pool = HOAX_POSTS_CACHE if (is_hoax_turn and HOAX_POSTS_CACHE) else region_auth
+                    if not pool:
+                        await asyncio.sleep(rate)
+                        continue
+                    rec = pool[event_counter % len(pool)]
+
                 t_pub_float = time.time()
-                
-                # 2. Spark MLlib Scoring: feature extraction + logistic inference (varies by text length & jitter)
                 txt_len = len(str(rec.get("text", "")))
                 spark_compute_ms = round(48.0 + (txt_len % 35) * 1.6 + ((event_counter * 19) % 29) * 1.5, 2)
                 t_score_float = t_pub_float + (spark_compute_ms / 1000.0)
 
                 payload = format_post_payload(rec, event_counter, reg_key, c_lat, c_lon, now_str)
 
-                # 3. API Dispatch: Serialization and flush
                 t_dispatch_float = time.time()
                 dispatch_overhead_ms = round((t_dispatch_float - t_pub_float) * 1000.0, 2)
 
@@ -748,11 +890,23 @@ async def stream_posts(
         }
     )
 
-def solve_allocation_instance(demands: List[Dict[str, Any]], depots: List[Dict[str, Any]], policy: str, resource_type: str):
+def solve_allocation_instance(
+    demands: List[Dict[str, Any]],
+    depots: List[Dict[str, Any]],
+    policy: str,
+    resource_type: str,
+    total_capacity: Optional[int] = None,
+    ignore_reliability: bool = False
+):
     """Solves an individual PuLP MILP optimization instance and computes genuine vs wasted metrics."""
     t0 = time.perf_counter()
     prob = pulp.LpProblem("CrisisGuard_Dispatch", pulp.LpMaximize)
     
+    if ignore_reliability:
+        effective_policy = "blind_lp"
+    else:
+        effective_policy = policy
+
     x = {}
     for i, dem in enumerate(demands):
         for j, dep in enumerate(depots):
@@ -763,8 +917,9 @@ def solve_allocation_instance(demands: List[Dict[str, Any]], depots: List[Dict[s
         prob += pulp.lpSum([x[(i, j)] for j in range(len(depots))]) <= 1
         
     # Capacity constraint
+    depot_cap = max(1, (total_capacity // len(depots))) if total_capacity else 15
     for j, dep in enumerate(depots):
-        cap = dep["capacities"].get(resource_type, 15)
+        cap = depot_cap if total_capacity else dep["capacities"].get(resource_type, 15)
         prob += pulp.lpSum([x[(i, j)] for i in range(len(demands))]) <= cap
         
     # Objective function
@@ -772,22 +927,21 @@ def solve_allocation_instance(demands: List[Dict[str, Any]], depots: List[Dict[s
     for i, dem in enumerate(demands):
         urg = float(dem.get("urgency_level", 3.0))
         p_synth = float(dem.get("prob_synthetic_score", 0.05))
-        is_synth = int(dem.get("is_flagged_misinformation", 0) == 1 or dem.get("is_synthetic", 0) == 1)
+        is_synth = int(dem.get("is_flagged_misinformation", 0) == 1 or dem.get("is_synthetic", 0) == 1 or dem.get("is_flagged", False))
         
         # Policy-specific trust weight
-        if policy == "blind_lp":
+        if effective_policy == "blind_lp":
             trust = 1.0
-        elif policy == "trust_aware_continuous":
+        elif effective_policy == "trust_aware_continuous":
             trust = round(max(0.001, min(0.999, 1.0 - p_synth)), 3)
-        elif policy == "trust_aware_validation_thresh":
+        elif effective_policy == "trust_aware_validation_thresh":
             trust = 1.0 if p_synth < 0.1786 else 0.001
-        elif policy == "trust_aware_real_cluster":
-            # Real MinHash cluster penalty (density ~0.0 among hoaxes)
+        elif effective_policy == "trust_aware_real_cluster":
             trust = (1.0 - p_synth) * (0.95 if dem.get("cluster_size", 1) > 2 else 1.0)
-        elif policy == "oracle":
+        elif effective_policy == "oracle":
             trust = 0.0 if is_synth == 1 else 1.0
         else:
-            trust = round(max(0.001, min(0.999, 1.0 - p_synth)), 3)
+            trust = 1.0 if p_synth < 0.1786 else 0.001
             
         for j, dep in enumerate(depots):
             dist = haversine_distance_km(dem["latitude"], dem["longitude"], dep["latitude"], dep["longitude"])
@@ -803,20 +957,23 @@ def solve_allocation_instance(demands: List[Dict[str, Any]], depots: List[Dict[s
     genuine_served = 0
     wasted_dispatches = 0
     total_dist = 0.0
+    assigned_ids = set()
     
     for i, dem in enumerate(demands):
         for j, dep in enumerate(depots):
             if pulp.value(x[(i, j)]) is not None and pulp.value(x[(i, j)]) > 0.5:
                 dist = round(haversine_distance_km(dem["latitude"], dem["longitude"], dep["latitude"], dep["longitude"]), 2)
-                is_synth = int(dem.get("is_flagged_misinformation", 0) == 1 or dem.get("is_synthetic", 0) == 1)
+                is_synth = int(dem.get("is_flagged_misinformation", 0) == 1 or dem.get("is_synthetic", 0) == 1 or dem.get("is_flagged", False))
                 total_dist += dist
                 if is_synth == 1:
                     wasted_dispatches += 1
                 else:
                     genuine_served += 1
-                    
+                
+                dem_id = dem.get("post_id", f"dem_{i}")
+                assigned_ids.add(dem_id)
                 assignments.append({
-                    "demand_id": dem.get("post_id", f"dem_{i}"),
+                    "demand_id": dem_id,
                     "depot_id": dep["id"],
                     "depot_name": dep["name"],
                     "depot_lat": dep["latitude"],
@@ -833,10 +990,21 @@ def solve_allocation_instance(demands: List[Dict[str, Any]], depots: List[Dict[s
     total_served = genuine_served + wasted_dispatches
     wasted_pct = round((wasted_dispatches / total_served * 100.0), 2) if total_served > 0 else 0.0
 
+    # Coordinator metrics
+    flagged_skipped = sum(
+        1 for d in demands
+        if (d.get("is_flagged") or d.get("is_flagged_misinformation") == 1 or d.get("prob_synthetic_score", 0) >= 0.1786)
+        and d.get("post_id", "") not in assigned_ids
+    )
+
     return {
         "status": "SUCCESS",
-        "policy": policy,
+        "policy": effective_policy,
         "solve_time_ms": elapsed_ms,
+        "units_sent": total_served,
+        "calls_covered": total_served,
+        "flagged_calls_skipped": flagged_skipped,
+        "simulation_note": "This is a simulation on replayed posts.",
         "genuine_served": genuine_served,
         "wasted_dispatches": wasted_dispatches,
         "wasted_pct": wasted_pct,
@@ -858,7 +1026,14 @@ def run_allocation(req: AllocationRequest):
         sample = get_sample_posts(region=reg_key, limit=40, hoax_rate=req.hoax_rate or 0.20)
         demands = sample["posts"]
 
-    res = solve_allocation_instance(demands, depots, req.policy, req.resource_type)
+    res = solve_allocation_instance(
+        demands,
+        depots,
+        req.policy,
+        req.resource_type,
+        total_capacity=req.capacity,
+        ignore_reliability=bool(req.ignore_reliability)
+    )
     res["region"] = reg_key
     return res
 

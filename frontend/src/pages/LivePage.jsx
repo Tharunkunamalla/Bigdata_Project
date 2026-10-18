@@ -1,241 +1,254 @@
 import React, { useState, useMemo } from 'react';
 import MapComponent from '../components/MapComponent';
 import PostDetailDrawer from '../components/PostDetailDrawer';
-import { format } from 'date-fns';
+import { Search, Pause, Play, AlertTriangle, ShieldAlert } from 'lucide-react';
+
+const REGION_CENTERS = {
+  houston: { center: [29.7604, -95.3698], zoom: 11, label: 'Houston (Hurricane Harvey)' },
+  california: { center: [38.5816, -121.4944], zoom: 10, label: 'Northern California (Wildfires)' },
+  nepal: { center: [27.7172, 85.3240], zoom: 11, label: 'Kathmandu Valley (Earthquake)' },
+  miami: { center: [25.7617, -80.1918], zoom: 11, label: 'Miami / South Florida (Hurricane Irma)' }
+};
 
 export default function LivePage({
   region,
   setRegion,
   depots,
   posts,
-  streamState,
+  dataState,
   isPaused,
   setIsPaused,
   selectedPost,
   setSelectedPost
 }) {
   const [searchQuery, setSearchQuery] = useState('');
-  const [verdictFilter, setVerdictFilter] = useState('all'); // 'all', 'credible', 'flagged'
+  const [showFilter, setShowFilter] = useState('all'); // 'all', 'flagged', 'urgent'
 
-  const REGION_CENTERS = {
-    houston: { center: [29.7604, -95.3698], zoom: 10 },
-    california: { center: [38.5816, -121.4944], zoom: 9 },
-    nepal: { center: [27.7172, 85.3240], zoom: 10 },
-    miami: { center: [25.7617, -80.1918], zoom: 10 }
-  };
+  const currentRegionConfig = REGION_CENTERS[region] || REGION_CENTERS.houston;
 
-  const currentCenter = REGION_CENTERS[region] || REGION_CENTERS.houston;
-
-  // Filter posts
+  // Filter posts based on controls
   const filteredPosts = useMemo(() => {
-    return posts.filter(post => {
-      // Verdict filter
-      const isFlagged = post.prob_synthetic_score >= 0.1786 || post.is_flagged_misinformation === 1;
-      if (verdictFilter === 'credible' && isFlagged) return false;
-      if (verdictFilter === 'flagged' && !isFlagged) return false;
+    return posts.filter((post) => {
+      const isFlagged = Boolean(
+        post.is_flagged ||
+        post.is_flagged_misinformation === 1 ||
+        (post.prob_synthetic_score !== undefined && post.prob_synthetic_score >= 0.1786)
+      );
+      const isUrgent = Boolean(post.is_urgent || (post.urgency_level && post.urgency_level >= 4.0));
 
-      // Search query
+      if (showFilter === 'flagged' && !isFlagged) return false;
+      if (showFilter === 'urgent' && !isUrgent) return false;
+
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
         const textMatch = post.text && post.text.toLowerCase().includes(q);
-        const idMatch = post.post_id && post.post_id.toLowerCase().includes(q);
-        if (!textMatch && !idMatch) return false;
+        const eventMatch = post.event_type && post.event_type.toLowerCase().includes(q);
+        if (!textMatch && !eventMatch) return false;
       }
       return true;
     });
-  }, [posts, verdictFilter, searchQuery]);
+  }, [posts, showFilter, searchQuery]);
 
-  // Compute live statistics
-  const flaggedCount = useMemo(() => {
-    return posts.filter(p => (p.prob_synthetic_score >= 0.1786) || (p.is_flagged_misinformation === 1)).length;
+  // Three live counts computed directly from current buffer (no hardcoded numbers!)
+  const stats = useMemo(() => {
+    let flagged = 0;
+    let urgent = 0;
+    posts.forEach((p) => {
+      if (p.is_flagged || p.is_flagged_misinformation === 1 || (p.prob_synthetic_score !== undefined && p.prob_synthetic_score >= 0.1786)) {
+        flagged++;
+      }
+      if (p.is_urgent || (p.urgency_level && p.urgency_level >= 4.0)) {
+        urgent++;
+      }
+    });
+    return {
+      total: posts.length,
+      flagged,
+      urgent
+    };
   }, [posts]);
 
-  const flaggedSharePct = posts.length > 0 ? ((flaggedCount / posts.length) * 100).toFixed(1) : '16.8';
-
-  const formatPostTime = (timestamp) => {
-    if (!timestamp) return 'Live';
+  // Clean time formatter: guarantees HH:mm:ss
+  const formatTime = (ts) => {
+    if (!ts) return '--:--:--';
+    if (/^\d{2}:\d{2}:\d{2}$/.test(ts)) return ts;
     try {
-      const d = new Date(timestamp);
-      return isNaN(d.getTime()) ? 'Live' : format(d, 'HH:mm:ss');
+      const d = new Date(ts);
+      if (isNaN(d.getTime())) return '--:--:--';
+      const hh = String(d.getHours()).padStart(2, '0');
+      const mm = String(d.getMinutes()).padStart(2, '0');
+      const ss = String(d.getSeconds()).padStart(2, '0');
+      return `${hh}:${mm}:${ss}`;
     } catch {
-      return 'Live';
+      return '--:--:--';
     }
   };
 
   return (
-    <div className="page-container" style={{ padding: '16px', maxWidth: '1440px', margin: '0 auto' }}>
-      {/* 1. Slim Summary Strip */}
-      <div className="summary-strip" style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: '10px 16px',
-        backgroundColor: 'var(--bg-surface)',
-        border: '1px solid var(--border-subtle)',
-        borderRadius: '4px',
-        marginBottom: '12px',
-        fontSize: '12px',
-        flexWrap: 'wrap',
-        gap: '12px'
-      }}>
-        <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
-          <span><strong>Throughput:</strong> <span className="tabular-nums">60 posts/min</span> (2,420 events/s peak)</span>
-          <span><strong>Flagged Share:</strong> <span className="tabular-nums" style={{ color: 'var(--status-danger-text)' }}>{flaggedSharePct}%</span> (37 TP, 5 FP in stream)</span>
-          <span><strong>Median Latency (p50):</strong> <span className="tabular-nums" style={{ color: 'var(--status-success-text)' }}>96.8 ms</span> (p95: 130.0 ms)</span>
-          <span><strong>Decision Threshold:</strong> <span className="tabular-nums">&theta;* = 0.1786</span> (validation-calibrated)</span>
+    <div className="live-page-layout">
+      {/* Offline banner if stream is down */}
+      {dataState === 'OFFLINE' && (
+        <div className="offline-banner">
+          <ShieldAlert size={15} />
+          <span>Stream is offline. Replay paused until connectivity is restored.</span>
         </div>
+      )}
 
-        <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
-          Stream AUC: <strong style={{ color: 'var(--text-primary)' }}>0.9183</strong> (Prec: 88.1%, Rec: 74.0%)
-        </div>
-      </div>
-
-      {/* 2. Control Toolbar */}
-      <div className="section-card" style={{ marginBottom: '16px', padding: '10px 16px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-            {/* Region Selector */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <label htmlFor="region-select" style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Region:</label>
-              <select
-                id="region-select"
-                className="select-input"
-                value={region}
-                onChange={(e) => setRegion(e.target.value)}
-              >
-                <option value="houston">Houston Metro</option>
-                <option value="california">Northern California</option>
-                <option value="nepal">Kathmandu Valley</option>
-                <option value="miami">South Florida</option>
-              </select>
-            </div>
-
-            {/* Verdict Filter */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <label htmlFor="verdict-filter" style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Verdict:</label>
-              <select
-                id="verdict-filter"
-                className="select-input"
-                value={verdictFilter}
-                onChange={(e) => setVerdictFilter(e.target.value)}
-              >
-                <option value="all">All Posts ({posts.length})</option>
-                <option value="credible">Credible Only</option>
-                <option value="flagged">Suspected Synthetic Only</option>
-              </select>
-            </div>
-
-            {/* Search Input */}
-            <input
-              id="search-input"
-              type="text"
-              className="text-input"
-              style={{ width: '220px' }}
-              placeholder="Search crisis keywords..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
-
-          {/* Pause / Resume Button */}
-          <button
-            id="pause-resume-btn"
-            className={`btn ${isPaused ? 'btn-primary' : 'btn-secondary'}`}
-            onClick={() => setIsPaused(!isPaused)}
-          >
-            {isPaused ? 'Resume Feed' : 'Pause Feed'}
-          </button>
-        </div>
-      </div>
-
-      {/* 3. Main Workspace: Map (Left) and Feed (Right) */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(460px, 1fr))', gap: '16px' }}>
-        {/* Left: Map */}
-        <div className="section-card" style={{ height: '620px', padding: 0, overflow: 'hidden' }}>
+      {/* Main 2-column view */}
+      <div className="live-view-grid">
+        {/* Left Column: Map */}
+        <section className="map-panel" aria-label="Disaster region map">
           <MapComponent
-            center={currentCenter.center}
-            zoom={currentCenter.zoom}
+            regionCenter={currentRegionConfig.center}
+            regionZoom={currentRegionConfig.zoom}
             depots={depots}
             posts={filteredPosts}
-            selectedPost={selectedPost}
+            showDepots={true}
+            showPosts={true}
+            showLines={false}
             onSelectPost={setSelectedPost}
+            fitDataTrigger={posts.length}
           />
-        </div>
+        </section>
 
-        {/* Right: Feed Table */}
-        <div className="section-card" style={{ height: '620px', display: 'flex', flexDirection: 'column', padding: '12px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-            <h3 style={{ fontSize: '14px', fontWeight: 600 }}>
-              Live Crisis Stream ({filteredPosts.length} posts)
-            </h3>
-            <span className="text-secondary" style={{ fontSize: '11px' }}>
-              Click any row for feature attribution & diagnostics
-            </span>
+        {/* Right Column: Live Feed */}
+        <section className="feed-panel" aria-label="Incoming incident feed">
+          {/* Above feed: 3 live counts from current buffer */}
+          <div className="feed-stats-strip">
+            <div className="stat-item">
+              <span className="stat-label">Posts received</span>
+              <span className="stat-value tabular-nums">{stats.total}</span>
+            </div>
+            <div className="stat-item">
+              <span className="stat-label">Flagged</span>
+              <span className="stat-value stat-flagged tabular-nums">{stats.flagged}</span>
+            </div>
+            <div className="stat-item">
+              <span className="stat-label">Urgent</span>
+              <span className="stat-value stat-urgent tabular-nums">{stats.urgent}</span>
+            </div>
           </div>
 
-          <div className="table-responsive" style={{ flex: 1, overflowY: 'auto' }}>
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th style={{ width: '70px' }}>Time</th>
-                  <th>Crisis Narrative</th>
-                  <th style={{ width: '80px' }}>Event</th>
-                  <th style={{ width: '130px' }}>Verdict</th>
-                  <th style={{ width: '75px' }}>Trust</th>
-                  <th style={{ width: '55px' }}>Urg</th>
-                </tr>
-              </thead>
-              <tbody>
+          {/* Controls toolbar */}
+          <div className="feed-controls-bar">
+            {/* Region selector */}
+            <select
+              id="region-selector"
+              className="ctrl-select"
+              value={region}
+              onChange={(e) => setRegion(e.target.value)}
+              aria-label="Select disaster region"
+            >
+              <option value="houston">Houston</option>
+              <option value="california">Northern California</option>
+              <option value="nepal">Kathmandu Valley</option>
+              <option value="miami">Miami / South Florida</option>
+            </select>
+
+            {/* Show Filter: All / Flagged / Urgent */}
+            <div className="filter-segmented-group" role="group" aria-label="Filter posts">
+              <button
+                className={`seg-btn ${showFilter === 'all' ? 'active' : ''}`}
+                onClick={() => setShowFilter('all')}
+              >
+                All
+              </button>
+              <button
+                className={`seg-btn ${showFilter === 'flagged' ? 'active' : ''}`}
+                onClick={() => setShowFilter('flagged')}
+              >
+                Flagged
+              </button>
+              <button
+                className={`seg-btn ${showFilter === 'urgent' ? 'active' : ''}`}
+                onClick={() => setShowFilter('urgent')}
+              >
+                Urgent
+              </button>
+            </div>
+
+            {/* Search */}
+            <div className="search-input-wrapper">
+              <Search size={14} className="search-icon" />
+              <input
+                id="search-posts-input"
+                type="text"
+                placeholder="Search..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="ctrl-search-input"
+              />
+            </div>
+
+            {/* Pause / Resume */}
+            <button
+              id="pause-resume-btn"
+              className={`btn-pause ${isPaused ? 'paused' : ''}`}
+              onClick={() => setIsPaused(!isPaused)}
+              title={isPaused ? 'Resume stream' : 'Pause stream'}
+              aria-label={isPaused ? 'Resume stream' : 'Pause stream'}
+            >
+              {isPaused ? <Play size={14} /> : <Pause size={14} />}
+              <span>{isPaused ? 'Resume' : 'Pause'}</span>
+            </button>
+          </div>
+
+          {/* Feed List */}
+          <div className="feed-list-container">
+            {filteredPosts.length === 0 ? (
+              <div className="feed-empty-state">
+                <p>No matching reports found in current buffer.</p>
+              </div>
+            ) : (
+              <div className="feed-rows">
                 {filteredPosts.map((post) => {
-                  const pSynth = post.prob_synthetic_score !== undefined ? post.prob_synthetic_score : 0.01;
-                  const trust = post.trust_score !== undefined ? post.trust_score : (1.0 - pSynth);
-                  const isFlagged = pSynth >= 0.1786 || post.is_flagged_misinformation === 1;
-                  const isSelected = selectedPost?.post_id === post.post_id;
+                  const isFlagged = Boolean(
+                    post.is_flagged ||
+                    post.is_flagged_misinformation === 1 ||
+                    (post.prob_synthetic_score !== undefined && post.prob_synthetic_score >= 0.1786)
+                  );
+                  const isUrgent = Boolean(post.is_urgent || (post.urgency_level && post.urgency_level >= 4.0));
 
                   return (
-                    <tr
+                    <article
                       key={post.post_id}
+                      className={`feed-row ${isFlagged ? 'row-flagged' : ''} ${selectedPost?.post_id === post.post_id ? 'row-selected' : ''}`}
                       onClick={() => setSelectedPost(post)}
-                      className={isSelected ? 'selected-row' : ''}
-                      style={{ cursor: 'pointer' }}
+                      tabIndex={0}
+                      role="button"
                     >
-                      <td className="tabular-nums text-secondary" style={{ fontSize: '11px' }}>
-                        {formatPostTime(post.timestamp)}
-                      </td>
-                      <td style={{ maxWidth: '280px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      <div className="feed-row-top">
+                        <time className="post-time tabular-nums">{formatTime(post.timestamp)}</time>
+                        <span className="post-event-tag">{post.event_type || 'Disaster'}</span>
+
+                        {/* Thin urgency indicator */}
+                        {isUrgent && (
+                          <span className="badge-urgent">Urgent</span>
+                        )}
+
+                        {/* Small Flagged label ONLY on flagged posts; normal posts have NO badge */}
+                        {isFlagged && (
+                          <span className="badge-flagged">Flagged</span>
+                        )}
+                      </div>
+
+                      <p className="feed-row-text">
                         {post.text}
-                      </td>
-                      <td className="text-secondary" style={{ fontSize: '11px' }}>
-                        {post.event_type || 'Disaster'}
-                      </td>
-                      <td>
-                        <span className={`badge ${isFlagged ? 'badge-danger' : 'badge-live'}`}>
-                          {isFlagged ? 'Suspected synthetic' : 'Credible'}
-                        </span>
-                      </td>
-                      <td className="tabular-nums">
-                        {Number(trust).toFixed(4)}
-                      </td>
-                      <td className="tabular-nums">
-                        {Number(post.urgency_level || 4.0).toFixed(1)}
-                      </td>
-                    </tr>
+                      </p>
+                    </article>
                   );
                 })}
-              </tbody>
-            </table>
+              </div>
+            )}
           </div>
-        </div>
+        </section>
       </div>
 
-      {/* 4. Side Detail Drawer for Clicked Post */}
-      {selectedPost && (
-        <PostDetailDrawer
-          post={selectedPost}
-          onClose={() => setSelectedPost(null)}
-          isReplayMode={streamState === 'REPLAY' || true}
-        />
-      )}
+      {/* Post Detail Drawer on row click */}
+      <PostDetailDrawer
+        post={selectedPost}
+        onClose={() => setSelectedPost(null)}
+      />
     </div>
   );
 }

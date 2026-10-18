@@ -13,26 +13,27 @@
 
 ### Minute 1: Problem, Architecture & Real Daemons (0:00 – 1:00)
 - **Speaker Cue:**
-  > "During natural disasters, Emergency Operations Centers monitor social feeds to triage rescues. However, generative AI enables automated botnets to flood communication channels with urgent, fabricated distress calls. When dispatchers use trust-blind algorithms, finite rescue assets are sent to phantom locations, starving real victims.
-  > CrisisGuard AI connects five core big data systems: Kafka for ingestion, Spark Streaming for sub-second MLlib scoring, HDFS for Parquet storage, Hive Metastore (queried through Spark SQL) for catalog governance, and PuLP MILP for optimal fleet allocation."
+  > "During natural disasters, Emergency Operations Centers monitor social feeds to triage rescues. However, automated bots can flood communication channels with urgent, fabricated distress calls. When dispatchers use trust-blind algorithms, finite rescue assets are sent to phantom locations, starving real victims.
+  > CrisisGuard connects five core big data systems: Kafka for ingestion, Spark Streaming for sub-second scoring, HDFS for Parquet storage, Hive Metastore (queried through Spark SQL) for catalog governance, and PuLP MILP for optimal fleet allocation."
 - **Terminal Command:**
   ```bash
-  make demo
+  make demo-ready
   ```
-- **Action:** Open `http://127.0.0.1:8000/` in browser. Point out the `LIVE` and `SIMULATED DATA` badges in the clean header.
+- **Action:** Open `http://127.0.0.1:8000/` in browser. Point out the product name "CrisisGuard", tabs (Live, Dispatch, About), and the status indicator.
 
-### Minute 2: Live Feed, Top Factors & Real PuLP Solver (1:00 – 2:00)
+### Minute 2: Live Feed, Detail Panel & Dispatch Planning (1:00 – 2:00)
 - **Action on View 1 (Live):**
-  - Show the 60% Leaflet map with Houston marine depots and incoming posts colored by trust (green = credible, red = suspected synthetic).
-  - Click a flagged post in the table: highlight the side drawer showing full text, synthetic probability (e.g. 0.850), and top predictive factors.
-- **Action on View 2 (Allocation):**
-  - Click **"Run Optimization"**. Point out solver runtime (~42 ms via PuLP CBC), genuine victims rescued (25), and wasted dispatches (0).
-  - Highlight the 30-seed offline comparison chart: Trust-Aware validation thresholding achieves a statistically significant gain (+0.63 victims, $p = 0.00053$) over Blind LP.
+  - Show the OpenStreetMap map with regional depots (blue squares) and incoming posts (neutral slate for standard civilian calls, warning amber-red for flagged reports).
+  - Point out the 3 buffer counts (Posts received, Flagged, Urgent).
+  - Click a flagged row in the feed: highlight the side panel showing full text, event tag, arrival time, and "Why it was flagged" in plain language (no raw probabilities or feature names).
+- **Action on View 2 (Dispatch):**
+  - Select rescue units and click **"Plan dispatch"**. Point out direct depot-to-call routes on the map and the summary list: "Units sent: N, calls covered: N, flagged calls skipped: N".
+  - Toggle **"Ignore report reliability"** to show how trust weighting protects units from phantom calls, beside the transparent note: "This is a simulation on replayed posts."
 
-### Minute 3: Provenance, Fault Tolerance & Results (2:00 – 3:00)
-- **Action on View 3 (Pipeline) & View 4 (Results):**
-  - Show cluster daemons table ("service reachable") and the crash-recovery table: 2.83s recovery with 0 data loss.
-  - Navigate to **Results** tab: highlight the model catalog, ROC/PR curves explicitly labeled with held-out Generator C test split provenance (32,879 rows), and confusion matrix at $\theta^* = 0.1786$.
+### Minute 3: Architecture Transparency, Status Drawer & Benchmarks (2:00 – 3:00)
+- **Action on View 3 (About) & Status Drawer:**
+  - Click the status indicator in the top bar to reveal the **Status Drawer**: show service health for Kafka, Spark streaming, HDFS, Hive metastore, and API ("Running / Not running" with last message time).
+  - Review the 5 plain English sentences in the About view, and point to the link to the full project report PDF.
 - **Closing Cue:**
   > "Every number shown is sourced from our 130,301-record deduplicated corpus and `results/summary.json`. Zero numbers are invented."
 
@@ -67,20 +68,22 @@
   > To prove the model does not rely on text length artifacts, we benchmarked length-only (AUC 0.6685) and stylometric-only (AUC 0.7820) baselines.
   > Crucially, we ran a 20-shuffle permutation control: when labels were randomized, ROC-AUC collapsed to 0.4997 ($p = 0.8220$), proving no data leakage.
   > Finally, in our MinHashLSH coordination graph of 15,000 posts, we discovered 82 dense clusters and PageRank amplifiers, while honestly documenting that ~30% of clustering reflects template phrasing syntax."
-- **Browser Action:**
-  - Navigate to **Models** tab at `http://127.0.0.1:8000/?tab=models`.
-  - Show the Models Catalog table, the SVG ROC and PR curves, the confusion matrix at $\theta^* = 0.1786$, and the Known Limits box.
+- **Terminal Action:**
+  - Show the terminal pipeline demo: `make demo`.
+  - Highlight the model evaluation results, permutation control (p = 0.8220), and MinHash coordination graph findings.
 
-#### [05:30 – 08:00] Presenter 3: Live Dashboard & Trust-Aware Allocation
+#### [05:30 – 08:00] Presenter 3: Emergency Coordinator Dashboard (Live, Dispatch, About)
 - **Speaker Cue:**
-  > "Let us examine the operational frontend, built with academic engineering clarity: system typography, neutral grays, tabular layouts, and zero decorative emojis.
-  > On the **Live** page, incoming social alerts stream via Server-Sent Events with a measured median latency of 96.85 ms (p95: 130.01 ms). The left panel renders a 60% Leaflet map showing OpenStreetMap depot coordinates and incident pins colored by trust. Clicking any row opens a side inspection drawer with full text and score attribution factors.
-  > On the **Allocation** page, dispatch commanders run the PuLP CBC optimizer on the current demand window.
-  > In our 30-seed statistical evaluation of Houston (52 rescue boats), Blind LP achieves 28.00 victims while wasting 20% of dispatches on hoaxes. Our Trust-Aware validation threshold policy achieves 28.63 ± 0.32 victims, a statistically significant gain of +0.63 victims ($p = 0.00053$) representing 2.6% of theoretical Oracle headroom.
-  > We repeat this across California Wildfires (+0.40 victims, $p = 0.00807$), Nepal Earthquake (+0.63 victims, $p = 0.00053$), and Miami Tropical Storm (+0.63 victims, $p = 0.00053$)."
+  > "Let us examine the emergency coordinator dashboard, designed as a practical operations tool rather than a data science report.
+  > On the **Live** view, social alerts stream via Server-Sent Events with measured median latency of 96.85 ms (p95: 130.01 ms). The map shows OpenStreetMap depot coordinates and incoming reports colored by reliability (neutral slate for standard civilian calls, warning amber-red for flagged reports). Clicking any row opens a side panel explaining why it was flagged in plain language. Three live buffer counts track received, flagged, and urgent reports.
+  > On the **Dispatch** view, the coordinator selects the region and number of rescue units and clicks 'Plan dispatch'. Direct transit routes appear on the map alongside units sent, calls covered, and flagged calls skipped.
+  > Clicking 'Ignore report reliability' illustrates the cost of dispatching blindly: without trust weighting, units are diverted to synthetic hoaxes.
+  > Next to this single simulated window, our 30-seed empirical study proves a statistically significant gain (+0.63 victims, $p = 0.00053$ in Houston; +0.40 victims, $p = 0.00807$ in California).
+  > On the **About** view and top-bar status drawer, coordinators can inspect truthful service status (Kafka, Spark, HDFS, Hive) and access the full project report."
 - **Browser Action:**
-  - Click **"Run allocation"** on the Allocation tab. Highlight the assignments table and summary cards.
-  - Review the two-sentence explanation box: 'What this shows / what it does not show'.
+  - Open `http://127.0.0.1:8000/`.
+  - Demonstrate Live feed and row detail panel, then Dispatch planning and the 'Ignore report reliability' toggle.
+  - Open the Status Drawer from the top-bar indicator.
 
 #### [08:00 – 10:00] Team Synthesis: Scaling, Fault Tolerance & Limits
 - **Speaker Cue:**

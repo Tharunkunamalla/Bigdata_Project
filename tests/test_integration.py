@@ -13,9 +13,8 @@ import os
 import sys
 import json
 import time
+import socket
 import pytest
-from kafka import KafkaProducer, KafkaConsumer
-from pyspark.sql import SparkSession
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, BASE_DIR)
@@ -25,7 +24,22 @@ TEST_TOPIC = "disaster_raw_posts"
 HDFS_NAMENODE = "hdfs://127.0.0.1:9000"
 HIVE_METASTORE_URI = "thrift://127.0.0.1:9083"
 
+def check_daemon_port(host: str, port: int) -> bool:
+    try:
+        s = socket.socket()
+        s.settimeout(0.4)
+        res = s.connect_ex((host, port))
+        s.close()
+        return res == 0
+    except Exception:
+        return False
+
+HAS_KAFKA = check_daemon_port("127.0.0.1", 9092)
+HAS_HDFS = check_daemon_port("127.0.0.1", 9000) and (sys.platform != "win32" or bool(os.getenv("HADOOP_HOME")))
+HAS_HIVE = check_daemon_port("127.0.0.1", 9083) and (sys.platform != "win32" or bool(os.getenv("HADOOP_HOME")))
+
 def build_spark_test_session():
+    from pyspark.sql import SparkSession
     return (
         SparkSession.builder
         .appName("CrisisGuard_Integration_Test")
@@ -38,7 +52,9 @@ def build_spark_test_session():
         .getOrCreate()
     )
 
+@pytest.mark.skipif(not HAS_KAFKA, reason="Live Kafka daemon not running on port 9092")
 def test_kafka_live_publish_and_consume():
+    from kafka import KafkaProducer, KafkaConsumer
     """Verify Kafka broker is accepting and delivering events."""
     producer = KafkaProducer(
         bootstrap_servers=[KAFKA_BROKER],
@@ -67,7 +83,9 @@ def test_kafka_live_publish_and_consume():
     producer.close()
     assert True, "Published 10 test events to Kafka"
 
+@pytest.mark.skipif(not HAS_HDFS, reason="Live HDFS daemon not running on port 9000 or HADOOP_HOME unset on Windows")
 def test_hdfs_silver_storage_connectivity():
+    from pyspark.sql import SparkSession
     """Verify HDFS silver storage contains valid Parquet partition files."""
     spark = SparkSession.builder.master("local[1]").appName("HDFS_Test").getOrCreate()
     hdfs_path = f"{HDFS_NAMENODE}/disaster_data/silver_real"
@@ -77,6 +95,7 @@ def test_hdfs_silver_storage_connectivity():
     assert count > 50000, f"Expected > 50,000 silver rows on HDFS, found {count:,}"
     spark.stop()
 
+@pytest.mark.skipif(not HAS_HIVE, reason="Live Hive Metastore daemon not running on port 9083 or HADOOP_HOME unset on Windows")
 def test_hive_metastore_table_row_count():
     """Verify Hive Metastore table 'disaster_db.crisis_silver_real' is registered and queryable."""
     spark = build_spark_test_session()

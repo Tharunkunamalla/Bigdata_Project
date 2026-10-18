@@ -116,31 +116,27 @@ CrisisGuard AI connects five specialized components into an integrated pipeline:
 | **PuLP CBC MILP** | Local | Linear/mixed-integer optimization engine running on the driver node to solve multi-depot fleet allocation. |
 
 ### 3.2 Operations Dashboard Interface
-The unified operations dashboard is served directly by FastAPI at `http://127.0.0.1:8000/`. Designed with restrained operations-console aesthetics (Inter typography loaded locally via @fontsource, neutral grays, 1px borders, tabular numerals, units on every number, zero marketing slogans or emojis), it provides real-time situational awareness across four core views:
+The emergency coordination dashboard is served directly by FastAPI at `http://127.0.0.1:8000/`. Designed with restrained operations-console aesthetics (Inter typography loaded locally via @fontsource, neutral slate grays, 1px borders, tabular numerals, units on every number, zero marketing slogans or emojis), it provides real-time situational awareness across three core views:
 
-![Dashboard View 1: Live GIS Map and Credibility Feed](screenshots/view_1_live.png)
+![Dashboard View 1: Live GIS Map and Incident Feed](screenshots/view_1_live.png)
 
-*Figure 1: View 1 (Live) — 60% Leaflet OpenStreetMap map (left) with authentic depot markers and distress points colored by trust score, paired with a virtualized credibility feed (right) displaying arrival time, crisis narrative, separated event tag, verdict, trust, and urgency. A slim summary strip reports throughput (60 posts/min, 2,420 events/s peak), flagged share, measured median latency (96.8 ms), and operating threshold ($\theta^* = 0.1786$).*
+*Figure 1: View 1 (Live) — Leaflet OpenStreetMap map (left) with authentic OpenStreetMap depot markers and distress reports colored by verdict (neutral slate for standard civilian calls, warning amber-red for flagged reports), paired with an incoming incident feed (right) displaying arrival time (HH:mm:ss), event tag (Flood, Earthquake, Hurricane, Wildfire, Cyclone), and a Flagged label only on unreliable reports. Three buffer counts above the feed compute total received, flagged, and urgent reports.*
 
-![Dashboard View 2: Trust-Aware Emergency Fleet Allocation](screenshots/view_2_allocation.png)
+![Dashboard View 2: Coordinator Dispatch Planning](screenshots/view_2_dispatch.png)
 
-*Figure 2: View 2 (Allocation) — Mixed-Integer Linear Programming (MILP) dispatch optimizer with regional controls (Houston, California, Nepal, Miami), depot capacity constraints, live map routes, schedule table, and an offline 30-seed empirical comparison chart (Blind vs Trust-Aware vs Oracle with 95% CIs) paired with transparent scope disclosures.*
+*Figure 2: View 2 (Dispatch) — Mixed-Integer Linear Programming (MILP) dispatch interface allowing coordinators to select disaster regions and unit counts, showing direct transit routes from depots to calls, units sent, calls covered, and flagged calls skipped. An "Ignore report reliability" toggle demonstrates the impact of trust weighting on fleet allocation beside the disclosure: "This is a simulation on replayed posts."*
 
-![Dashboard View 3: Distributed Big Data Infrastructure & Resiliency](screenshots/view_3_pipeline.png)
+![Dashboard View 3: About and System Transparency](screenshots/view_3_about.png)
 
-*Figure 3: View 3 (Pipeline) — Single-pane cluster component table (Kafka 9092, Spark Streaming, HDFS 9000, Hive Metastore 9083 via Spark SQL, FastAPI 8000) with real TCP status ("service reachable"), heartbeat telemetry, and key operational metrics; accompanied by tables for the 100,000-event streaming crash-recovery test (2.83s recovery, 0% data loss) and 10M-row out-of-core scaling benchmark.*
+*Figure 3: View 3 (About) — Plain-English overview outlining system operations, synthetic detection criteria, dataset replay simulation, and distributed pipeline components (Kafka, Spark, HDFS, Hive), accompanied by direct links to technical documentation and the repository.*
 
-![Dashboard View 4: Machine Learning Suites, ROC/PR Curves & Confusion Matrix](screenshots/view_4_results.png)
+![Figure 4: Terminal Pipeline Demonstration](screenshots/terminal_pipeline_demo.png)
 
-*Figure 4: View 4 (Results) — Multi-task model suite evaluation table reporting in-distribution vs unseen-event generalization, interactive ROC and Precision-Recall curves explicitly labeled with training/test provenance (Generator C Held-Out Test Split, 32,879 rows), confusion matrix at $\theta^* = 0.1786$, and methodological disclosures.*
+*Figure 4: Terminal Demonstration — Master terminal demonstration running in Ubuntu, reporting live Kafka broker state, Spark Structured Streaming latency, HDFS Parquet silver warehouse path, Hive Metastore catalog registration, and single simulated window PuLP MILP dispatch results (+12 genuine victims prioritized in candidate window, seed 42) presented alongside the 30-seed empirical study mean (+0.63 ± 0.35 victims in Houston; +0.40 ± 0.28 victims in California) from `results/ablation_study.json`.*
 
-![Figure 5: Terminal Pipeline Demonstration Fallback](screenshots/terminal_pipeline_demo.png)
+![Figure 5: Apache Hive Metastore Verification via Spark SQL](screenshots/terminal_spark_hive_query.png)
 
-*Figure 5: Terminal Demonstration — Master terminal demonstration running in Ubuntu, reporting live Kafka broker state, Spark Structured Streaming latency, HDFS Parquet silver warehouse path, Hive Metastore catalog registration, and single simulated window PuLP MILP dispatch results (+12 genuine victims saved) labeled with the offline 30-seed study mean ± 95% CIs.*
-
-![Figure 6: Apache Hive Metastore Verification via Spark SQL](screenshots/terminal_spark_hive_query.png)
-
-*Figure 6: Apache Hive Production Query Evidence — Terminal verification of the Apache Hive Metastore catalog queried through Spark SQL (port 9083), materializing gold emergency demand aggregates across 3,413 partitions with the Catalyst optimizer physical execution plan.*
+*Figure 5: Apache Hive Production Query Evidence — Terminal verification of the Apache Hive Metastore catalog queried through Spark SQL (port 9083), materializing gold emergency demand aggregates across 3,413 partitions with the Catalyst optimizer physical execution plan.*
 
 ---
 
