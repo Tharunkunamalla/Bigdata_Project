@@ -7,7 +7,7 @@
 [![Hadoop HDFS](https://img.shields.io/badge/Hadoop%20HDFS-3.3.6-yellow.svg)](https://hadoop.apache.org/)
 [![Hive Metastore](https://img.shields.io/badge/Hive%20Metastore-3.1.3-green.svg)](https://hive.apache.org/)
 [![Pytest](https://img.shields.io/badge/Tests-21%20Passing-brightgreen.svg)](tests/test_real_pipeline.py)
-[![Release](https://img.shields.io/badge/Version-v1.0--final--8-blue.svg)](docs/REPORT.md)
+[![Release](https://img.shields.io/badge/Version-v1.0--final--9-blue.svg)](docs/REPORT.md)
 
 **CrisisGuard AI** is an end-to-end, distributed big data analytics and optimization pipeline designed to protect emergency dispatch operations from generative AI-driven misinformation during natural disasters. Built across **Apache Kafka 3.7.0**, **Apache Spark 3.5.1 Structured Streaming & MLlib**, **Apache Hadoop HDFS 3.3.6**, **Apache Hive Metastore 3.1.3** (queried through Spark SQL), and **PuLP CBC Mixed-Integer Linear Programming (MILP)**, CrisisGuard ingests high-velocity disaster streams, scores synthetic hoaxes, identifies botnet coordination via MinHashLSH, and executes optimal fleet dispatch plans to prioritize genuine disaster victims.
 
@@ -449,7 +449,22 @@ Miami (Tropical Storm)      Validation Threshold   30.63 ± 0.32               1
 
 ---
 
-## 16. API Endpoints
+## 16. Operations Dashboard (Restrained 4-View Operations Console)
+
+CrisisGuard AI serves a unified operations console at `http://127.0.0.1:8000/` designed with senior-engineering restraint (Inter typography loaded locally via `@fontsource/inter`, neutral grays, 1px borders, tabular numerals, units on every number, zero marketing slogans or emojis):
+
+| View | Purpose & Core Features | Screenshot Evidence |
+| :--- | :--- | :--- |
+| **1. Live** | 60% Leaflet OSM map (left) with authentic depot markers and distress calls colored by trust; virtualized credibility feed (right) with arrival time, narrative, separated event tag, verdict, trust, urgency, and post inspection drawer. Summary strip reports throughput (60 posts/min, 2,420 events/s peak), flagged share, measured median latency (96.8 ms), and operating threshold ($\theta^* = 0.1786$). | ![View 1 Live](docs/screenshots/view_1_live.png) |
+| **2. Allocation** | Mixed-Integer Linear Program (MILP) dispatch optimizer with regional controls (Houston, California, Nepal, Miami), depot capacity constraints, live map routes, schedule table, and an offline 30-seed empirical comparison chart (Blind vs Trust-Aware vs Oracle with 95% CIs) paired with transparent scope disclosures. | ![View 2 Allocation](docs/screenshots/view_2_allocation.png) |
+| **3. Pipeline** | Cluster component table (Kafka 9092, Spark Streaming, HDFS 9000, Hive Metastore 9083 via Spark SQL, FastAPI 8000) with real TCP status ("service reachable"), heartbeat telemetry, and operational metrics; accompanied by tables for the 100,000-event streaming crash-recovery test (2.83s recovery, 0% data loss) and 10M-row out-of-core scaling benchmark. | ![View 3 Pipeline](docs/screenshots/view_3_pipeline.png) |
+| **4. Results** | Multi-task model suite evaluation table reporting in-distribution vs unseen-event generalization, interactive ROC and Precision-Recall curves explicitly labeled with training/test provenance (Generator C Held-Out Test Split, 32,879 rows), confusion matrix at $\theta^* = 0.1786$, and methodological disclosures. | ![View 4 Results](docs/screenshots/view_4_results.png) |
+| **Terminal Pipeline Demo** | Master terminal pipeline demonstration in Ubuntu terminal reporting Kafka broker state, Spark Streaming latency, HDFS Parquet silver warehouse path, Hive Metastore catalog registration, and PuLP MILP single simulated window (+12 genuine victims saved) labeled with the offline 30-seed study mean ± 95% CIs. | ![Terminal Pipeline Demo](docs/screenshots/terminal_pipeline_demo.png) |
+| **Spark SQL Hive Metastore Query** | Verification of Apache Hive Metastore catalog queried through Spark SQL (port 9083), materializing gold emergency demand aggregates across 3,413 partitions with Catalyst physical execution plan. | ![Terminal Spark Hive Query](docs/screenshots/terminal_spark_hive_query.png) |
+
+---
+
+## 17. API Endpoints
 
 The FastAPI gateway serves the following endpoints on port 8000:
 
@@ -472,7 +487,7 @@ The FastAPI gateway serves the following endpoints on port 8000:
 
 ---
 
-## 17. Limitations
+## 18. Limitations
 
 1. **Random Split Optimism**: The 75/25 split is a random stratified partition within each dataset. Because crisis posts from the same events appear across train and test partitions, in-distribution metrics are optimistic compared to held-out disaster event evaluation (HumAID 5-fold CV yields Macro-F1 = 0.5587 ± 0.0631).
 2. **Short Crisis Alert Score Concentration**: On short tweets (~110 characters), standard uncalibrated classification thresholds ($\theta = 0.50$) produce zero detections. Operating threshold calibration ($\theta^* = 0.1786$) is necessary to distinguish hoaxes.
@@ -482,30 +497,24 @@ The FastAPI gateway serves the following endpoints on port 8000:
 
 ---
 
-## 18. Future Enhancements
-
-- **Few-Shot LLM Fine-Tuning**: Integration of lightweight open-weights models (e.g., Llama 3 8B, Mistral) for real-time dialect and semantic nuance extraction on crisis tweets.
-- **Dynamic Real-Time MinHash Graph Updates**: Upgrading the batch MinHashLSH implementation to an online streaming graph engine to dynamically identify emerging bot clusters.
-- **Dynamic Fleet Routing**: Extending the single-period static transportation MILP formulation into a multi-period Capacitated Vehicle Routing Problem (CVRP) with real-time road accessibility networks.
-- **Multi-Modal Cross-Validation**: Combining social media text alerts with real-time satellite imagery and sensor networks (USGS seismic, NOAA radar) for multi-source physical verification.
-
----
-
 ## 19. Individual Contribution Breakdown (Team of 3 Students)
 
-This project was developed for CSE412 Big Data Analytics at Arizona State University:
+*To be completed by the team members prior to final submission:*
 
-- **Student 1 (Name: Siva Sai boggu, NetID: ____________________)**:
-  - Primary Responsibilities: Stream ingestion, Apache Kafka setup, and streaming fault tolerance testing.
+- **Student 1 (Name: ____________________, NetID: ____________________)**:
+  - Primary Responsibilities: __________________________________________________________________
   - Specific Technical Deliverables: ___________________________________________________________
+  - Verification Artifacts: ___________________________________________________________________
 
-- **Student 2 (Name: Tharun Kunamalla, NetID: ____________________)**:
-  - Primary Responsibilities: Machine learning pipeline, Spark MLlib model training, and sanity controls.
+- **Student 2 (Name: ____________________, NetID: ____________________)**:
+  - Primary Responsibilities: __________________________________________________________________
   - Specific Technical Deliverables: ___________________________________________________________
+  - Verification Artifacts: ___________________________________________________________________
 
-- **Student 3 (Name: Bhargav Chennupati, NetID: ____________________)**:
-  - Primary Responsibilities: Optimization engine, PuLP MILP formulation, FastAPI backend, and dashboard.
+- **Student 3 (Name: ____________________, NetID: ____________________)**:
+  - Primary Responsibilities: __________________________________________________________________
   - Specific Technical Deliverables: ___________________________________________________________
+  - Verification Artifacts: ___________________________________________________________________
 
 ---
 

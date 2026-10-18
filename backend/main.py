@@ -1014,6 +1014,11 @@ FRONTEND_DIST = os.path.join(BASE_DIR, "frontend", "dist")
 if os.path.exists(FRONTEND_DIST):
     app.mount("/assets", StaticFiles(directory=os.path.join(FRONTEND_DIST, "assets")), name="assets")
 
+    @app.get("/")
+    async def serve_root():
+        index_file = os.path.join(FRONTEND_DIST, "index.html")
+        return FileResponse(index_file)
+
     @app.get("/{full_path:path}")
     async def serve_spa(full_path: str):
         if full_path.startswith("api"):

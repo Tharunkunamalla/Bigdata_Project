@@ -3,7 +3,7 @@
 **Course:** CSE412 — Big Data Analytics  
 **Institution:** Arizona State University  
 **System Address:** Single unified endpoint at **`http://127.0.0.1:8000/`**  
-**Release Tag:** `v1.0-final-8`  
+**Release Tag:** `v1.0-final-9`  
 
 ---
 
@@ -17,23 +17,22 @@
   > CrisisGuard AI connects five core big data systems: Kafka for ingestion, Spark Streaming for sub-second MLlib scoring, HDFS for Parquet storage, Hive Metastore (queried through Spark SQL) for catalog governance, and PuLP MILP for optimal fleet allocation."
 - **Terminal Command:**
   ```bash
-  curl -s http://127.0.0.1:8000/api/health
+  make demo
   ```
-- **Action:** Open `http://127.0.0.1:8000/` in browser. Point out the `LIVE` and `SIMULATED` badges in the clean header.
+- **Action:** Open `http://127.0.0.1:8000/` in browser. Point out the `LIVE` and `SIMULATED DATA` badges in the clean header.
 
 ### Minute 2: Live Feed, Top Factors & Real PuLP Solver (1:00 – 2:00)
-- **Action on Page 1 (Live):**
+- **Action on View 1 (Live):**
   - Show the 60% Leaflet map with Houston marine depots and incoming posts colored by trust (green = credible, red = suspected synthetic).
   - Click a flagged post in the table: highlight the side drawer showing full text, synthetic probability (e.g. 0.850), and top predictive factors.
-- **Action on Page 3 (Allocation):**
-  - Click **"Run allocation"**. Point out solver runtime (~24 ms via PuLP CBC), genuine victims rescued (29), and wasted dispatches (0).
+- **Action on View 2 (Allocation):**
+  - Click **"Run Optimization"**. Point out solver runtime (~42 ms via PuLP CBC), genuine victims rescued (25), and wasted dispatches (0).
   - Highlight the 30-seed offline comparison chart: Trust-Aware validation thresholding achieves a statistically significant gain (+0.63 victims, $p = 0.00053$) over Blind LP.
 
-### Minute 3: Provenance, Fault Tolerance & Evidence Export (2:00 – 3:00)
-- **Action on Page 4 (Pipeline) & Page 5 (Demo):**
-  - Show cluster daemons table and the crash-recovery table: 2.83s recovery with 0 data loss.
-  - Navigate to **Demo** tab: click **"Run step"** on Step 4 (Spark SQL Hive catalog query: 130,301 rows).
-  - Click **"Export evidence"** to demonstrate reproducible verification written to `results/demo_evidence/`.
+### Minute 3: Provenance, Fault Tolerance & Results (2:00 – 3:00)
+- **Action on View 3 (Pipeline) & View 4 (Results):**
+  - Show cluster daemons table ("service reachable") and the crash-recovery table: 2.83s recovery with 0 data loss.
+  - Navigate to **Results** tab: highlight the model catalog, ROC/PR curves explicitly labeled with held-out Generator C test split provenance (32,879 rows), and confusion matrix at $\theta^* = 0.1786$.
 - **Closing Cue:**
   > "Every number shown is sourced from our 130,301-record deduplicated corpus and `results/summary.json`. Zero numbers are invented."
 
@@ -44,7 +43,7 @@
 ### Timeline & Presenter Breakdown
 - **[00:00 – 02:30] Presenter 1 (Infrastructure & Streaming Lead):** Motivation, Distributed Architecture, Kafka & HDFS
 - **[02:30 – 05:30] Presenter 2 (Machine Learning & Graph Lead):** Corpus Provenance, Spark MLlib Suite, Calibration, MinHashLSH
-- **[05:30 – 08:00] Presenter 3 (Optimization & Operations Dashboard Lead):** Clean 5-Page Dashboard, Live Map, Solver Execution, 30-Seed Ablation
+- **[05:30 – 08:00] Presenter 3 (Optimization & Operations Dashboard Lead):** Restrained 4-View Operations Console, Live Map, Solver Execution, 30-Seed Ablation
 - **[08:00 – 10:00] Team Synthesis:** Scaling Benchmark (Pandas vs Spark), Honest Limitations, Q&A Preparation
 
 ### Detailed Cue Sheet

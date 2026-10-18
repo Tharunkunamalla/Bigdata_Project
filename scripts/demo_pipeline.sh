@@ -196,9 +196,14 @@ print(f'  [B] Trust-Aware Validation LP (theta* = 0.1786):')
 print(f'      Solver Time             : {t_trust_ms:.1f} ms')
 print(f'      Genuine Victims Served  : \033[0;32m\033[1m{res_trust[\"genuine_served\"]}\033[0m / 25')
 print(f'      Wasted Boat Dispatches  : \033[0;32m{res_trust[\"wasted_dispatches\"]}\033[0m (0.0%)')
-print('')
 diff = res_trust['genuine_served'] - res_blind['genuine_served']
-print(f'  >>> \033[0;32m\033[1mHUMANITARIAN GAIN: +{diff} genuine disaster victims saved from resource starvation!\033[0m <<<')
+print(f'  >>> \033[0;32m\033[1mDEMO RESULT [Single simulated window, hoax rate 30.0%, seed 42]: Saved +{diff} genuine victims!\033[0m <<<')
+print(f'  ----------------------------------------------------------------------------------------')
+print(f'  Offline 30-Seed Empirical Study (results/ablation_study.json, Mean ± 95% CI):')
+print(f'    * Houston (Harvey Flooding):   +0.63 ± 0.32 victims gained (p = 0.00053)')
+print(f'    * California (Wildfires):      +0.40 ± 0.56 victims gained (p = 0.00807)')
+print(f'    * Continuous Trust Baseline:   +0.00 to -0.50 (continuous weights alone do not filter')
+print(f'      high-urgency hoaxes; validation thresholding theta* = 0.1786 is mandatory).')
 "
 sleep 1.0
 

@@ -3,7 +3,7 @@
 **Course:** CSE412 Big Data Analytics  
 **Institution:** Arizona State University  
 **System Architecture:** Apache Kafka 3.7.0 (KRaft) → Apache Spark 3.5.1 Structured Streaming & MLlib → Apache Hadoop HDFS 3.3.6 → Apache Hive Metastore 3.1.3 (queried via Spark SQL) → PuLP CBC MILP Optimizer  
-**Release Tag:** `v1.0-final-8`  
+**Release Tag:** `v1.0-final-9`  
 **Execution Environment:** Distributed Big Data Daemon Cluster on WSL2 / Ubuntu 22.04 LTS  
 
 ---
@@ -28,7 +28,7 @@ To overcome these challenges, we design, implement, and empirically evaluate **C
 - **Calibrated Multi-Task Machine Learning Suite:** Using a 130,301-record curated corpus drawn from QCRI HumAID, CrisisLex, PHEME, LIAR, HC3, and MAGE, we develop a multi-task suite spanning synthetic text detection, crisis rumour classification, humanitarian categorization, and urgency regression. We prove that while standard thresholds ($\theta = 0.50$) fail on short crisis tweets, validation threshold tuning ($\theta^* = 0.1786$) yields 0.9200 precision and an ROC-AUC of 0.9940 on held-out generator hoaxes, while establishing an honest -0.198 Macro-F1 generalization penalty across unseen disaster events.
 - **MinHashLSH Coordination Graph with Circularity Controls:** We implement distributed Locality-Sensitive Hashing to construct near-duplicate communication graphs across 15,000 posts, identifying coordinated amplification structures while establishing that approximately 30.0% of dense clustering reflects template phrasing syntax rather than malicious coordination.
 - **Trust-Aware Mixed-Integer Linear Optimization:** We formulate and solve a Trust-Aware MILP optimizer in PuLP CBC, integrating continuous Bayesian trust discounting and calibrated threshold gating with authentic OpenStreetMap depot facilities. In a 30-seed empirical study across four multi-hazard regions, our calibrated policy demonstrates a statistically significant rescue gain (+0.63 genuine victims rescued in Houston, $p = 0.00053$) by withholding assets from synthetic hoaxes while fully servicing verified civilian demands.
-- **Academic Operations Dashboard:** We deploy a clean, engineering-grade 5-page dashboard served directly by the FastAPI backend at `http://127.0.0.1:8000/`, featuring real-time Server-Sent Events (measured p50 latency 96.85 ms, p95 = 130.01 ms over 250 raw events), interactive MILP dispatch execution, transparent model diagnostics, and verified end-to-end demo execution.
+- **Academic Operations Dashboard:** We deploy a clean, engineering-grade 4-view operations console served directly by the FastAPI backend at `http://127.0.0.1:8000/`, featuring real-time Server-Sent Events (measured p50 latency 96.85 ms, p95 = 130.01 ms over 250 raw events), interactive MILP dispatch execution, transparent model diagnostics, and verified end-to-end demo execution.
 
 ---
 
@@ -116,19 +116,31 @@ CrisisGuard AI connects five specialized components into an integrated pipeline:
 | **PuLP CBC MILP** | Local | Linear/mixed-integer optimization engine running on the driver node to solve multi-depot fleet allocation. |
 
 ### 3.2 Operations Dashboard Interface
-The unified operations dashboard is served directly by FastAPI at `http://127.0.0.1:8000/`. Designed with academic engineering aesthetics (Inter typography, neutral grays, tabular data, zero marketing flair), it provides real-time situational awareness across five dedicated views:
+The unified operations dashboard is served directly by FastAPI at `http://127.0.0.1:8000/`. Designed with restrained operations-console aesthetics (Inter typography loaded locally via @fontsource, neutral grays, 1px borders, tabular numerals, units on every number, zero marketing slogans or emojis), it provides real-time situational awareness across four core views:
 
-![CrisisGuard Live Disaster Operations Dashboard](screenshots/01_live_dark.png)
+![Dashboard View 1: Live GIS Map and Credibility Feed](screenshots/view_1_live.png)
 
-*Figure 1: Live Disaster Operations Dashboard displaying 60% Leaflet map with OpenStreetMap depot markers, incoming emergency posts colored by trust rating, real-time SSE feed table, and post inspection drawer showing score attribution factors.*
+*Figure 1: View 1 (Live) — 60% Leaflet OpenStreetMap map (left) with authentic depot markers and distress points colored by trust score, paired with a virtualized credibility feed (right) displaying arrival time, crisis narrative, separated event tag, verdict, trust, and urgency. A slim summary strip reports throughput (60 posts/min, 2,420 events/s peak), flagged share, measured median latency (96.8 ms), and operating threshold ($\theta^* = 0.1786$).*
 
-![Model Validation & Misinformation Detection Interface](screenshots/02_models_dark.png)
+![Dashboard View 2: Trust-Aware Emergency Fleet Allocation](screenshots/view_2_allocation.png)
 
-*Figure 2: Model Specifications and Validation Dashboard showing the production model suite catalog, ROC and Precision-Recall curves, confusion matrix at calibrated threshold $\theta^* = 0.1786$, and transparent known limits callout box.*
+*Figure 2: View 2 (Allocation) — Mixed-Integer Linear Programming (MILP) dispatch optimizer with regional controls (Houston, California, Nepal, Miami), depot capacity constraints, live map routes, schedule table, and an offline 30-seed empirical comparison chart (Blind vs Trust-Aware vs Oracle with 95% CIs) paired with transparent scope disclosures.*
 
-![Trust-Aware Emergency Resource Allocation Interface](screenshots/03_allocation_dark.png)
+![Dashboard View 3: Distributed Big Data Infrastructure & Resiliency](screenshots/view_3_pipeline.png)
 
-*Figure 3: Trust-Aware Emergency Resource Allocation view featuring interactive PuLP solver controls, real-time dispatch outcome metrics, and 30-seed offline policy comparison bar chart with 95% confidence intervals.*
+*Figure 3: View 3 (Pipeline) — Single-pane cluster component table (Kafka 9092, Spark Streaming, HDFS 9000, Hive Metastore 9083 via Spark SQL, FastAPI 8000) with real TCP status ("service reachable"), heartbeat telemetry, and key operational metrics; accompanied by tables for the 100,000-event streaming crash-recovery test (2.83s recovery, 0% data loss) and 10M-row out-of-core scaling benchmark.*
+
+![Dashboard View 4: Machine Learning Suites, ROC/PR Curves & Confusion Matrix](screenshots/view_4_results.png)
+
+*Figure 4: View 4 (Results) — Multi-task model suite evaluation table reporting in-distribution vs unseen-event generalization, interactive ROC and Precision-Recall curves explicitly labeled with training/test provenance (Generator C Held-Out Test Split, 32,879 rows), confusion matrix at $\theta^* = 0.1786$, and methodological disclosures.*
+
+![Figure 5: Terminal Pipeline Demonstration Fallback](screenshots/terminal_pipeline_demo.png)
+
+*Figure 5: Terminal Demonstration — Master terminal demonstration running in Ubuntu, reporting live Kafka broker state, Spark Structured Streaming latency, HDFS Parquet silver warehouse path, Hive Metastore catalog registration, and single simulated window PuLP MILP dispatch results (+12 genuine victims saved) labeled with the offline 30-seed study mean ± 95% CIs.*
+
+![Figure 6: Apache Hive Metastore Verification via Spark SQL](screenshots/terminal_spark_hive_query.png)
+
+*Figure 6: Apache Hive Production Query Evidence — Terminal verification of the Apache Hive Metastore catalog queried through Spark SQL (port 9083), materializing gold emergency demand aggregates across 3,413 partitions with the Catalyst optimizer physical execution plan.*
 
 ---
 

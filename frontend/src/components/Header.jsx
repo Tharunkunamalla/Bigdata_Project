@@ -1,20 +1,19 @@
 import React from 'react';
+import { Sun, Moon } from 'lucide-react';
 
 export default function Header({
   activeTab,
   setActiveTab,
   streamState, // 'LIVE', 'REPLAY', 'STALE', 'OFFLINE'
   isSimulated = true,
-  onOpenSettings,
   theme,
   onToggleTheme
 }) {
   const tabs = [
-    { id: 'live', label: 'Live Operations' },
-    { id: 'models', label: 'Model Validation' },
-    { id: 'allocation', label: 'Fleet Allocation' },
-    { id: 'pipeline', label: 'Big Data Pipeline' },
-    { id: 'demo', label: 'End-to-End Demo' }
+    { id: 'live', label: 'Live' },
+    { id: 'allocation', label: 'Allocation' },
+    { id: 'pipeline', label: 'Pipeline' },
+    { id: 'results', label: 'Results' }
   ];
 
   const getBadgeClass = (state) => {
@@ -31,19 +30,19 @@ export default function Header({
       <div className="brand-section">
         <span className="brand-title">CrisisGuard AI</span>
         <div className="badge-group">
-          <span className={`badge ${getBadgeClass(streamState)}`} title={`Current ingestion feed state: ${streamState}`}>
+          <span className={`badge ${getBadgeClass(streamState)}`} title={`Ingestion feed state: ${streamState}`}>
             <span className="status-dot"></span>
             {streamState}
           </span>
           {isSimulated && (
-            <span className="badge badge-simulated" title="Coordinates or simulated replay data active">
-              SIMULATED
+            <span className="badge badge-simulated" title="Simulated data: Social coordinates & replay feed active">
+              Simulated data
             </span>
           )}
         </div>
       </div>
 
-      <nav className="tab-nav" aria-label="Main application sections">
+      <nav className="tab-nav" aria-label="Main navigation">
         {tabs.map((tab) => (
           <button
             key={tab.id}
@@ -58,20 +57,13 @@ export default function Header({
 
       <div className="header-actions">
         <button
+          id="theme-toggle-btn"
           className="btn-icon"
           onClick={onToggleTheme}
           title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
-          aria-label="Toggle theme"
+          aria-label="Toggle visual theme"
         >
-          {theme === 'dark' ? 'Light' : 'Dark'}
-        </button>
-        <button
-          className="btn-icon"
-          onClick={onOpenSettings}
-          title="Open application settings"
-          aria-label="Settings"
-        >
-          Settings
+          {theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
         </button>
       </div>
     </header>

@@ -54,6 +54,23 @@ def test_health_endpoint_service_reachable_wording():
         assert "status" in svc
         assert "service reachable" in svc["status"].lower() or "offline" in svc["status"].lower()
 
+def test_health_endpoint_kafka_down_handling(monkeypatch):
+    """Verify that when Kafka is down, status degrades to OFFLINE/DEGRADED without fake data."""
+    import backend.main as bmain
+    # Mock check_tcp_port to return False for Kafka port 9092
+    original_check = bmain.check_tcp_port
+    def mock_check(host, port, timeout=0.5):
+        if port == 9092:
+            return False
+        return original_check(host, port, timeout)
+    
+    monkeypatch.setattr(bmain, "check_tcp_port", mock_check)
+    data = bmain.get_health()
+    assert data["status"] == "DEGRADED"
+    assert data["services"]["kafka"]["status"] == "OFFLINE"
+    assert data["services"]["kafka"]["service_reachable"] is False
+    assert data["services"]["kafka"]["last_seen"] is None
+
 def test_hand_computed_threshold_confusion_matrix():
     """Verify the interactive threshold slider against hand-computed ground truth on test_predictions.csv."""
     assert os.path.exists(TEST_PREDS_CSV), "test_predictions.csv must exist"

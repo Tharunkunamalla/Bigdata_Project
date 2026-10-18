@@ -3,7 +3,7 @@
 **Course:** CSE412 — Big Data & Large-Scale Computing  
 **Project:** CrisisGuard AI  
 **Scope:** Distributed Infrastructure Topology, Port Mappings, Dataflow Lifecycles, and Component Specifications  
-**Release Tag:** `v1.0-final-8`  
+**Release Tag:** `v1.0-final-9`  
 
 ---
 
@@ -18,7 +18,7 @@ flowchart TD
 
     subgraph StorageCatalog["2. Distributed Storage & Metastore Catalog"]
         CuratedCSV["Curated Silver Dataset<br/>(130,301 rows)"] -->|PySpark Ingestion| HDFSSilver["Hadoop HDFS 3.3.6<br/>(/user/hive/warehouse/cse412_disaster.db/disaster_posts_silver)<br/>Partitioned by disaster_type (Parquet)"]
-        HDFSSilver -->|Thrift Port 9083| HiveMeta["Apache Hive Metastore 3.1.3<br/>(queried via Spark SQL)"]
+        HDFSSilver -->|Thrift Port 9083| HiveMeta["Apache Hive Metastore 3.1.3<br/>(Hive Metastore catalog queried through Spark SQL)"]
     end
 
     subgraph DistributedML["3. Spark MLlib & Graph Analytics Engine"]
@@ -44,12 +44,11 @@ flowchart TD
     end
 
     subgraph Presentation["6. Full-Stack Operations UI"]
-        Backend -->|Server-Sent Events & Static Serving| ReactUI["Clean React 18 Engineering Dashboard<br/>(http://127.0.0.1:8000/)"]
-        ReactUI --> LiveView["Live: 60% Map & Feed Table Drawer"]
-        ReactUI --> ModelsView["Models: Metrics Table & ROC/PR Curves"]
+        Backend -->|Server-Sent Events & Static Serving| ReactUI["Restrained 4-View Operations Console<br/>(http://127.0.0.1:8000/)"]
+        ReactUI --> LiveView["Live: GIS Map & Credibility Feed"]
         ReactUI --> AllocView["Allocation: Solver & 30-Seed CI Chart"]
         ReactUI --> PipeView["Pipeline: Cluster Status & Recovery Tables"]
-        ReactUI --> DemoView["Demo: Stepwise Pipeline Runner & Evidence Export"]
+        ReactUI --> ResultsView["Results: Model Catalog, ROC/PR Curves & Confusion Matrix"]
     end
 ```
 
@@ -62,11 +61,11 @@ flowchart TD
 | **Message Broker** | Apache Kafka (KRaft) | 3.7.0 | `9092` | `127.0.0.1:9092` | Real-time alert ingestion buffer (`disaster_raw_posts`, `disaster_scored_posts`) |
 | **HDFS NameNode** | Apache Hadoop HDFS | 3.3.6 | `9000` / `9870` | `127.0.0.1:9000` | Distributed block storage & RPC (`/user/hive/warehouse/cse412_disaster.db/disaster_posts_silver`) |
 | **HDFS DataNode** | Apache Hadoop HDFS | 3.3.6 | `9864` | `127.0.0.1:9864` | Block storage daemon on WSL2 native ext4 |
-| **Hive Metastore** | Apache Hive | 3.1.3 | `9083` | `127.0.0.1:9083` | Centralized schema catalog queried through Spark SQL (HiveServer2 does not run) |
+| **Hive Metastore** | Apache Hive | 3.1.3 | `9083` | `127.0.0.1:9083` | Hive Metastore catalog queried through Spark SQL (HiveServer2 does not run) |
 | **Execution Engine** | Apache Spark | 3.5.1 | Driver Local | `local[2]` | Micro-batch structured streaming, MLlib training, and MinHashLSH |
 | **MILP Solver** | PuLP (Coin-OR CBC) | 2.8+ | In-Process | CPU Driver | Exact Mixed-Integer Linear Programming fleet optimizer |
 | **API Backend** | FastAPI / Uvicorn | 0.115+ | `8000` | `0.0.0.0:8000` | Telemetry gateway, Server-Sent Events, and static React SPA host |
-| **Dashboard UI** | React 18 / Vite | 5.4+ | Bundled | `http://127.0.0.1:8000/` | Simple, neat, professional 5-page operations dashboard |
+| **Dashboard UI** | React 18 / Vite / TS | 5.4+ | Bundled | `http://127.0.0.1:8000/` | Restrained 4-view operations console (Live, Allocation, Pipeline, Results) |
 
 ---
 
