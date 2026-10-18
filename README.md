@@ -1,12 +1,7 @@
 # CrisisGuard
 ### Real-Time Detection of Synthetic Misinformation and Trust-Aware Emergency Resource Allocation
 
-[![Course](https://img.shields.io/badge/Course-CSE412%20Big%20Data-blue.svg)](docs/REPORT.md)
-[![Apache Spark](https://img.shields.io/badge/Apache%20Spark-3.5.1%20MLlib-orange.svg)](https://spark.apache.org/)
-[![Apache Kafka](https://img.shields.io/badge/Apache%20Kafka-3.7.0%20KRaft-black.svg)](https://kafka.apache.org/)
-[![Hadoop HDFS](https://img.shields.io/badge/Hadoop%20HDFS-3.3.6-yellow.svg)](https://hadoop.apache.org/)
-[![Hive Metastore](https://img.shields.io/badge/Hive%20Metastore-3.1.3-green.svg)](https://hive.apache.org/)
-[![Version](https://img.shields.io/badge/Release-v1.0--final--9-blue.svg)](docs/REPORT.md)
+
 
 **CrisisGuard** is a real-time emergency coordination dashboard and distributed data processing pipeline. It helps emergency coordinators answer three critical questions during natural disasters:
 1. *What is being reported right now?*
@@ -83,7 +78,7 @@ Bigdata_Project/
 ├── ingestion/       # Kafka live disaster replay simulator
 ├── ml/              # Spark MLlib training pipeline, models, and evaluation routines
 ├── results/         # Single source of truth JSON files, metrics, and empirical evidence
-├── scripts/         # Demo scripts, preflight, consistency checks, and PDF exporter
+├── scripts/         # Demo scripts, preflight, consistency checks
 └── tests/           # Unit tests, integration tests, and infrastructure verifiers
 ```
 
@@ -110,41 +105,14 @@ All metrics are measured from the **130,301-record curated disaster corpus** (Hu
 
 ---
 
-## 6. Project Documentation & Full Report
 
-For the complete theoretical formulation, multi-region ablation studies, baseline comparisons, and system benchmarks, see:
-- [docs/REPORT.md](docs/REPORT.md)
-- [docs/REPORT.pdf](docs/REPORT.pdf)
-- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
-- [docs/DEMO_SCRIPT.md](docs/DEMO_SCRIPT.md)
-- [docs/QA_PREP.md](docs/QA_PREP.md)
 
 ---
 
-## 7. Individual Contribution Breakdown (Team of 3 Students)
 
-*To be completed by team members prior to submission:*
-
-- **Student 1 (Name: ____________________, NetID: ____________________)**:
-  - Primary Responsibilities: __________________________________________________________________
-  - Specific Technical Deliverables: ___________________________________________________________
-  - Verification Artifacts: ___________________________________________________________________
-
-- **Student 2 (Name: ____________________, NetID: ____________________)**:
-  - Primary Responsibilities: __________________________________________________________________
-  - Specific Technical Deliverables: ___________________________________________________________
-  - Verification Artifacts: ___________________________________________________________________
-
-- **Student 3 (Name: ____________________, NetID: ____________________)**:
-  - Primary Responsibilities: __________________________________________________________________
-  - Specific Technical Deliverables: ___________________________________________________________
-  - Verification Artifacts: ___________________________________________________________________
 
 ---
 
-## 8. AI Assistance Disclosure
-
-> **AI Assistance Disclosure**: An AI coding assistant (Antigravity IDE / Gemini 2.5 Flash) was utilized during the development of this project to assist with pipeline scaffolding, boilerplate code generation, data cleaning scripts, unit test creation, and formatting. All data ingestion, model training runs, statistical ablation studies, and architectural benchmarks were executed locally on system daemons (Kafka, HDFS, Spark, Hive), and all empirical outputs were reviewed and validated against course guidelines.
 
 ---
 
