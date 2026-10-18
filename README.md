@@ -63,7 +63,7 @@ make demo-stop
 
 ---
 
-## 3. Top-Level Folder Map
+## 3. Folder Structure
 
 ```
 Bigdata_Project/
@@ -84,7 +84,7 @@ Bigdata_Project/
 
 ---
 
-## 4. Key Empirical Results (Single Source of Truth)
+## 4. Key Empirical Results 
 
 All metrics are measured from the **130,301-record curated disaster corpus** (HumAID, CrisisLex, PHEME, HC3, MAGE, LIAR) with a strict 75/25 random stratified split (97,422 train / 32,879 test, seed 42) and zero text leakage. Generalization to unseen disaster events is evaluated as a separate analysis (HumAID 5-fold CV: Macro-F1 = 0.5587 ± 0.0631).
 
@@ -116,6 +116,4 @@ All metrics are measured from the **130,301-record curated disaster corpus** (Hu
 
 ---
 
-## 9. License
 
-This project is licensed under the MIT License. See [LICENSE](LICENSE) for details, including third-party attributions for OpenStreetMap, Leaflet, and academic disaster datasets.
