@@ -62,6 +62,7 @@ Per prompt constraints, the following critical deliverables and pipeline compone
 | `scripts/audit_phase_a.py` | Diagnostic script | Superseded by `scripts/check_doc_consistency.py`. |
 | `scripts/diagnose_item2.py` | Diagnostic script | Diagnostic check; 0 references. |
 | `scripts/measure_stream_latency.py` | Superseded script | Superseded by `scripts/measure_real_pipeline.py`. |
+| `frontend/src/utils/initialPosts.js` | Stale Mock Data | Contained off-topic MAGE benchmark texts (razor blades, TF2, toddler bomb). Replaced by dynamic verified disaster API feed. 0 references after removal. |
 | `.pytest_cache/` | Cache directory | Python test cache (excluded by `.gitignore`). |
 | `**/__pycache__/` | Cache directories | Python bytecode caches (excluded by `.gitignore`). |
 | `derby.log` | Ephemeral log | Derby temporary log file. |

@@ -1,13 +1,10 @@
 import React from 'react';
-import { Sun, Moon, Radio } from 'lucide-react';
 
 export default function Header({
   activeTab,
   setActiveTab,
   dataState = 'REPLAY', // 'LIVE', 'REPLAY', 'OFFLINE'
-  onOpenStatus,
-  theme,
-  onToggleTheme
+  onOpenStatus
 }) {
   const tabs = [
     { id: 'live', label: 'Live' },
@@ -59,17 +56,7 @@ export default function Header({
         ))}
       </nav>
 
-      <div className="header-right">
-        <button
-          id="theme-toggle-btn"
-          className="btn-theme"
-          onClick={onToggleTheme}
-          title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
-          aria-label="Toggle theme"
-        >
-          {theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
-        </button>
-      </div>
+      <div className="header-right" />
     </header>
   );
 }

@@ -125,8 +125,8 @@ def main():
         if batch_df.isEmpty():
             return
             
+        t_start = time.time()
         n_records = batch_df.count()
-        print(f"\n[MicroBatch {batch_id}] Processing {n_records} posts...")
 
         # Score with Synthetic Detector
         scored_synth = synth_model.transform(batch_df)
@@ -180,10 +180,12 @@ def main():
             .option("topic", OUTPUT_TOPIC)
             .save()
         )
-        print(f"  -> Sunk {n_records} scored posts to Kafka topic '{OUTPUT_TOPIC}'")
 
         # 2. Append to local curated streaming sink for analytics
         enriched_df.write.mode("append").parquet("data/curated/streaming_sink")
+
+        duration_ms = int((time.time() - t_start) * 1000)
+        print(f"[batch id: {batch_id}, rows: {n_records}, duration: {duration_ms} ms]", flush=True)
 
     # Start Streaming Query
     query = (
@@ -194,7 +196,13 @@ def main():
     )
 
     print("Stream processing loop active. Awaiting data...")
-    query.awaitTermination()
+    try:
+        query.awaitTermination()
+    except KeyboardInterrupt:
+        print("\n[STOP] Shutting down Spark streaming query cleanly...")
+        query.stop()
+        spark.stop()
+        sys.exit(0)
 
 if __name__ == "__main__":
     main()

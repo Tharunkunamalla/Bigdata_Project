@@ -1,42 +1,47 @@
 import React from 'react';
-import { X, CheckCircle2, XCircle, Clock, Zap } from 'lucide-react';
+import { X, CheckCircle2, XCircle } from 'lucide-react';
 
 export default function StatusDrawer({
   isOpen,
   onClose,
   health,
   dataState = 'REPLAY',
-  lastMsgTime,
-  replayRate,
-  onReplayRateChange
+  lastMsgTime
 }) {
   if (!isOpen) return null;
+
+  const isServiceRunning = (srv) => {
+    if (!srv) return false;
+    if (typeof srv === 'string') return srv.toLowerCase().includes('running');
+    if (srv.status) return srv.status.toLowerCase().includes('running');
+    return Boolean(srv.service_reachable);
+  };
 
   const services = [
     {
       name: 'Kafka',
-      running: health?.services?.kafka === 'Running (service reachable)' || health?.services?.kafka?.includes('Running'),
-      note: health?.services?.kafka || 'Checking...'
+      running: isServiceRunning(health?.services?.kafka),
+      lastMsg: health?.services?.kafka?.last_message || lastMsgTime
     },
     {
       name: 'Spark streaming',
-      running: health?.services?.spark_streaming === 'Running (service reachable)' || health?.services?.spark_streaming?.includes('Running'),
-      note: health?.services?.spark_streaming || 'Checking...'
+      running: isServiceRunning(health?.services?.spark),
+      lastMsg: null
     },
     {
       name: 'HDFS',
-      running: health?.services?.hdfs === 'Running (service reachable)' || health?.services?.hdfs?.includes('Running'),
-      note: health?.services?.hdfs || 'Checking...'
+      running: isServiceRunning(health?.services?.hdfs),
+      lastMsg: null
     },
     {
       name: 'Hive metastore',
-      running: health?.services?.hive_metastore === 'Running (service reachable)' || health?.services?.hive_metastore?.includes('Running'),
-      note: health?.services?.hive_metastore || 'Checking...'
+      running: isServiceRunning(health?.services?.hive),
+      lastMsg: null
     },
     {
       name: 'API',
-      running: health?.services?.api === 'Running' || Boolean(health),
-      note: health?.services?.api || 'Running'
+      running: isServiceRunning(health?.services?.api) || Boolean(health),
+      lastMsg: null
     }
   ];
 
@@ -47,7 +52,7 @@ export default function StatusDrawer({
           <div className="drawer-title-group">
             <h2 className="drawer-title">System status</h2>
             <span className={`status-pill pill-${dataState.toLowerCase()}`}>
-              {dataState === 'LIVE' ? 'Live stream' : dataState === 'REPLAY' ? 'Replay of recorded posts' : 'Offline'}
+              {dataState === 'LIVE' ? 'Live' : dataState === 'REPLAY' ? 'Replay of recorded posts' : 'Offline'}
             </span>
           </div>
           <button className="btn-close" onClick={onClose} aria-label="Close status drawer">
@@ -56,6 +61,12 @@ export default function StatusDrawer({
         </div>
 
         <div className="drawer-body">
+          {dataState === 'OFFLINE' && (
+            <div className="drawer-offline-alert">
+              <strong>API offline.</strong> The API is not running. Start it with <code>make api</code>
+            </div>
+          )}
+
           <div className="service-list">
             {services.map((s) => (
               <div key={s.name} className="service-row">
@@ -71,36 +82,12 @@ export default function StatusDrawer({
                   <span className={s.running ? 'state-running' : 'state-not-running'}>
                     {s.running ? 'Running' : 'Not running'}
                   </span>
-                  {s.name === 'Kafka' && lastMsgTime && (
-                    <span className="last-seen">last message {lastMsgTime}</span>
+                  {s.name === 'Kafka' && s.running && s.lastMsg && (
+                    <span className="last-seen">last message {s.lastMsg}</span>
                   )}
                 </div>
               </div>
             ))}
-          </div>
-
-          <div className="drawer-section">
-            <label className="section-label">
-              <Zap size={14} className="icon-inline" /> Replay speed
-            </label>
-            <div className="speed-buttons">
-              {[
-                { label: '1x (Normal)', rate: 1.0 },
-                { label: '2x (Fast)', rate: 0.5 },
-                { label: '5x (Rapid)', rate: 0.2 }
-              ].map((sp) => (
-                <button
-                  key={sp.rate}
-                  className={`btn-speed ${replayRate === sp.rate ? 'active' : ''}`}
-                  onClick={() => onReplayRateChange && onReplayRateChange(sp.rate)}
-                >
-                  {sp.label}
-                </button>
-              ))}
-            </div>
-            <p className="drawer-help-text">
-              Adjusts arrival interval for the replayed disaster feed.
-            </p>
           </div>
         </div>
       </div>

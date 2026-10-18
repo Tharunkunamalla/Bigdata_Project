@@ -1,5 +1,5 @@
 import React from 'react';
-import { FileText, Github, ExternalLink, ShieldCheck, Database, Layers, Radio } from 'lucide-react';
+import { FileText, Github, ExternalLink, Database, Layers, Radio, Cpu } from 'lucide-react';
 
 export default function AboutPage() {
   return (
@@ -7,7 +7,7 @@ export default function AboutPage() {
       <div className="about-card">
         <h2 className="about-title">About CrisisGuard</h2>
         <p className="about-lead">
-          Real-time disaster response verification and resource dispatch system.
+          Real-time emergency post verification and resource dispatch system.
         </p>
 
         {/* Five short sentences in plain English */}
@@ -17,16 +17,16 @@ export default function AboutPage() {
               CrisisGuard helps emergency coordinators verify incoming disaster reports and allocate limited rescue units.
             </li>
             <li>
-              The system analyzes report phrasing and repetition to flag suspected synthetic or automated hoaxes before responders deploy.
+              The system analyzes wording and style features to flag suspected synthetic reports before responders deploy.
             </li>
             <li>
-              All social posts in this dashboard are replayed from verified disaster datasets, and map locations are simulated within the region.
+              All posts in this dashboard are a replay of recorded disaster posts plus simulated hoaxes, and map locations are simulated inside the region.
             </li>
             <li>
-              The processing pipeline runs on Apache Kafka for event streaming, Apache Spark for real-time scoring, and Hadoop HDFS with Hive for durable storage.
+              The backend pipeline is powered by Apache Kafka, Apache Spark, Hadoop HDFS, and Apache Hive.
             </li>
             <li>
-              Detailed benchmark tables, ablation studies, and architectural evaluations are documented in the project report and GitHub repository.
+              Technical benchmarks and methodology are available in the project report PDF and GitHub repository.
             </li>
           </ol>
         </div>
@@ -56,54 +56,41 @@ export default function AboutPage() {
           </a>
         </div>
 
-        {/* Core tools summary */}
+        {/* Core tools 2x2 grid */}
         <div className="tools-grid">
           <div className="tool-item">
-            <Radio size={16} className="tool-icon" />
-            <div>
-              <strong>Apache Kafka</strong>
-              <span>Event ingestion & scored post streaming</span>
+            <Radio size={20} className="tool-icon" />
+            <div className="tool-info">
+              <strong className="tool-title">Apache Kafka</strong>
+              <span className="tool-desc">Event streaming for raw and scored posts</span>
             </div>
           </div>
+
           <div className="tool-item">
-            <ZapIcon size={16} className="tool-icon" />
-            <div>
-              <strong>Apache Spark</strong>
-              <span>Streaming feature extraction & logistic scoring</span>
+            <Cpu size={20} className="tool-icon" />
+            <div className="tool-info">
+              <strong className="tool-title">Apache Spark</strong>
+              <span className="tool-desc">Real-time feature extraction and scoring with Spark MLlib models</span>
             </div>
           </div>
+
           <div className="tool-item">
-            <Database size={16} className="tool-icon" />
-            <div>
-              <strong>Hadoop HDFS</strong>
-              <span>Partitioned parquet storage & checkin dumps</span>
+            <Database size={20} className="tool-icon" />
+            <div className="tool-info">
+              <strong className="tool-title">Hadoop HDFS</strong>
+              <span className="tool-desc">Durable data stored as Parquet files</span>
             </div>
           </div>
+
           <div className="tool-item">
-            <Layers size={16} className="tool-icon" />
-            <div>
-              <strong>Apache Hive</strong>
-              <span>External metastore & analytical SQL queries</span>
+            <Layers size={20} className="tool-icon" />
+            <div className="tool-info">
+              <strong className="tool-title">Apache Hive</strong>
+              <span className="tool-desc">Analytical catalog queried through Spark SQL</span>
             </div>
           </div>
         </div>
       </div>
     </div>
-  );
-}
-
-function ZapIcon(props) {
-  return (
-    <svg
-      {...props}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
-    </svg>
   );
 }

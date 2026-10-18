@@ -65,34 +65,46 @@ def run_simulator(rate_per_sec: float = 50.0, max_posts: int = 5000, loop: bool 
     interval = 1.0 / rate_per_sec if rate_per_sec > 0 else 0.01
     sent_count = 0
     start_time = time.time()
+    last_report_time = start_time
 
-    while True:
-        for rec in records:
-            # Stamp with current real-time replay timestamp
-            payload = dict(rec)
-            payload["stream_timestamp"] = time.time()
-            
-            key = payload.get("post_id", f"msg_{sent_count}")
-            producer.send(topic, key=key, value=payload)
-            sent_count += 1
-
-            if sent_count % 100 == 0:
-                elapsed = time.time() - start_time
-                actual_rate = sent_count / max(0.001, elapsed)
-                print(f"  [Replay] Streamed {sent_count:,} posts | Actual throughput: {actual_rate:.1f} posts/sec")
-
-            if max_posts > 0 and sent_count >= max_posts:
-                break
+    try:
+        while True:
+            for rec in records:
+                # Stamp with current real-time replay timestamp
+                payload = dict(rec)
+                payload["stream_timestamp"] = time.time()
                 
-            time.sleep(interval)
+                key = payload.get("post_id", f"msg_{sent_count}")
+                producer.send(topic, key=key, value=payload)
+                sent_count += 1
 
-        if not loop or (max_posts > 0 and sent_count >= max_posts):
-            break
+                now = time.time()
+                if now - last_report_time >= 1.0:
+                    elapsed = now - start_time
+                    rate = sent_count / max(0.001, elapsed)
+                    print(f"[events sent: {sent_count:,}, rate: {rate:.1f}/s]", flush=True)
+                    last_report_time = now
 
-    producer.flush()
-    producer.close()
-    elapsed = time.time() - start_time
-    print(f"\n[DONE] Streamed {sent_count:,} posts in {elapsed:.2f}s ({sent_count/max(0.001, elapsed):.1f} posts/sec).")
+                if max_posts > 0 and sent_count >= max_posts:
+                    break
+                    
+                time.sleep(interval)
+
+            if not loop or (max_posts > 0 and sent_count >= max_posts):
+                break
+
+        producer.flush()
+        producer.close()
+        elapsed = time.time() - start_time
+        print(f"\n[DONE] Streamed {sent_count:,} posts in {elapsed:.2f}s ({sent_count/max(0.001, elapsed):.1f} posts/sec).")
+    except KeyboardInterrupt:
+        print("\n[STOP] Replay simulation stopped cleanly by user.")
+        try:
+            producer.flush()
+            producer.close()
+        except Exception:
+            pass
+        sys.exit(0)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="CSE412 Crisis Stream Replay Simulator")

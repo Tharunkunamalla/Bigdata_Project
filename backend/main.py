@@ -64,8 +64,9 @@ app.add_middleware(
 )
 
 RESULTS_DIR = os.path.join(BASE_DIR, "results")
-CURATED_CSV = os.path.join(BASE_DIR, "data", "curated", "real_disaster_corpus.csv")
-TEST_PREDS_CSV = os.path.join(BASE_DIR, "data", "curated", "test_predictions.csv")
+DATA_DIR = os.path.join(BASE_DIR, "data", "curated")
+CURATED_CSV = os.path.join(DATA_DIR, "real_disaster_corpus.csv")
+TEST_PREDS_CSV = os.path.join(DATA_DIR, "test_predictions.csv")
 OSM_DEPOTS_FILE = os.path.join(BASE_DIR, "data", "raw", "osm_emergency_depots.json")
 EVIDENCE_DIR = os.path.join(RESULTS_DIR, "demo_evidence")
 os.makedirs(EVIDENCE_DIR, exist_ok=True)
@@ -74,6 +75,12 @@ os.makedirs(EVIDENCE_DIR, exist_ok=True)
 # Text & Event Cleaning Utilities
 # ---------------------------------------------------------------------------
 import html
+
+from backend.disaster_regions import (
+    REGIONAL_CONFIGS,
+    matches_region_event,
+    ALLOWED_SOURCES as ALLOWED_DISASTER_SOURCES
+)
 
 EVENT_PREFIX_PATTERNS = [
     re.compile(r'^(None|\"\"None|None\s+\"\"|\"None\"\"|\"None)\s*', re.IGNORECASE),
@@ -86,14 +93,28 @@ def clean_post_text(s: str) -> str:
         return ""
     text = html.unescape(str(s).strip())
     # Fix known encoding and mojibake artifacts
-    text = text.replace("‰ÛÒ", "—").replace("‰ÛÓ", "—").replace("‰ÛÏ", '"').replace("‰Ûª", "'").replace("‰Û", '"').replace("Û_", "")
-    text = text.replace("\x89\xdb\x92", "—").replace("\x89\xdb\x93", "—").replace("â€™", "'").replace("â€œ", '"').replace("â€\x9d", '"')
+    text = (text
+        .replace("‰ÛÒ", "—")
+        .replace("‰ÛÓ", "—")
+        .replace("‰ÛÏ", '"')
+        .replace("‰Ûª", "'")
+        .replace("‰Û", '"')
+        .replace("Û_", "")
+        .replace("ÛÓ", "—")
+        .replace("-??-", " ")
+        .replace("??", " ")
+        .replace("\x89\xdb\x92", "—")
+        .replace("\x89\xdb\x93", "—")
+        .replace("â€™", "'")
+        .replace("â€œ", '"')
+        .replace("â€\x9d", '"')
+    )
     
     prev = None
     while prev != text:
         prev = text
         text = text.strip()
-        text = re.sub(r'^(None\b|"None"|\'None\'|None\s*""|""None)\s*', '', text, flags=re.IGNORECASE)
+        text = re.sub(r'^(None\b|"None"|\'None\'|None\s*""|""None|"None"")\s*', '', text, flags=re.IGNORECASE)
         text = re.sub(r'^["\'`\s]+', '', text)
         text = re.sub(r'^(earthquake|flood|hurricane|typhoon|cyclone|explosion|crash|fire|wildfire|tornado)\s+', '', text, flags=re.IGNORECASE)
         text = re.sub(r'^["\'`\s]+', '', text)
@@ -107,6 +128,8 @@ def clean_event_prefix(text: str) -> str:
 def is_readable_disaster_text(text: str) -> bool:
     """Validates that a post is readable and contains sufficient textual content."""
     if not text or len(text) < 15:
+        return False
+    if "-??-" in text or text.count("?") > 5:
         return False
     alnum = sum(c.isalnum() for c in text)
     return alnum >= 10
@@ -128,20 +151,11 @@ def derive_clean_event_type(ev_str: str, dt_str: str, text: str) -> str:
         return "Tornado"
     elif "crash" in s:
         return "Transport Emergency"
-    return "Severe Hazard"
+    return "Flood"
 
 def match_region_disaster(r: Dict[str, Any], reg_key: str) -> bool:
     """Matches a post to the appropriate disaster event for the selected region."""
-    blob = f"{r.get('event_type', '')} {r.get('disaster_type', '')} {r.get('text', '')}".lower()
-    if reg_key == "houston":
-        return any(k in blob for k in ["harvey", "houston", "flood", "water", "texas"])
-    elif reg_key == "california":
-        return any(k in blob for k in ["wildfire", "bushfire", "fire", "smoke", "blaze", "burn", "forest"])
-    elif reg_key == "nepal":
-        return any(k in blob for k in ["nepal", "earthquake", "quake", "tremor", "kathmandu"])
-    elif reg_key == "miami":
-        return any(k in blob for k in ["irma", "maria", "hurricane", "cyclone", "typhoon", "florida", "storm surge"])
-    return True
+    return matches_region_event(r, reg_key)
 
 # ---------------------------------------------------------------------------
 # In-Memory Cache of Cleaned Disaster Posts & Test Predictions
@@ -177,6 +191,19 @@ def init_corpus_cache():
         except Exception:
             pass
 
+    fast_cache = os.path.join(DATA_DIR, "clean_disaster_cache.parquet")
+    if os.path.exists(fast_cache):
+        try:
+            cached_df = pd.read_parquet(fast_cache)
+            auth_df = cached_df[cached_df["is_hoax"] == False]
+            hoax_df = cached_df[cached_df["is_hoax"] == True]
+            AUTHENTIC_POSTS_CACHE = auth_df.to_dict(orient="records")
+            HOAX_POSTS_CACHE = hoax_df.to_dict(orient="records")
+            print(f"[INIT] Loaded {len(AUTHENTIC_POSTS_CACHE)} clean disaster posts and {len(HOAX_POSTS_CACHE)} hoaxes from fast cache.")
+            return
+        except Exception:
+            pass
+
     source_path = CURATED_CSV if os.path.exists(CURATED_CSV) else TEST_PREDS_CSV
     if not os.path.exists(source_path):
         return
@@ -205,6 +232,14 @@ def init_corpus_cache():
 
         AUTHENTIC_POSTS_CACHE = auth_df.to_dict(orient="records")
         HOAX_POSTS_CACHE = hoax_df.to_dict(orient="records")
+
+        # Save fast cache for subsequent instant startup
+        try:
+            combo = pd.concat([auth_df.assign(is_hoax=False), hoax_df.assign(is_hoax=True)])
+            combo.to_parquet(fast_cache)
+        except Exception:
+            pass
+
         print(f"[INIT] Loaded {len(AUTHENTIC_POSTS_CACHE)} clean disaster posts and {len(HOAX_POSTS_CACHE)} hoaxes (excluded general-domain text).")
     except Exception as e:
         print(f"[WARN] Failed to initialize in-memory corpus cache: {e}")
@@ -214,56 +249,7 @@ init_corpus_cache()
 # ---------------------------------------------------------------------------
 # Region Definitions & OSM Depots
 # ---------------------------------------------------------------------------
-REGIONAL_CONFIGS = {
-    "houston": {
-        "name": "Houston Metro Area",
-        "disaster": "Hurricane Harvey (Flood)",
-        "resource": "rescue_boats",
-        "center": [29.7604, -95.3698],
-        "default_depots": [
-            {"id": "hou_downtown", "name": "Downtown Central Marina Base", "latitude": 29.7560, "longitude": -95.3620, "capacities": {"rescue_boats": 15}},
-            {"id": "hou_katy", "name": "West Sector Rescue Outpost (Katy)", "latitude": 29.7858, "longitude": -95.8245, "capacities": {"rescue_boats": 12}},
-            {"id": "hou_sugarland", "name": "South Sector Marine Staging", "latitude": 29.6197, "longitude": -95.6349, "capacities": {"rescue_boats": 10}},
-            {"id": "hou_cypress", "name": "North Sector Boat Depot", "latitude": 29.9688, "longitude": -95.6972, "capacities": {"rescue_boats": 15}}
-        ]
-    },
-    "california": {
-        "name": "Northern California",
-        "disaster": "California Wildfires",
-        "resource": "wildfire_units",
-        "center": [38.5816, -121.4944],
-        "default_depots": [
-            {"id": "ca_sacramento", "name": "Sacramento Fire Air Base", "latitude": 38.5816, "longitude": -121.4944, "capacities": {"wildfire_units": 14}},
-            {"id": "ca_napa", "name": "Napa Valley Fire Ops", "latitude": 38.2975, "longitude": -122.2869, "capacities": {"wildfire_units": 12}},
-            {"id": "ca_oakland", "name": "Oakland Bay Dispatch", "latitude": 37.8044, "longitude": -122.2712, "capacities": {"wildfire_units": 12}},
-            {"id": "ca_fresno", "name": "Fresno Central Fire Logistics", "latitude": 36.7468, "longitude": -119.7726, "capacities": {"wildfire_units": 14}}
-        ]
-    },
-    "nepal": {
-        "name": "Kathmandu Valley",
-        "disaster": "Nepal Earthquake",
-        "resource": "earthquake_rescue_teams",
-        "center": [27.7172, 85.3240],
-        "default_depots": [
-            {"id": "nep_kathmandu", "name": "Kathmandu Central Search Base", "latitude": 27.7172, "longitude": 85.3240, "capacities": {"earthquake_rescue_teams": 15}},
-            {"id": "nep_pokhara", "name": "Pokhara Rescue Outpost", "latitude": 28.2096, "longitude": 83.9856, "capacities": {"earthquake_rescue_teams": 12}},
-            {"id": "nep_lalitpur", "name": "Lalitpur Medical Base", "latitude": 27.6588, "longitude": 85.3247, "capacities": {"earthquake_rescue_teams": 12}},
-            {"id": "nep_bhaktapur", "name": "Bhaktapur Collapse Ops", "latitude": 27.6710, "longitude": 85.4298, "capacities": {"earthquake_rescue_teams": 13}}
-        ]
-    },
-    "miami": {
-        "name": "South Florida Metro",
-        "disaster": "Hurricane & Tropical Storm",
-        "resource": "ambulances",
-        "center": [25.7617, -80.1918],
-        "default_depots": [
-            {"id": "mia_downtown", "name": "Miami Health District Depot", "latitude": 25.7907, "longitude": -80.2104, "capacities": {"ambulances": 16}},
-            {"id": "mia_beach", "name": "Miami Beach Urgent Transport", "latitude": 25.7907, "longitude": -80.1300, "capacities": {"ambulances": 12}},
-            {"id": "mia_coralgables", "name": "Coral Gables Regional Staging", "latitude": 25.7215, "longitude": -80.2684, "capacities": {"ambulances": 12}},
-            {"id": "mia_hialeah", "name": "Hialeah Fleet Headquarters", "latitude": 25.8576, "longitude": -80.2781, "capacities": {"ambulances": 14}}
-        ]
-    }
-}
+# (REGIONAL_CONFIGS imported from backend.disaster_regions)
 
 def load_osm_depots_for_region(region_key: str):
     """Loads authentic OpenStreetMap depots if available, else returns defaults."""
@@ -368,7 +354,7 @@ def get_health():
     now = datetime.now(timezone.utc).isoformat()
     overall = "OPERATIONAL" if (kafka_up and hdfs_up) else "DEGRADED"
 
-    is_kafka_live = kafka_up and (LAST_KAFKA_MSG_TIME is not None and (time.time() - LAST_KAFKA_MSG_TIME < 30.0))
+    is_kafka_live = kafka_up and (LAST_KAFKA_MSG_TIME is not None and (time.time() - LAST_KAFKA_MSG_TIME < 10.0))
     has_replay = len(AUTHENTIC_POSTS_CACHE) > 0
     
     if is_kafka_live:
@@ -384,11 +370,12 @@ def get_health():
     last_kafka_str = f"{int(time.time() - LAST_KAFKA_MSG_TIME)}s ago" if LAST_KAFKA_MSG_TIME else None
 
     return {
-        "status": "OPERATIONAL" if overall == "OPERATIONAL" else "DEGRADED",
+        "status": "HEALTHY" if overall == "OPERATIONAL" else "DEGRADED",
         "overall_state": overall,
         "as_of": now,
         "data_state": data_state,
         "data_state_label": data_state_label,
+        "offline_next_step": "The API is not running. Start it with make api",
         "stream_stats": {
             "last_event_time": STREAM_STATS["last_event_time"],
             "events_served": STREAM_STATS["events_served"],
@@ -663,13 +650,26 @@ def get_depots(region: str = Query("houston", description="Disaster region: hous
 
 CALIBRATED_OPERATING_THRESHOLD = 0.1786
 
-def format_post_payload(r: Dict[str, Any], idx: int, reg_key: str, c_lat: float, c_lon: float, arrival_ts: str) -> Dict[str, Any]:
+def format_post_payload(r: Dict[str, Any], idx: int, reg_key: str, *args, **kwargs) -> Dict[str, Any]:
     """
     Helper to transform raw database record into clean API post representation.
     CRITICAL: Verdict (is_flagged) is strictly computed from model output probability
     prob_synthetic_score and validation threshold CALIBRATED_OPERATING_THRESHOLD (0.1786).
     Ground-truth labels (is_synthetic, is_hoax) are NEVER used to determine the verdict.
     """
+    cfg = REGIONAL_CONFIGS.get(reg_key, REGIONAL_CONFIGS["houston"])
+    c_lat, c_lon = cfg["center"]
+    bounds = cfg.get("bounds", {"min_lat": c_lat - 0.2, "max_lat": c_lat + 0.2, "min_lon": c_lon - 0.2, "max_lon": c_lon + 0.2})
+
+    if len(args) == 3:
+        # Signature: (r, idx, reg_key, c_lat, c_lon, arrival_ts)
+        c_lat, c_lon, arrival_ts = args
+    elif len(args) == 1:
+        # Signature: (r, idx, reg_key, arrival_ts)
+        arrival_ts = args[0]
+    else:
+        arrival_ts = kwargs.get("arrival_ts", datetime.now(timezone.utc).strftime("%H:%M:%S"))
+
     is_synth_ground_truth = int(r.get("is_synthetic", 0) == 1 or r.get("is_hoax", 0) == 1)
     
     # Real model probability directly from model inference dataset
@@ -683,30 +683,15 @@ def format_post_payload(r: Dict[str, Any], idx: int, reg_key: str, c_lat: float,
     trust = max(0.0, min(1.0, 1.0 - p_synth))
     urg = round(float(r.get("urgency_level", 4.5 if is_synth_ground_truth else 3.0)), 1)
     
-    # Perturb coordinates realistically around regional bounding box
-    lat = float(r.get("latitude", c_lat))
-    lon = float(r.get("longitude", c_lon))
-    if abs(lat - c_lat) > 1.0 or abs(lon - c_lon) > 1.0:
-        lat = round(c_lat + ((hash(str(r.get("post_id", idx))) % 100) - 50) * 0.003, 5)
-        lon = round(c_lon + ((hash(str(r.get("post_id", idx)) + "x") % 100) - 50) * 0.003, 5)
+    # Coordinates simulated strictly within region bounding box
+    h_seed = abs(hash(str(r.get("post_id", idx))))
+    h1 = (h_seed % 1000) / 1000.0
+    h2 = (abs(hash(str(r.get("post_id", idx)) + "_lon")) % 1000) / 1000.0
+    lat = round(bounds["min_lat"] + h1 * (bounds["max_lat"] - bounds["min_lat"]), 5)
+    lon = round(bounds["min_lon"] + h2 * (bounds["max_lon"] - bounds["min_lon"]), 5)
 
     clean_txt = clean_post_text(str(r.get("text", "")))
-    clean_ev = derive_clean_event_type(r.get("event_type", ""), r.get("disaster_type", ""), clean_txt)
-    
-    # Map event to one of the standard tags: Flood, Earthquake, Hurricane, Wildfire, Cyclone
-    ev_lower = clean_ev.lower()
-    if "flood" in ev_lower or "water" in ev_lower or "harvey" in ev_lower or reg_key == "houston":
-        standard_tag = "Flood"
-    elif "quake" in ev_lower or "tremor" in ev_lower or "nepal" in ev_lower or reg_key == "nepal":
-        standard_tag = "Earthquake"
-    elif "fire" in ev_lower or "smoke" in ev_lower or "blaze" in ev_lower or reg_key == "california":
-        standard_tag = "Wildfire"
-    elif "cyclone" in ev_lower or "typhoon" in ev_lower:
-        standard_tag = "Cyclone"
-    elif "hurricane" in ev_lower or "storm" in ev_lower or "irma" in ev_lower or "maria" in ev_lower or reg_key == "miami":
-        standard_tag = "Hurricane"
-    else:
-        standard_tag = "Flood"
+    standard_tag = cfg.get("event_tag", "Flood")
 
     # Flagging is STRICTLY derived from model prediction score at validation threshold (0.1786)
     # NEVER from ground-truth label!
@@ -717,11 +702,11 @@ def format_post_payload(r: Dict[str, Any], idx: int, reg_key: str, c_lat: float,
     if is_flagged:
         txt_l = clean_txt.lower()
         if any(ch in clean_txt for ch in ["!", "?", "..."]) or clean_txt.count("!") > 1:
-            why_flagged.append("Unusual punctuation or formatting")
+            why_flagged.append("Unusual punctuation or length")
         if any(w in txt_l for w in ["breaking", "urgent", "emergency", "alert", "sos", "confirmed", "official"]):
-            why_flagged.append("Repetitive urgency keywords")
+            why_flagged.append("Reads like generated text")
         if len(clean_txt) > 180 or len(clean_txt.split()) > 30:
-            why_flagged.append("Very uniform wording typical of generated text")
+            why_flagged.append("Very uniform wording")
         else:
             why_flagged.append("Reads like generated text")
     else:
@@ -769,37 +754,53 @@ def get_sample_posts(
     reg_key = str(region).lower()
     if reg_key not in REGIONAL_CONFIGS:
         reg_key = "houston"
-    cfg = REGIONAL_CONFIGS[reg_key]
-    c_lat, c_lon = cfg["center"]
 
     if not AUTHENTIC_POSTS_CACHE and not HOAX_POSTS_CACHE:
         init_corpus_cache()
 
-    # Regional event filtering: filter authentic posts for this region
-    region_auth = [p for p in AUTHENTIC_POSTS_CACHE if match_region_disaster(p, reg_key)]
+    # Regional event filtering: filter authentic posts strictly for this region's event
+    region_auth = [p for p in AUTHENTIC_POSTS_CACHE if matches_region_event(p, reg_key)]
     if not region_auth:
-        region_auth = AUTHENTIC_POSTS_CACHE
+        return {
+            "posts": [],
+            "count": 0,
+            "region": reg_key,
+            "message": "No reports recorded for this region in the disaster dataset."
+        }
+
+    region_hoaxes = [h for h in HOAX_POSTS_CACHE if matches_region_event(h, reg_key)]
+    if not region_hoaxes:
+        region_hoaxes = HOAX_POSTS_CACHE
 
     eff_limit = int(limit)
     eff_hoax_rate = float(hoax_rate)
-    num_hoaxes = int(round(eff_limit * eff_hoax_rate))
-    num_auth = eff_limit - num_hoaxes
+    num_hoaxes = max(1, int(round(eff_limit * eff_hoax_rate))) if eff_hoax_rate > 0 else 0
+    num_auth = max(1, eff_limit - num_hoaxes)
 
-    sampled_records = []
-    if region_auth:
-        auth_len = len(region_auth)
-        sampled_records.extend([region_auth[(i * 13) % auth_len] for i in range(num_auth)])
-    if HOAX_POSTS_CACHE:
-        hoax_len = len(HOAX_POSTS_CACHE)
-        sampled_records.extend([HOAX_POSTS_CACHE[(j * 7) % hoax_len] for j in range(num_hoaxes)])
+    sampled_auth = [region_auth[(i * 13) % len(region_auth)] for i in range(num_auth)]
+    sampled_hoaxes = [region_hoaxes[(j * 7) % len(region_hoaxes)] for j in range(num_hoaxes)] if region_hoaxes else []
 
-    # Interleave and format
+    # Interleave authentic reports and hoaxes so flagged posts appear evenly
+    interleaved = []
+    auth_idx = 0
+    hoax_idx = 0
+    total_slots = len(sampled_auth) + len(sampled_hoaxes)
+    hoax_interval = max(1, round(total_slots / max(1, len(sampled_hoaxes)))) if sampled_hoaxes else 9999
+
+    for slot in range(total_slots):
+        if hoax_idx < len(sampled_hoaxes) and (slot % hoax_interval == 0 or auth_idx >= len(sampled_auth)):
+            interleaved.append(sampled_hoaxes[hoax_idx])
+            hoax_idx += 1
+        elif auth_idx < len(sampled_auth):
+            interleaved.append(sampled_auth[auth_idx])
+            auth_idx += 1
+
     posts = []
     now_dt = datetime.now(timezone.utc)
-    for idx, r in enumerate(sampled_records):
-        ts_sec = now_dt.timestamp() - (len(sampled_records) - idx) * 1.5
+    for idx, r in enumerate(interleaved):
+        ts_sec = now_dt.timestamp() - (len(interleaved) - idx) * 1.5
         ts_str = datetime.fromtimestamp(ts_sec, timezone.utc).strftime("%H:%M:%S")
-        posts.append(format_post_payload(r, idx, reg_key, c_lat, c_lon, ts_str))
+        posts.append(format_post_payload(r, idx, reg_key, ts_str))
 
     return {"posts": posts, "count": len(posts), "region": reg_key}
 
@@ -821,9 +822,10 @@ async def stream_posts(
     c_lat, c_lon = cfg["center"]
 
     # Filter regional disaster pool
-    region_auth = [p for p in AUTHENTIC_POSTS_CACHE if match_region_disaster(p, reg_key)]
-    if not region_auth:
-        region_auth = AUTHENTIC_POSTS_CACHE
+    region_auth = [p for p in AUTHENTIC_POSTS_CACHE if matches_region_event(p, reg_key)]
+    region_hoaxes = [h for h in HOAX_POSTS_CACHE if matches_region_event(h, reg_key)]
+    if not region_hoaxes:
+        region_hoaxes = HOAX_POSTS_CACHE
 
     async def event_generator():
         global STREAM_STATS
@@ -851,7 +853,7 @@ async def stream_posts(
                 if rec is None:
                     # Serve from regional replay pool
                     is_hoax_turn = (event_counter % int(max(1, round(1.0 / max(0.01, hoax_rate))))) == 0
-                    pool = HOAX_POSTS_CACHE if (is_hoax_turn and HOAX_POSTS_CACHE) else region_auth
+                    pool = region_hoaxes if (is_hoax_turn and region_hoaxes) else region_auth
                     if not pool:
                         await asyncio.sleep(rate)
                         continue
@@ -862,7 +864,7 @@ async def stream_posts(
                 spark_compute_ms = round(48.0 + (txt_len % 35) * 1.6 + ((event_counter * 19) % 29) * 1.5, 2)
                 t_score_float = t_pub_float + (spark_compute_ms / 1000.0)
 
-                payload = format_post_payload(rec, event_counter, reg_key, c_lat, c_lon, now_str)
+                payload = format_post_payload(rec, event_counter, reg_key, now_str)
 
                 t_dispatch_float = time.time()
                 dispatch_overhead_ms = round((t_dispatch_float - t_pub_float) * 1000.0, 2)

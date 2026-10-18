@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import MapComponent from '../components/MapComponent';
 import PostDetailDrawer from '../components/PostDetailDrawer';
-import { Search, Pause, Play, AlertTriangle, ShieldAlert } from 'lucide-react';
+import { Search, ShieldAlert } from 'lucide-react';
 
 const REGION_CENTERS = {
   houston: { center: [29.7604, -95.3698], zoom: 11, label: 'Houston (Hurricane Harvey)' },
@@ -16,8 +16,6 @@ export default function LivePage({
   depots,
   posts,
   dataState,
-  isPaused,
-  setIsPaused,
   selectedPost,
   setSelectedPost
 }) {
@@ -90,7 +88,7 @@ export default function LivePage({
       {dataState === 'OFFLINE' && (
         <div className="offline-banner">
           <ShieldAlert size={15} />
-          <span>Stream is offline. Replay paused until connectivity is restored.</span>
+          <span>The API is not running. Start it with <code>make api</code></span>
         </div>
       )}
 
@@ -139,10 +137,10 @@ export default function LivePage({
               onChange={(e) => setRegion(e.target.value)}
               aria-label="Select disaster region"
             >
-              <option value="houston">Houston</option>
-              <option value="california">Northern California</option>
-              <option value="nepal">Kathmandu Valley</option>
-              <option value="miami">Miami / South Florida</option>
+              <option value="houston">Houston (Hurricane Harvey)</option>
+              <option value="california">Northern California (Wildfires)</option>
+              <option value="nepal">Kathmandu Valley (Earthquake)</option>
+              <option value="miami">Miami / South Florida (Hurricane Irma)</option>
             </select>
 
             {/* Show Filter: All / Flagged / Urgent */}
@@ -173,31 +171,23 @@ export default function LivePage({
               <input
                 id="search-posts-input"
                 type="text"
-                placeholder="Search..."
+                placeholder="Search reports..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="ctrl-search-input"
               />
             </div>
-
-            {/* Pause / Resume */}
-            <button
-              id="pause-resume-btn"
-              className={`btn-pause ${isPaused ? 'paused' : ''}`}
-              onClick={() => setIsPaused(!isPaused)}
-              title={isPaused ? 'Resume stream' : 'Pause stream'}
-              aria-label={isPaused ? 'Resume stream' : 'Pause stream'}
-            >
-              {isPaused ? <Play size={14} /> : <Pause size={14} />}
-              <span>{isPaused ? 'Resume' : 'Pause'}</span>
-            </button>
           </div>
 
           {/* Feed List */}
           <div className="feed-list-container">
             {filteredPosts.length === 0 ? (
               <div className="feed-empty-state">
-                <p>No matching reports found in current buffer.</p>
+                {dataState === 'OFFLINE' ? (
+                  <p>The API is not running. Start it with <code>make api</code></p>
+                ) : (
+                  <p>No reports recorded for this region in the disaster dataset.</p>
+                )}
               </div>
             ) : (
               <div className="feed-rows">
@@ -221,7 +211,7 @@ export default function LivePage({
                         <time className="post-time tabular-nums">{formatTime(post.timestamp)}</time>
                         <span className="post-event-tag">{post.event_type || 'Disaster'}</span>
 
-                        {/* Thin urgency indicator */}
+                        {/* Thin urgency indicator only for known disaster events with urgency >= 4 */}
                         {isUrgent && (
                           <span className="badge-urgent">Urgent</span>
                         )}

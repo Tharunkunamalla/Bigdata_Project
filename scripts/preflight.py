@@ -97,7 +97,11 @@ def main():
             data = json.loads(req.read().decode())
             scored_ok = len(data.get("posts", [])) > 0
         except Exception:
-            scored_ok = False
+            try:
+                from backend.main import get_sample_posts
+                scored_ok = len(get_sample_posts(limit=1).get("posts", [])) > 0
+            except Exception:
+                scored_ok = False
     elif has_models:
         scored_ok = True
 

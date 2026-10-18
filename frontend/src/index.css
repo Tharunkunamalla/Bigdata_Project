@@ -34,27 +34,6 @@
   --radius-sm: 4px;
 }
 
-[data-theme="dark"] {
-  --bg-page: #0f172a;
-  --bg-surface: #1e293b;
-  --bg-surface-subtle: #334155;
-  --bg-surface-hover: #475569;
-  --border-subtle: #334155;
-  --border-strong: #475569;
-
-  --text-primary: #f8fafc;
-  --text-secondary: #94a3b8;
-  --text-tertiary: #64748b;
-
-  --accent-primary: #3b82f6;
-  --accent-hover: #60a5fa;
-  --accent-subtle: rgba(59, 130, 246, 0.15);
-
-  --warning-text: #f87171;
-  --warning-bg: rgba(239, 68, 68, 0.15);
-  --warning-border: rgba(239, 68, 68, 0.3);
-}
-
 @media (prefers-reduced-motion: reduce) {
   * {
     animation-duration: 0.01ms !important;
@@ -1195,39 +1174,105 @@ body {
   color: var(--text-tertiary);
 }
 
-.drawer-section {
+.drawer-offline-alert {
+  padding: 10px 14px;
+  background: var(--warning-bg);
+  border: 1px solid var(--warning-border);
+  border-radius: var(--radius);
+  color: var(--warning-text);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.drawer-offline-alert code {
+  background: rgba(0, 0, 0, 0.06);
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-family: monospace;
+}
+
+/* About Page Tools 2x2 Grid */
+.tools-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin-top: 24px;
+}
+
+.tool-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius);
+}
+
+.tool-icon {
+  width: 20px !important;
+  height: 20px !important;
+  min-width: 20px !important;
+  min-height: 20px !important;
+  max-width: 20px !important;
+  max-height: 20px !important;
+  color: var(--accent-primary);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.tool-info {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  border-top: 1px solid var(--border-subtle);
-  padding-top: 16px;
+  gap: 3px;
 }
 
-.speed-buttons {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 6px;
+.tool-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
 }
 
-.btn-speed {
-  background: var(--bg-surface-subtle);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-sm);
-  padding: 6px 8px;
-  font-size: 11px;
-  font-weight: 500;
+.tool-desc {
+  font-size: 12px;
   color: var(--text-secondary);
+  line-height: 1.35;
+}
+
+/* Leaflet DivIcon Styling Resets */
+.leaflet-div-icon,
+.custom-depot-icon,
+.custom-post-marker,
+.custom-cluster-marker {
+  background: transparent !important;
+  border: none !important;
+}
+
+.plan-idle {
+  padding: 32px 16px;
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.btn-retry {
+  display: inline-block;
+  padding: 4px 10px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-primary);
   cursor: pointer;
 }
 
-.btn-speed.active {
-  background: var(--accent-subtle);
-  border-color: var(--accent-primary);
-  color: var(--accent-primary);
-  font-weight: 600;
+.btn-retry:hover {
+  background: var(--bg-surface-hover);
 }
 
-.drawer-help-text {
-  font-size: 11px;
-  color: var(--text-tertiary);
+@media (max-width: 768px) {
+  .tools-grid {
+    grid-template-columns: 1fr;
+  }
 }

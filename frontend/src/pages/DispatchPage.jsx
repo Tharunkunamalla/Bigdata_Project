@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import MapComponent from '../components/MapComponent';
 import { api } from '../api/client';
-import { Truck, CheckCircle2, AlertOctagon, RotateCcw } from 'lucide-react';
+import { Truck } from 'lucide-react';
 
 const REGION_CENTERS = {
   houston: { center: [29.7604, -95.3698], zoom: 11, label: 'Houston (Hurricane Harvey)' },
@@ -12,40 +12,43 @@ const REGION_CENTERS = {
 
 export default function DispatchPage({ region, setRegion, depots }) {
   const [unitCount, setUnitCount] = useState(20);
-  const [ignoreReliability, setIgnoreReliability] = useState(false);
+  const [compareWithoutReliability, setCompareWithoutReliability] = useState(false);
   const [dispatchResult, setDispatchResult] = useState(null);
-  const [isSolving, setIsSolving] = useState(false);
+  
+  // Explicit single state machine: 'idle' | 'running' | 'result' | 'error'
+  const [planState, setPlanState] = useState('idle');
   const [errorMsg, setErrorMsg] = useState(null);
 
   const currentRegionConfig = REGION_CENTERS[region] || REGION_CENTERS.houston;
 
-  const runDispatchPlan = async (ignore = ignoreReliability) => {
-    setIsSolving(true);
+  const runDispatchPlan = async (withoutReliability = compareWithoutReliability) => {
+    setPlanState('running');
     setErrorMsg(null);
+
     try {
       const res = await api.allocate({
         region,
         capacity: unitCount,
-        policy: ignore ? 'blind_lp' : 'trust_aware_validation_thresh',
-        ignore_reliability: ignore
+        policy: withoutReliability ? 'blind_lp' : 'trust_aware_validation_thresh',
+        ignore_reliability: withoutReliability
       });
       setDispatchResult(res);
+      setPlanState('result');
     } catch (err) {
       console.error('Dispatch optimization error:', err);
-      setErrorMsg('Unable to plan dispatch. Verify API status.');
-    } finally {
-      setIsSolving(false);
+      setErrorMsg('Unable to plan dispatch. The API is not running or unreachable.');
+      setPlanState('error');
     }
   };
 
-  // Run on mount or region change
+  // Run initial plan on mount or when region changes
   useEffect(() => {
-    runDispatchPlan(ignoreReliability);
+    runDispatchPlan(compareWithoutReliability);
   }, [region]);
 
-  const handleToggleIgnore = (e) => {
+  const handleToggleWithoutReliability = (e) => {
     const val = e.target.checked;
-    setIgnoreReliability(val);
+    setCompareWithoutReliability(val);
     runDispatchPlan(val);
   };
 
@@ -62,10 +65,10 @@ export default function DispatchPage({ region, setRegion, depots }) {
               value={region}
               onChange={(e) => setRegion(e.target.value)}
             >
-              <option value="houston">Houston</option>
-              <option value="california">Northern California</option>
-              <option value="nepal">Kathmandu Valley</option>
-              <option value="miami">Miami / South Florida</option>
+              <option value="houston">Houston (Hurricane Harvey)</option>
+              <option value="california">Northern California (Wildfires)</option>
+              <option value="nepal">Kathmandu Valley (Earthquake)</option>
+              <option value="miami">Miami / South Florida (Hurricane Irma)</option>
             </select>
           </div>
 
@@ -90,11 +93,11 @@ export default function DispatchPage({ region, setRegion, depots }) {
               <input
                 id="ignore-reliability-toggle"
                 type="checkbox"
-                checked={ignoreReliability}
-                onChange={handleToggleIgnore}
+                checked={compareWithoutReliability}
+                onChange={handleToggleWithoutReliability}
                 className="toggle-checkbox"
               />
-              <span className="toggle-text">Ignore report reliability</span>
+              <span className="toggle-text">Compare without reliability check</span>
             </label>
             <span className="toggle-hint">Dispatches without trust weighting</span>
           </div>
@@ -103,11 +106,11 @@ export default function DispatchPage({ region, setRegion, depots }) {
             <button
               id="plan-dispatch-btn"
               className="btn-primary"
-              onClick={() => runDispatchPlan(ignoreReliability)}
-              disabled={isSolving}
+              onClick={() => runDispatchPlan(compareWithoutReliability)}
+              disabled={planState === 'running'}
             >
               <Truck size={15} />
-              <span>{isSolving ? 'Planning...' : 'Plan dispatch'}</span>
+              <span>{planState === 'running' ? 'Planning...' : 'Plan dispatch'}</span>
             </button>
           </div>
         </div>
@@ -122,7 +125,7 @@ export default function DispatchPage({ region, setRegion, depots }) {
             regionZoom={currentRegionConfig.zoom}
             depots={depots}
             posts={[]}
-            assignments={dispatchResult?.assignments || []}
+            assignments={planState === 'result' ? (dispatchResult?.assignments || []) : []}
             showDepots={true}
             showPosts={false}
             showLines={true}
@@ -130,17 +133,36 @@ export default function DispatchPage({ region, setRegion, depots }) {
           />
         </div>
 
-        {/* Short list of assignments and counts */}
+        {/* Short list of assignments and counts with exactly one state displayed */}
         <div className="dispatch-summary-panel">
           <h3 className="section-title">Dispatch plan</h3>
 
-          {errorMsg && (
-            <div className="alert-box error">
-              <span>{errorMsg}</span>
+          {planState === 'running' && (
+            <div className="plan-loading">
+              <p>Calculating dispatch plan...</p>
             </div>
           )}
 
-          {dispatchResult ? (
+          {planState === 'error' && (
+            <div className="alert-box error">
+              <span>{errorMsg}</span>
+              <button
+                className="btn-retry"
+                onClick={() => runDispatchPlan(compareWithoutReliability)}
+                style={{ marginTop: '8px' }}
+              >
+                Retry
+              </button>
+            </div>
+          )}
+
+          {planState === 'idle' && (
+            <div className="plan-idle">
+              <p>Select region and available units, then click Plan dispatch.</p>
+            </div>
+          )}
+
+          {planState === 'result' && dispatchResult && (
             <div className="plan-results">
               <div className="metrics-summary-list">
                 <div className="summary-stat-row">
@@ -163,10 +185,10 @@ export default function DispatchPage({ region, setRegion, depots }) {
               <div className="assignments-list-container">
                 <h4 className="assignments-heading">Assigned routes</h4>
                 <div className="assignments-scroll-area">
-                  {dispatchResult.assignments?.length === 0 ? (
+                  {(!dispatchResult.assignments || dispatchResult.assignments.length === 0) ? (
                     <p className="empty-text">No active assignments generated.</p>
                   ) : (
-                    dispatchResult.assignments?.map((a, i) => (
+                    dispatchResult.assignments.map((a, i) => (
                       <div key={i} className="assignment-item">
                         <div className="assignment-header">
                           <span className="depot-tag">{a.depot_name}</span>
@@ -188,10 +210,6 @@ export default function DispatchPage({ region, setRegion, depots }) {
               <div className="simulation-disclaimer">
                 {dispatchResult.simulation_note || 'This is a simulation on replayed posts.'}
               </div>
-            </div>
-          ) : (
-            <div className="plan-loading">
-              <p>Calculating optimal route assignments...</p>
             </div>
           )}
         </div>

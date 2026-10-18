@@ -18,7 +18,6 @@ if "%1"=="ui-build" goto ui_build
 if "%1"=="test" goto test
 if "%1"=="test-integration" goto test_integration
 if "%1"=="verify" goto verify
-if "%1"=="demo" goto demo
 if "%1"=="demo-ready" goto demo_ready
 if "%1"=="demo-stop" goto demo_stop
 
@@ -26,7 +25,7 @@ echo Unknown target: %1
 goto help
 
 :help
-echo CrisisGuard (v1.0-final-9) Operational Targets:
+echo CrisisGuard Operational Targets:
 echo   make setup             - Install dependencies and build frontend
 echo   make up                - Start Docker cluster services
 echo   make down              - Stop Docker cluster services
@@ -39,7 +38,6 @@ echo   make ui-build          - Build production frontend SPA
 echo   make test              - Run pytest suite and client logic tests
 echo   make test-integration  - Run end-to-end integration tests
 echo   make verify            - Run tests and consistency verification
-echo   make demo              - Run interactive terminal demo
 echo   make demo-ready        - Start services, replay, API, and launch dashboard
 echo   make demo-stop         - Stop background demo processes
 goto end
@@ -96,10 +94,6 @@ if %ERRORLEVEL% NEQ 0 goto end
 cd frontend && call npm test && cd ..
 if %ERRORLEVEL% NEQ 0 goto end
 %PYTHON% scripts\check_doc_consistency.py
-goto end
-
-:demo
-%PYTHON% scripts\demo_terminal.py
 goto end
 
 :demo_ready

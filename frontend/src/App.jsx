@@ -5,7 +5,6 @@ import LivePage from './pages/LivePage';
 import DispatchPage from './pages/DispatchPage';
 import AboutPage from './pages/AboutPage';
 import { api, SSEClient } from './api/client';
-import { INITIAL_SAMPLE_POSTS } from './utils/initialPosts';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState(() => {
@@ -17,27 +16,11 @@ export default function App() {
     }
   });
 
-  // Default theme: light theme (Section 4: "Default light theme (off-white background, slate text)")
-  const [theme, setTheme] = useState(() => {
-    try {
-      const qTheme = new URLSearchParams(window.location.search).get('theme');
-      if (qTheme === 'light' || qTheme === 'dark') return qTheme;
-      return localStorage.getItem('crisisguard_theme') || 'light';
-    } catch {
-      return 'light';
-    }
-  });
-
   const [region, setRegion] = useState('houston');
-  const [isPaused, setIsPaused] = useState(false);
-  const isPausedRef = useRef(isPaused);
-  isPausedRef.current = isPaused;
-
   const [isStatusDrawerOpen, setIsStatusDrawerOpen] = useState(false);
   const [health, setHealth] = useState(null);
   const [dataState, setDataState] = useState('REPLAY'); // 'LIVE', 'REPLAY', 'OFFLINE'
   const [lastMsgTime, setLastMsgTime] = useState(null);
-  const [replayRate, setReplayRate] = useState(1.0);
 
   const [depots, setDepots] = useState([
     { id: 'hou_downtown', name: 'Downtown Central Marina Base', latitude: 29.7560, longitude: -95.3620, capacities: { rescue_boats: 15 } },
@@ -46,23 +29,9 @@ export default function App() {
     { id: 'hou_cypress', name: 'North Sector Boat Depot', latitude: 29.9688, longitude: -95.6972, capacities: { rescue_boats: 15 } }
   ]);
 
-  const [posts, setPosts] = useState(INITIAL_SAMPLE_POSTS);
+  const [posts, setPosts] = useState([]);
   const [selectedPost, setSelectedPost] = useState(null);
   const sseClientRef = useRef(null);
-
-  // Apply theme to HTML root
-  useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme);
-    try {
-      localStorage.setItem('crisisguard_theme', theme);
-    } catch {
-      // ignore
-    }
-  }, [theme]);
-
-  const toggleTheme = () => {
-    setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
-  };
 
   // Poll health status for truthful status indicator & drawer
   const fetchHealth = async () => {
@@ -72,8 +41,8 @@ export default function App() {
       if (h.data_state) {
         setDataState(h.data_state);
       }
-      if (h.last_kafka_message_time) {
-        setLastMsgTime(h.last_kafka_message_time);
+      if (h.services?.kafka?.last_message) {
+        setLastMsgTime(h.services.kafka.last_message);
       }
     } catch {
       setDataState('OFFLINE');
@@ -85,6 +54,24 @@ export default function App() {
     const interval = setInterval(fetchHealth, 5000);
     return () => clearInterval(interval);
   }, []);
+
+  // Fetch verified regional disaster sample posts on mount and when region changes
+  useEffect(() => {
+    let isCancelled = false;
+    api.getSamplePosts({ region, limit: 30, hoax_rate: 0.20 })
+      .then((res) => {
+        if (!isCancelled && res && res.posts) {
+          setPosts(res.posts);
+        }
+      })
+      .catch((err) => {
+        console.error('Initial posts fetch error:', err);
+      });
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [region]);
 
   // Update depots when region changes
   useEffect(() => {
@@ -98,7 +85,6 @@ export default function App() {
   // Connect SSE live / replay stream
   useEffect(() => {
     const handleIncomingMessage = (newPost) => {
-      if (isPausedRef.current) return;
       if (dataState === 'OFFLINE') return; // Stop appending posts when OFFLINE
 
       const browserNow = typeof performance !== 'undefined' && performance.timeOrigin
@@ -108,7 +94,7 @@ export default function App() {
       newPost.browser_receive_timestamp = new Date(browserNow).toISOString();
 
       setPosts((prev) => {
-        // Deduplicate by post_id and cap buffer at 300 posts (Section 5)
+        // Deduplicate by post_id and cap buffer at 300 posts
         const filtered = prev.filter((p) => p.post_id !== newPost.post_id);
         return [newPost, ...filtered].slice(0, 300);
       });
@@ -125,7 +111,7 @@ export default function App() {
     const client = new SSEClient({
       onMessage: handleIncomingMessage,
       onStatusChange: handleStatusChange,
-      rate: replayRate,
+      rate: 1.0,
       hoaxRate: 0.20,
       region
     });
@@ -136,7 +122,7 @@ export default function App() {
     return () => {
       client.disconnect();
     };
-  }, [region, replayRate, dataState]);
+  }, [region, dataState]);
 
   return (
     <div className="app-shell">
@@ -145,8 +131,6 @@ export default function App() {
         setActiveTab={setActiveTab}
         dataState={dataState}
         onOpenStatus={() => setIsStatusDrawerOpen(true)}
-        theme={theme}
-        onToggleTheme={toggleTheme}
       />
 
       <main className="app-main-content">
@@ -157,8 +141,6 @@ export default function App() {
             depots={depots}
             posts={posts}
             dataState={dataState}
-            isPaused={isPaused}
-            setIsPaused={setIsPaused}
             selectedPost={selectedPost}
             setSelectedPost={setSelectedPost}
           />
@@ -184,8 +166,6 @@ export default function App() {
         health={health}
         dataState={dataState}
         lastMsgTime={lastMsgTime}
-        replayRate={replayRate}
-        onReplayRateChange={(r) => setReplayRate(r)}
       />
     </div>
   );
