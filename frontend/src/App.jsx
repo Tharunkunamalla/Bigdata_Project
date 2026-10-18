@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Header from './components/Header';
+import StatusDrawer from './components/StatusDrawer';
 import LivePage from './pages/LivePage';
-import AllocationPage from './pages/AllocationPage';
-import PipelinePage from './pages/PipelinePage';
-import ResultsPage from './pages/ResultsPage';
+import DispatchPage from './pages/DispatchPage';
+import AboutPage from './pages/AboutPage';
 import { api, SSEClient } from './api/client';
 import { INITIAL_SAMPLE_POSTS } from './utils/initialPosts';
 
@@ -11,18 +11,20 @@ export default function App() {
   const [activeTab, setActiveTab] = useState(() => {
     try {
       const t = new URLSearchParams(window.location.search).get('tab');
-      return ['live', 'allocation', 'pipeline', 'results'].includes(t) ? t : 'live';
+      return ['live', 'dispatch', 'about'].includes(t) ? t : 'live';
     } catch {
       return 'live';
     }
   });
+
+  // Default theme: light theme (Section 4: "Default light theme (off-white background, slate text)")
   const [theme, setTheme] = useState(() => {
     try {
       const qTheme = new URLSearchParams(window.location.search).get('theme');
       if (qTheme === 'light' || qTheme === 'dark') return qTheme;
-      return localStorage.getItem('crisisguard_theme') || 'dark';
+      return localStorage.getItem('crisisguard_theme') || 'light';
     } catch {
-      return 'dark';
+      return 'light';
     }
   });
 
@@ -31,9 +33,12 @@ export default function App() {
   const isPausedRef = useRef(isPaused);
   isPausedRef.current = isPaused;
 
+  const [isStatusDrawerOpen, setIsStatusDrawerOpen] = useState(false);
   const [health, setHealth] = useState(null);
-  const [summary, setSummary] = useState(null);
-  const [modelsData, setModelsData] = useState(null);
+  const [dataState, setDataState] = useState('REPLAY'); // 'LIVE', 'REPLAY', 'OFFLINE'
+  const [lastMsgTime, setLastMsgTime] = useState(null);
+  const [replayRate, setReplayRate] = useState(1.0);
+
   const [depots, setDepots] = useState([
     { id: 'hou_downtown', name: 'Downtown Central Marina Base', latitude: 29.7560, longitude: -95.3620, capacities: { rescue_boats: 15 } },
     { id: 'hou_katy', name: 'West Sector Rescue Outpost (Katy)', latitude: 29.7858, longitude: -95.8245, capacities: { rescue_boats: 12 } },
@@ -43,10 +48,9 @@ export default function App() {
 
   const [posts, setPosts] = useState(INITIAL_SAMPLE_POSTS);
   const [selectedPost, setSelectedPost] = useState(null);
-  const [streamState, setStreamState] = useState('OPEN');
   const sseClientRef = useRef(null);
 
-  // Apply visual theme to document
+  // Apply theme to HTML root
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
     try {
@@ -57,52 +61,71 @@ export default function App() {
   }, [theme]);
 
   const toggleTheme = () => {
-    setTheme(prev => prev === 'dark' ? 'light' : 'dark');
+    setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
   };
 
-  // Initial data fetches
+  // Poll health status for truthful status indicator & drawer
+  const fetchHealth = async () => {
+    try {
+      const h = await api.getHealth();
+      setHealth(h);
+      if (h.data_state) {
+        setDataState(h.data_state);
+      }
+      if (h.last_kafka_message_time) {
+        setLastMsgTime(h.last_kafka_message_time);
+      }
+    } catch {
+      setDataState('OFFLINE');
+    }
+  };
+
   useEffect(() => {
-    api.getHealth().then(d => setHealth(d)).catch(err => console.error('Health fetch error:', err));
-    api.getSummary().then(d => setSummary(d)).catch(err => console.error('Summary fetch error:', err));
-    api.getModels().then(d => setModelsData(d)).catch(err => console.error('Models fetch error:', err));
+    fetchHealth();
+    const interval = setInterval(fetchHealth, 5000);
+    return () => clearInterval(interval);
   }, []);
 
   // Update depots when region changes
   useEffect(() => {
     api.getDepots(region)
-      .then(d => {
+      .then((d) => {
         if (d && d.depots) setDepots(d.depots);
       })
-      .catch(err => console.error('Depots fetch error:', err));
+      .catch((err) => console.error('Depots fetch error:', err));
   }, [region]);
 
-  // Connect SSE Stream
+  // Connect SSE live / replay stream
   useEffect(() => {
     const handleIncomingMessage = (newPost) => {
       if (isPausedRef.current) return;
+      if (dataState === 'OFFLINE') return; // Stop appending posts when OFFLINE
 
-      // Capture browser receive timestamp aligned with timeOrigin
       const browserNow = typeof performance !== 'undefined' && performance.timeOrigin
         ? performance.timeOrigin + performance.now()
         : Date.now();
 
       newPost.browser_receive_timestamp = new Date(browserNow).toISOString();
 
-      setPosts(prev => {
-        // Deduplicate by post_id and cap buffer at 250 records
-        const filtered = prev.filter(p => p.post_id !== newPost.post_id);
-        return [newPost, ...filtered].slice(0, 250);
+      setPosts((prev) => {
+        // Deduplicate by post_id and cap buffer at 300 posts (Section 5)
+        const filtered = prev.filter((p) => p.post_id !== newPost.post_id);
+        return [newPost, ...filtered].slice(0, 300);
       });
     };
 
     const handleStatusChange = (status) => {
-      setStreamState(status === 'OPEN' ? 'LIVE' : status);
+      if (status === 'ERROR' || status === 'OFFLINE') {
+        setDataState('OFFLINE');
+      } else if (status === 'OPEN' || status === 'LIVE') {
+        fetchHealth();
+      }
     };
 
     const client = new SSEClient({
       onMessage: handleIncomingMessage,
       onStatusChange: handleStatusChange,
-      rate: 1.0,
+      rate: replayRate,
       hoaxRate: 0.20,
       region
     });
@@ -113,27 +136,27 @@ export default function App() {
     return () => {
       client.disconnect();
     };
-  }, [region]);
+  }, [region, replayRate, dataState]);
 
   return (
-    <div className="app-shell" style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', backgroundColor: 'var(--bg-page)' }}>
+    <div className="app-shell">
       <Header
         activeTab={activeTab}
         setActiveTab={setActiveTab}
-        streamState={streamState === 'LIVE' ? 'LIVE' : (streamState === 'OPEN' ? 'LIVE' : streamState)}
-        isSimulated={true}
+        dataState={dataState}
+        onOpenStatus={() => setIsStatusDrawerOpen(true)}
         theme={theme}
         onToggleTheme={toggleTheme}
       />
 
-      <main style={{ flex: 1, paddingBottom: '24px' }}>
+      <main className="app-main-content">
         {activeTab === 'live' && (
           <LivePage
             region={region}
             setRegion={setRegion}
             depots={depots}
             posts={posts}
-            streamState={streamState}
+            dataState={dataState}
             isPaused={isPaused}
             setIsPaused={setIsPaused}
             selectedPost={selectedPost}
@@ -141,26 +164,29 @@ export default function App() {
           />
         )}
 
-        {activeTab === 'allocation' && (
-          <AllocationPage
+        {activeTab === 'dispatch' && (
+          <DispatchPage
             region={region}
             setRegion={setRegion}
             depots={depots}
           />
         )}
 
-        {activeTab === 'pipeline' && (
-          <PipelinePage
-            health={health}
-          />
-        )}
-
-        {activeTab === 'results' && (
-          <ResultsPage
-            modelsData={modelsData}
-          />
+        {activeTab === 'about' && (
+          <AboutPage />
         )}
       </main>
+
+      {/* Status drawer */}
+      <StatusDrawer
+        isOpen={isStatusDrawerOpen}
+        onClose={() => setIsStatusDrawerOpen(false)}
+        health={health}
+        dataState={dataState}
+        lastMsgTime={lastMsgTime}
+        replayRate={replayRate}
+        onReplayRateChange={(r) => setReplayRate(r)}
+      />
     </div>
   );
 }

@@ -156,12 +156,11 @@ def main():
             time.sleep(0.5)
 
     try:
-        # 1. Capture 4 Dashboard Views
+        # 1. Capture 3 Dashboard Views (Default light theme per Section 4)
         views = [
-            {"name": "view_1_live", "url": "http://127.0.0.1:8000/?tab=live&theme=dark"},
-            {"name": "view_2_allocation", "url": "http://127.0.0.1:8000/?tab=allocation&theme=dark"},
-            {"name": "view_3_pipeline", "url": "http://127.0.0.1:8000/?tab=pipeline&theme=dark"},
-            {"name": "view_4_results", "url": "http://127.0.0.1:8000/?tab=results&theme=dark"},
+            {"name": "view_1_live", "url": "http://127.0.0.1:8000/?tab=live&theme=light"},
+            {"name": "view_2_dispatch", "url": "http://127.0.0.1:8000/?tab=dispatch&theme=light"},
+            {"name": "view_3_about", "url": "http://127.0.0.1:8000/?tab=about&theme=light"},
         ]
 
         for v in views:

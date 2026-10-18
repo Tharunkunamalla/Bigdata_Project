@@ -9,40 +9,44 @@ if "%1"=="help" goto help
 if "%1"=="setup" goto setup
 if "%1"=="up" goto up
 if "%1"=="down" goto down
-if "%1"=="test" goto test
-if "%1"=="test-integration" goto test_integration
-if "%1"=="verify" goto verify
+if "%1"=="preflight" goto preflight
 if "%1"=="stream" goto stream
 if "%1"=="simulate" goto simulate
 if "%1"=="api" goto api
 if "%1"=="ui" goto ui
 if "%1"=="ui-build" goto ui_build
+if "%1"=="test" goto test
+if "%1"=="test-integration" goto test_integration
+if "%1"=="verify" goto verify
 if "%1"=="demo" goto demo
-if "%1"=="demo-ui" goto demo_ui
+if "%1"=="demo-ready" goto demo_ready
+if "%1"=="demo-stop" goto demo_stop
 
 echo Unknown target: %1
 goto help
 
 :help
-echo CrisisGuard AI (v1.0-final-9) Operational Commands:
-echo   make setup             - Install Python dependencies and build frontend SPA
-echo   make up                - Start Docker big data cluster services (Kafka, HDFS, Hive)
-echo   make down              - Tear down Docker big data cluster services
-echo   make test              - Run fast unit and logic tests
-echo   make test-integration  - Run end-to-end integration tests (Kafka/HDFS/Hive)
-echo   make verify            - Run test suite and documentation consistency audit
-echo   make stream            - Launch Spark Structured Streaming real-time scorer
-echo   make simulate          - Launch Kafka live replay stream simulator
-echo   make api               - Start FastAPI operations gateway (:8000)
-echo   make ui                - Start Vite development server (:3000)
-echo   make ui-build          - Compile production frontend SPA into frontend/dist
-echo   make demo              - Launch full terminal pipeline demonstration
-echo   make demo-ui           - Launch FastAPI gateway and serve dashboard at http://127.0.0.1:8000/
+echo CrisisGuard (v1.0-final-9) Operational Targets:
+echo   make setup             - Install dependencies and build frontend
+echo   make up                - Start Docker cluster services
+echo   make down              - Stop Docker cluster services
+echo   make preflight         - Run preflight service and asset checklist
+echo   make stream            - Run Spark streaming scorer
+echo   make simulate          - Run post replay simulator
+echo   make api               - Start FastAPI backend
+echo   make ui                - Start frontend development server
+echo   make ui-build          - Build production frontend SPA
+echo   make test              - Run pytest suite and client logic tests
+echo   make test-integration  - Run end-to-end integration tests
+echo   make verify            - Run tests and consistency verification
+echo   make demo              - Run interactive terminal demo
+echo   make demo-ready        - Start services, replay, API, and launch dashboard
+echo   make demo-stop         - Stop background demo processes
 goto end
 
 :setup
 %PYTHON% -m pip install -r requirements.txt
-cd frontend && npm install && npm run build && cd ..
+cd frontend && call npm install && call npm run build && cd ..
 goto end
 
 :up
@@ -53,18 +57,8 @@ goto end
 docker compose -f %COMPOSE_FILE% down
 goto end
 
-:test
-%PYTHON% -m pytest tests\test_real_pipeline.py tests\test_dashboard_upgrade.py -v
-goto end
-
-:test_integration
-%PYTHON% -m pytest tests\test_integration.py -v
-goto end
-
-:verify
-%PYTHON% -m pytest tests\test_real_pipeline.py tests\test_dashboard_upgrade.py -v
-if %ERRORLEVEL% NEQ 0 goto end
-%PYTHON% scripts\check_doc_consistency.py
+:preflight
+%PYTHON% scripts\preflight.py
 goto end
 
 :stream
@@ -80,19 +74,40 @@ goto end
 goto end
 
 :ui
-cd frontend && npm run dev
+cd frontend && call npm run dev
 goto end
 
 :ui_build
-cd frontend && npm run build && cd ..
+cd frontend && call npm run build && cd ..
+goto end
+
+:test
+%PYTHON% -m pytest tests\test_real_pipeline.py tests\test_dashboard_upgrade.py tests\test_ui_cleanliness.py -v
+cd frontend && call npm test && cd ..
+goto end
+
+:test_integration
+%PYTHON% -m pytest tests\test_integration.py -v
+goto end
+
+:verify
+%PYTHON% -m pytest tests\test_real_pipeline.py tests\test_dashboard_upgrade.py tests\test_ui_cleanliness.py -v
+if %ERRORLEVEL% NEQ 0 goto end
+cd frontend && call npm test && cd ..
+if %ERRORLEVEL% NEQ 0 goto end
+%PYTHON% scripts\check_doc_consistency.py
 goto end
 
 :demo
 %PYTHON% scripts\demo_terminal.py
 goto end
 
-:demo_ui
-%PYTHON% -m uvicorn backend.main:app --host 0.0.0.0 --port 8000
+:demo_ready
+%PYTHON% scripts\demo_ready.py
+goto end
+
+:demo_stop
+%PYTHON% scripts\demo_stop.py
 goto end
 
 :end

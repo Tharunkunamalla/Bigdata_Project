@@ -44,11 +44,10 @@ flowchart TD
     end
 
     subgraph Presentation["6. Full-Stack Operations UI"]
-        Backend -->|Server-Sent Events & Static Serving| ReactUI["Restrained 4-View Operations Console<br/>(http://127.0.0.1:8000/)"]
-        ReactUI --> LiveView["Live: GIS Map & Credibility Feed"]
-        ReactUI --> AllocView["Allocation: Solver & 30-Seed CI Chart"]
-        ReactUI --> PipeView["Pipeline: Cluster Status & Recovery Tables"]
-        ReactUI --> ResultsView["Results: Model Catalog, ROC/PR Curves & Confusion Matrix"]
+        Backend -->|Server-Sent Events & Static Serving| ReactUI["Emergency Coordinator Dashboard<br/>(http://127.0.0.1:8000/)"]
+        ReactUI --> LiveView["Live: Map & Incident Feed"]
+        ReactUI --> DispatchView["Dispatch: Regional Fleet Routing"]
+        ReactUI --> AboutView["About: System Transparency & Status Drawer"]
     end
 ```
 
@@ -65,7 +64,7 @@ flowchart TD
 | **Execution Engine** | Apache Spark | 3.5.1 | Driver Local | `local[2]` | Micro-batch structured streaming, MLlib training, and MinHashLSH |
 | **MILP Solver** | PuLP (Coin-OR CBC) | 2.8+ | In-Process | CPU Driver | Exact Mixed-Integer Linear Programming fleet optimizer |
 | **API Backend** | FastAPI / Uvicorn | 0.115+ | `8000` | `0.0.0.0:8000` | Telemetry gateway, Server-Sent Events, and static React SPA host |
-| **Dashboard UI** | React 18 / Vite / TS | 5.4+ | Bundled | `http://127.0.0.1:8000/` | Restrained 4-view operations console (Live, Allocation, Pipeline, Results) |
+| **Dashboard UI** | React 18 / Vite / TS | 5.4+ | Bundled | `http://127.0.0.1:8000/` | Emergency coordinator dashboard (Live, Dispatch, About + Status Drawer) |
 
 ---
 
