@@ -82,10 +82,15 @@ export default function App() {
       .catch((err) => console.error('Depots fetch error:', err));
   }, [region]);
 
+  const dataStateRef = useRef(dataState);
+  useEffect(() => {
+    dataStateRef.current = dataState;
+  }, [dataState]);
+
   // Connect SSE live / replay stream
   useEffect(() => {
     const handleIncomingMessage = (newPost) => {
-      if (dataState === 'OFFLINE') return; // Stop appending posts when OFFLINE
+      if (dataStateRef.current === 'OFFLINE') return; // Stop appending posts when OFFLINE
 
       const browserNow = typeof performance !== 'undefined' && performance.timeOrigin
         ? performance.timeOrigin + performance.now()
@@ -122,7 +127,7 @@ export default function App() {
     return () => {
       client.disconnect();
     };
-  }, [region, dataState]);
+  }, [region]);
 
   return (
     <div className="app-shell">

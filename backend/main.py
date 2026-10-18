@@ -311,6 +311,7 @@ def check_tcp_port(host: str, port: int, timeout: float = 0.5) -> bool:
 # ---------------------------------------------------------------------------
 LAST_KAFKA_MSG_TIME: Optional[float] = None
 KAFKA_SCORED_BUFFER: List[Dict[str, Any]] = []
+KAFKA_BUFFER_LOCK = threading.Lock()
 
 def kafka_consumer_worker():
     global LAST_KAFKA_MSG_TIME
@@ -329,9 +330,10 @@ def kafka_consumer_worker():
                 for msg in consumer:
                     if msg and msg.value:
                         LAST_KAFKA_MSG_TIME = time.time()
-                        KAFKA_SCORED_BUFFER.append(msg.value)
-                        if len(KAFKA_SCORED_BUFFER) > 300:
-                            KAFKA_SCORED_BUFFER.pop(0)
+                        with KAFKA_BUFFER_LOCK:
+                            KAFKA_SCORED_BUFFER.append(msg.value)
+                            if len(KAFKA_SCORED_BUFFER) > 300:
+                                KAFKA_SCORED_BUFFER.pop(0)
             else:
                 time.sleep(2.0)
         except Exception:
