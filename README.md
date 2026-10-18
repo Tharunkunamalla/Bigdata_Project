@@ -103,11 +103,7 @@ All metrics are measured from the **130,301-record curated disaster corpus** (Hu
 - **Simulated GPS Coordinates:** While regional depots are authentic facilities sourced from OpenStreetMap, social media post coordinates are simulated within regional bounding boxes due to Twitter API privacy anonymization.
 - **Template Regularity in Synthetic Generators:** Rule-based generators produce template phrases ("mayday", "evacuation") that facilitate high detection accuracy; real-world LLM-generated campaigns exhibit higher stylistic variance.
 
----
 
-## 6. AI Assistance Disclosure
-
-> **AI Assistance Disclosure**: An AI coding assistant (Antigravity IDE / Gemini 2.5 Flash) was utilized during the development of this project to assist with pipeline scaffolding, boilerplate code generation, data cleaning scripts, unit test creation, and documentation formatting. All data ingestion, model training runs, statistical ablation studies, and architectural benchmarks were executed locally by the team on system daemons (Kafka, HDFS, Spark, Hive), and all empirical outputs were reviewed and validated against course guidelines.
 
 
 
